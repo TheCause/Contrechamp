@@ -182,9 +182,14 @@ def test_missing_source_reports_every_base_tried(tmp_path):
 
     resolved, tried = VideoCompose._resolve_source("assets/video/nope.mp4", out)
 
+    project_dir = out.parent.parent.resolve()
+
     assert resolved is None
     assert len(tried) == 2, tried
-    assert any("projects/demo" in str(t) for t in tried)
+    # Compare Path objects, not rendered strings: `str(Path)` uses the host
+    # separator, so a "projects/demo" substring check passes on POSIX and
+    # fails on Windows for the very path it is meant to accept.
+    assert project_dir / "assets" / "video" / "nope.mp4" in tried, tried
 
 
 def test_project_dir_inference():
