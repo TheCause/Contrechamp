@@ -203,6 +203,13 @@ class RemotionCaptionBurn(BaseTool):
                         "startMs": int(w["start"] * 1000),
                         "endMs": int(w["end"] * 1000),
                     })
+                # A segment is a sentence / caption line. CaptionOverlay
+                # supports `pageBreakAfter` but nothing set it, so pagination
+                # ran straight through segment boundaries and mixed the tail of
+                # one line with the head of the next ("...GOES DOWN" + "NOT..."
+                # rendered as one page reading "DOWN NOT EVERY RIDER GETS").
+                if captions:
+                    captions[-1]["pageBreakAfter"] = True
             elif "text" in seg:
                 text_words = seg["text"].strip().split()
                 dur = seg["end"] - seg["start"]
@@ -214,6 +221,8 @@ class RemotionCaptionBurn(BaseTool):
                         "startMs": int((seg["start"] + i * per_word) * 1000),
                         "endMs": int((seg["start"] + (i + 1) * per_word) * 1000),
                     })
+                if captions:
+                    captions[-1]["pageBreakAfter"] = True
         return captions
 
     def _srt_to_word_captions(
@@ -312,7 +321,12 @@ class RemotionCaptionBurn(BaseTool):
 
         # Build props JSON
         props = {
-            "videoSrc": f"public/talking-head/{video_filename}",
+            # staticFile() paths are relative to public/, and Remotion
+            # throws if the prefix is included: "Do not include the
+            # public/ prefix when using staticFile()". Passing
+            # "public/talking-head/..." made every Remotion caption
+            # render fail before drawing a frame.
+            "videoSrc": f"talking-head/{video_filename}",
             "captions": captions,
             "overlays": overlays or [],
             "wordsPerPage": words_per_page,
