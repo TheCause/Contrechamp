@@ -108,3 +108,10 @@ venv/
 # Personal session files (never versioned)
 .claude-handoff.md
 CLAUDE.local.md
+
+# Local-only working files (never versioned)
+*.log
+_sources*/
+_local/
+# Frames and OCR variants written next to a render by final_review
+.final_review_frames/
