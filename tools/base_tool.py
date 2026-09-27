@@ -301,6 +301,10 @@ class BaseTool(ABC):
         except DependencyError:
             return ToolStatus.UNAVAILABLE
 
+    def status_reason(self) -> str:
+        """Why get_status() is not AVAILABLE ("" when nothing to report)."""
+        return ""
+
     def check_dependencies(self) -> None:
         """Verify all dependencies are installed. Raises DependencyError if not."""
         for dep in self.dependencies:
