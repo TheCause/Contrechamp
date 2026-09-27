@@ -92,7 +92,7 @@ qui le laisse **silencieux** sur le cas sain :
 | `null` | tesseract absent (simulé) → `null` + raison, statut `revise` | — |
 
 Fixtures **synthétiques** (ffmpeg `lavfi`, `drawtext`) : aucun contenu du banc n'entre dans le
-dépôt public. Contrôle réel à part, **hors dépôt**, sur le M4 : les rendus cassés et bons du banc
+dépôt public. Contrôle réel à part, **hors dépôt**, sur la machine de calcul : les rendus cassés et bons du banc
 doivent recevoir des verdicts **différents**.
 
 ## Hors lot 1
