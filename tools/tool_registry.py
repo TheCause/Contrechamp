@@ -362,6 +362,10 @@ class ToolRegistry:
             info = vc.get_info()
             engines = info.get("render_engines") or {}
             comp_runtimes = {k: bool(v) for k, v in engines.items()}
+            if comp_runtimes.get("ffmpeg"):
+                from lib import ffmpeg_caps
+                if ffmpeg_caps.warning():
+                    runtime_warnings.append(ffmpeg_caps.warning())
         # If hyperframes_compose is registered, surface its npm-resolve reasons
         # explicitly — those are the "looks available but isn't" failures.
         hf = self._tools.get("hyperframes_compose")

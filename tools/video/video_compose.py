@@ -42,7 +42,7 @@ from pathlib import Path
 from typing import Any, Optional
 from urllib.parse import unquote, urlsplit
 
-from lib import render_checks
+from lib import ffmpeg_caps, render_checks
 from tools.base_tool import (
     BaseTool,
     Determinism,
@@ -2861,6 +2861,8 @@ class VideoCompose(BaseTool):
             return ToolResult(success=False, error=f"Input not found: {input_path}")
         if not subtitle_path.exists():
             return ToolResult(success=False, error=f"Subtitle file not found: {subtitle_path}")
+        if "subtitles" in ffmpeg_caps.missing_filters():
+            return ToolResult(success=False, error=ffmpeg_caps.warning())
 
         style = inputs.get("subtitle_style", {})
         ass_style = self._build_subtitle_style(style)

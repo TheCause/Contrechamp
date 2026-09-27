@@ -99,3 +99,31 @@ doivent recevoir des verdicts **différents**.
 
 Correction de `CaptionOverlay`, sous-titres alignés sur le script (lot 2) ; profils muet / série /
 texte sacré (lot 3) ; `approval_policy` et fichier de montage unique (lot 4).
+
+## Résultat — épreuve sur rendus réels (27 sept 2026, hors dépôt)
+
+Mêmes rendus, revue d'origine contre revue du fork :
+
+| Rendu réel | Revue d'origine | Revue du fork |
+|---|---|---|
+| Explainer, sous-titres aux mots collés | `pass`, `unreadable_text: false`, `music_present: true` | `revise`, `unreadable_text: true`, `music_present: false` |
+| Même explainer, sous-titres réparés | `pass` (verdict identique au cassé) | `unreadable_text: false` |
+| Épisode muet, image figée assombrie | `revise` (pour « silence »), aucune couture mesurée | couture KO (SSIM 0,928, luminance +11), boucle KO |
+| Épisode muet, mauvaise image figée | `revise` (même verdict) | couture KO (SSIM 0,826), boucle KO |
+| Épisode muet, rendu bon | `revise` (même verdict) | couture OK (0,991), boucle OK (0,979) |
+
+La revue d'origine donnait **le même verdict** au rendu cassé et au bon ; celle du fork les
+sépare sur les deux paires. Les rendus sains restent `revise` pour des causes connues, hors lot 1 :
+« silence » sur une vidéo voulue muette (profil muet, lot 3), fichier de sous-titres introuvable
+par chemin relatif (lot 2).
+
+Statuts d'outils, vérifiés par appel réel : `piper_tts` trouvé dans le venv sans activation, voix
+retrouvée par son nom (2,15 s produites), `unavailable` + raison sans voix ; `pixabay_music`
+`degraded` + raison ; ffmpeg : 481 filtres lus, `drawtext` et `subtitles` absents signalés en
+préflight, et l'incrustation de sous-titres échoue avec un message clair.
+
+Contrôles vides trouvés **dans ma propre écriture** pendant le lot, et corrigés : une vidéo de
+test dont le changement d'image ne tombait pas au temps déclaré (les tests de couture passaient à
+vide) ; un seuil de mots collés à 26 lettres alors que les vrais défauts en font 22 et 24 ; un
+témoin « revue d'origine » qui exécutait en fait le nouveau code. Seuil OCR 140 : sa mutation
+survit (non prouvé nécessaire à la détection), gardé pour la complétude de lecture — dit dans le code.
