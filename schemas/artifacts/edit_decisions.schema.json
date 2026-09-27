@@ -61,7 +61,11 @@
             "type": "string",
             "description": "Backing color used behind this cut by composition runtimes"
           },
-          "reason": { "type": "string" }
+          "reason": { "type": "string" },
+          "continuity": {
+            "type": "boolean",
+            "description": "This cut must be invisible (hold, freeze, match). final_review measures SSIM + luminance across it. Implied when the previous cut has the same source."
+          }
         },
         "additionalProperties": false
       }

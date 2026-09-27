@@ -31,6 +31,13 @@ SILENCE_NOISE_DB = -50
 SILENCE_MIN_SECONDS = 0.3
 MUSIC_MAX_SILENCE_RATIO = 0.05
 
+# Expected text: loose match floor, and below this the text is not there at all.
+TEXT_MATCH_MIN = 0.85
+TEXT_PRESENT_MIN = 0.5
+
+# Mean luma (0-255) under which a sampled frame is black.
+BLACK_FRAME_MAX_LUMA = 6.0
+
 MAX_SAMPLED_SEGMENTS = 24
 LEGACY_SAMPLE_POINTS = [0.10, 0.35, 0.65, 0.90]
 
