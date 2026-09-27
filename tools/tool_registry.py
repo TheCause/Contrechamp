@@ -366,6 +366,8 @@ class ToolRegistry:
                 from lib import ffmpeg_caps
                 if ffmpeg_caps.warning():
                     runtime_warnings.append(ffmpeg_caps.warning())
+                if ffmpeg_caps.ocr_warning():
+                    runtime_warnings.append(ffmpeg_caps.ocr_warning())
         # If hyperframes_compose is registered, surface its npm-resolve reasons
         # explicitly — those are the "looks available but isn't" failures.
         hf = self._tools.get("hyperframes_compose")

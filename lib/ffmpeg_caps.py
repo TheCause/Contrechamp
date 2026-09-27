@@ -37,6 +37,21 @@ def warning() -> str:
         return ""
     return (
         f"ffmpeg: filters missing: {', '.join(missing)} — FFmpeg subtitle burn-in "
-        "and text cards will fail. Install a full build (Homebrew: `brew install "
-        "ffmpeg-full`, keg-only: put /opt/homebrew/opt/ffmpeg-full/bin first on PATH)."
+        "and text cards will fail. Install a build with libass + freetype: "
+        "macOS `brew install ffmpeg-full` (keg-only: put "
+        "$(brew --prefix)/opt/ffmpeg-full/bin first on PATH); Debian/Ubuntu "
+        "`sudo apt install ffmpeg`; Windows: a 'full' build from gyan.dev or BtbN."
+    )
+
+
+def ocr_warning() -> str:
+    """Preflight note when the on-screen text checks cannot run."""
+    if shutil.which("tesseract"):
+        return ""
+    return (
+        "tesseract: not installed — final_review cannot read on-screen text "
+        "(captions, cards); renders with expected text will not 'pass'. Install: "
+        "macOS `brew install tesseract tesseract-lang`; Debian/Ubuntu "
+        "`sudo apt install tesseract-ocr tesseract-ocr-<lang>`; Windows: UB-Mannheim "
+        "installer. Or set review.ocr_required: false in config.yaml."
     )

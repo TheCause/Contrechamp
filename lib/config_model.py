@@ -62,6 +62,33 @@ class PathsConfig(BaseModel):
     output_dir: str = "output"
 
 
+class ReviewConfig(BaseModel):
+    """Thresholds of the measured post-render checks (lib/render_checks.py).
+
+    Defaults were calibrated on a handful of real renders; tune them to your
+    style. Every threshold is also reported next to its measure in final_review.
+    """
+
+    # A caption token with at least this many letters is glued words.
+    glued_word_min_len: int = Field(21, ge=8, le=60)
+    # Continuity cuts (hold, freeze, match) must stay above / below these.
+    seam_min_ssim: float = Field(0.90, ge=0.0, le=1.0)
+    seam_max_luma_jump: float = Field(4.0, ge=0.0, le=255.0)
+    # Music bed: share of the audio allowed to be digital silence.
+    music_max_silence_ratio: float = Field(0.05, ge=0.0, le=1.0)
+    silence_noise_db: float = Field(-50.0, le=0.0)
+    silence_min_seconds: float = Field(0.3, gt=0.0)
+    # Expected on-screen text: loose-match floor, and "not there at all".
+    text_match_min: float = Field(0.85, ge=0.0, le=1.0)
+    text_present_min: float = Field(0.5, ge=0.0, le=1.0)
+    black_frame_max_luma: float = Field(6.0, ge=0.0, le=255.0)
+    max_sampled_segments: int = Field(24, ge=1, le=500)
+    ocr_thresholds: list[int] = Field(default_factory=lambda: [140, 200])
+    # When text is expected on screen but OCR (tesseract) cannot run:
+    # True -> the review cannot "pass"; False -> recorded under not_checked only.
+    ocr_required: bool = True
+
+
 class OpenMontageConfig(BaseModel):
     """Top-level runtime configuration."""
 
@@ -70,6 +97,7 @@ class OpenMontageConfig(BaseModel):
     checkpoint: CheckpointConfig = Field(default_factory=CheckpointConfig)
     output: OutputConfig = Field(default_factory=OutputConfig)
     paths: PathsConfig = Field(default_factory=PathsConfig)
+    review: ReviewConfig = Field(default_factory=ReviewConfig)
 
     @classmethod
     def load(cls, config_path: Optional[Path] = None) -> "OpenMontageConfig":

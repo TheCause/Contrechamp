@@ -2,7 +2,7 @@
 
 Every check here either measures something and reports what it read, or
 returns ``None`` with a reason. Nothing defaults to a reassuring value: a
-check that did not run must say so (see docs/fork/lot1-controles-qui-mordent.md).
+check that did not run must say so (see docs/fork/lot1-checks-that-bite.md).
 """
 
 from __future__ import annotations
@@ -12,43 +12,38 @@ import re
 import shutil
 import subprocess
 from pathlib import Path
+from functools import lru_cache
 from typing import Any
 
 from PIL import Image
 
-# A caption token with at least this many letters is two or more words glued
-# together. Measured on a real broken render: glued lines were 22 and 24
-# letters ("medecinsprescriventplusd"), so the bar must sit below 22. Long
-# everyday words stay silent at 20 ("incomprehensiblement", "internationalisation").
-GLUED_WORD_MIN_LEN = 21
+from lib.config_model import OpenMontageConfig, ReviewConfig
 
-# Continuity seam thresholds (same shot on both sides of the cut).
-SEAM_MIN_SSIM = 0.90
-SEAM_MAX_LUMA_JUMP = 4.0
+# Thresholds live in config.yaml (section `review`, see lib/config_model.py
+# ReviewConfig). Why the defaults: glued caption lines seen on a real broken
+# render were 22 and 24 letters, long everyday words stay at 20; a clean
+# freeze-frame seam measured SSIM 0.99, a wrong one 0.83 and a darkened one
+# 0.93 with an 11-point luminance jump.
+_CONFIG_PATH: Path | None = None  # None -> repo config.yaml
 
-# A silence this long below this level between speech means no music bed.
-SILENCE_NOISE_DB = -50
-SILENCE_MIN_SECONDS = 0.3
-MUSIC_MAX_SILENCE_RATIO = 0.05
 
-# Expected text: loose match floor, and below this the text is not there at all.
-TEXT_MATCH_MIN = 0.85
-TEXT_PRESENT_MIN = 0.5
+@lru_cache(maxsize=1)
+def settings() -> ReviewConfig:
+    return OpenMontageConfig.load(_CONFIG_PATH).review
 
-# Mean luma (0-255) under which a sampled frame is black.
-BLACK_FRAME_MAX_LUMA = 6.0
 
-MAX_SAMPLED_SEGMENTS = 24
 LEGACY_SAMPLE_POINTS = [0.10, 0.35, 0.65, 0.90]
 
 
 # --- Pure helpers -------------------------------------------------------------
 
 
-def glued_words(text: str | None, min_len: int = GLUED_WORD_MIN_LEN) -> list[str]:
+def glued_words(text: str | None, min_len: int | None = None) -> list[str]:
     """Tokens that look like several words stuck together."""
     if not text:
         return []
+    if min_len is None:
+        min_len = settings().glued_word_min_len
     glued = []
     for token in text.split():
         letters = re.sub(r"[^\w]", "", token)
@@ -115,9 +110,10 @@ def sample_times(segments: list[dict[str, Any]], duration: float) -> list[tuple[
     if not segments:
         return [(None, round(duration * p, 2)) for p in LEGACY_SAMPLE_POINTS]
     picked = segments
-    if len(segments) > MAX_SAMPLED_SEGMENTS:
-        step = len(segments) / MAX_SAMPLED_SEGMENTS
-        picked = [segments[int(i * step)] for i in range(MAX_SAMPLED_SEGMENTS)]
+    cap = settings().max_sampled_segments
+    if len(segments) > cap:
+        step = len(segments) / cap
+        picked = [segments[int(i * step)] for i in range(cap)]
     return [(s["id"], round((s["start"] + s["end"]) / 2, 2)) for s in picked]
 
 
@@ -163,7 +159,6 @@ def frame_ssim(a: Path, b: Path) -> float | None:
 # frame, missed some). The 140 threshold is not needed to *detect* them, but
 # gave the most complete reading of a caption line, which matters when the
 # reading is compared to expected text. Every variant is read and kept.
-OCR_THRESHOLDS = (140, 200)
 
 
 def _ocr_variants(path: Path, work: Path) -> list[Path]:
@@ -172,7 +167,7 @@ def _ocr_variants(path: Path, work: Path) -> list[Path]:
     gray = gray.resize((gray.width * 2, gray.height * 2), Image.LANCZOS)
     work.mkdir(parents=True, exist_ok=True)
     variants = [("gray", gray)]
-    for th in OCR_THRESHOLDS:
+    for th in settings().ocr_thresholds:
         variants.append((f"t{th}", gray.point(lambda v, th=th: 0 if v > th else 255)))
     paths = []
     for name, img in variants:
@@ -220,7 +215,8 @@ def ocr_frame(path: Path, lang: str = "eng") -> tuple[str | None, str | None]:
 def _compare(a: Path, b: Path) -> dict[str, Any]:
     ssim = frame_ssim(a, b)
     jump = abs(frame_luma(a) - frame_luma(b))
-    ok = ssim is not None and ssim >= SEAM_MIN_SSIM and jump <= SEAM_MAX_LUMA_JUMP
+    cfg = settings()
+    ok = ssim is not None and ssim >= cfg.seam_min_ssim and jump <= cfg.seam_max_luma_jump
     return {"ssim": None if ssim is None else round(ssim, 4),
             "luma_jump": round(jump, 2), "ok": ok if ssim is not None else None}
 
@@ -258,7 +254,7 @@ def check_loop(video: Path, work_dir: Path) -> dict[str, Any]:
 
 def _silences(video: Path) -> tuple[list[tuple[float, float]], float | None]:
     cmd = ["ffmpeg", "-v", "info", "-i", str(video), "-vn", "-af",
-           f"silencedetect=noise={SILENCE_NOISE_DB}dB:d={SILENCE_MIN_SECONDS}", "-f", "null", "-"]
+           f"silencedetect=noise={settings().silence_noise_db}dB:d={settings().silence_min_seconds}", "-f", "null", "-"]
     proc = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
     err = proc.stderr or ""
     starts = [float(x) for x in re.findall(r"silence_start: (-?[0-9.]+)", err)]
@@ -281,7 +277,7 @@ def detect_music(video: Path) -> dict[str, Any]:
     silent = sum(max(e - s, 0.0) for s, e in silences)
     ratio = silent / duration
     return {
-        "music_present": ratio <= MUSIC_MAX_SILENCE_RATIO,
+        "music_present": ratio <= settings().music_max_silence_ratio,
         "silence_ratio": round(ratio, 3),
         "silences": [[round(s, 2), round(e, 2)] for s, e in silences[:20]],
     }

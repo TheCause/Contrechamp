@@ -1,5 +1,7 @@
 # Lot 1 — Des contrôles qui mordent
 
+*Traduction française de [`lot1-checks-that-bite.md`](lot1-checks-that-bite.md) (version de référence, en anglais).*
+
 *Fork `TheCause/OpenMontage`, 27 sept 2026. Source : banc d'essai de 3 rendus réels (explainer
 vertical FR, épisode muet à carton, animatique), 0 €. 13 faux verts relevés, tous dans la revue
 finale de `video_compose` (`_run_final_review`) ou dans les statuts d'outils.*
@@ -94,6 +96,17 @@ qui le laisse **silencieux** sur le cas sain :
 Fixtures **synthétiques** (ffmpeg `lavfi`, `drawtext`) : aucun contenu du banc n'entre dans le
 dépôt public. Contrôle réel à part, **hors dépôt**, sur la machine de calcul : les rendus cassés et bons du banc
 doivent recevoir des verdicts **différents**.
+
+## Configuration et prérequis (complément « générique »)
+
+- **Seuils réglables** dans `config.yaml`, section `review:` (bornes validées par
+  `ReviewConfig` dans `lib/config_model.py`). `review.ocr_required: false` permet de travailler
+  sans tesseract : les contrôles de texte sont alors notés « non vérifiés » sans bloquer `pass`.
+- **tesseract** (+ données de langue) pour lire le texte à l'écran ; `make setup` le vérifie et
+  affiche la commande d'installation par système.
+- **ffmpeg avec libass + freetype** pour l'incrustation de sous-titres et les cartons FFmpeg ; la
+  formule Homebrew `ffmpeg` ne les a pas, utiliser `ffmpeg-full`. Le préflight le signale.
+- Les outils exposent `status_reason()` : la raison d'un statut non disponible.
 
 ## Hors lot 1
 

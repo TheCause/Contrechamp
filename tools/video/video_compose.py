@@ -2422,7 +2422,7 @@ class VideoCompose(BaseTool):
                     )
                     if frame:
                         frames.append((seg_id, ts, frame))
-                        if render_checks.frame_luma(frame) < render_checks.BLACK_FRAME_MAX_LUMA:
+                        if render_checks.frame_luma(frame) < render_checks.settings().black_frame_max_luma:
                             visual_spotcheck["black_frames_detected"] = True
                 visual_spotcheck["frames_sampled"] = len(frames)
                 visual_spotcheck["frame_paths"] = [str(f) for _, _, f in frames]
@@ -2457,9 +2457,10 @@ class VideoCompose(BaseTool):
                     visual_spotcheck["ocr_readings"] = []
                     visual_spotcheck["not_checked"]["unreadable_text"] = ocr_reason
                     visual_spotcheck["not_checked"]["broken_overlays"] = ocr_reason
-                    if text_expected:
+                    if text_expected and render_checks.settings().ocr_required:
                         visual_spotcheck["issues"].append(
-                            f"On-screen text expected but not checked: {ocr_reason}"
+                            f"On-screen text expected but not checked: {ocr_reason} "
+                            "(install tesseract, or set review.ocr_required: false)"
                         )
                 else:
                     unreadable = bool(glued)
@@ -2489,7 +2490,7 @@ class VideoCompose(BaseTool):
                                 {"expected": item["text"], "t": round(mid, 2), "text": best,
                                  "similarity": round(score, 3), "exact": exact}
                             )
-                            needed = 1.0 if exact else render_checks.TEXT_MATCH_MIN
+                            needed = 1.0 if exact else render_checks.settings().text_match_min
                             if score < needed:
                                 unreadable = True
                                 visual_spotcheck["issues"].append(
@@ -2497,7 +2498,7 @@ class VideoCompose(BaseTool):
                                     f"(similarity {score:.2f}, {'exact' if exact else 'loose'}): "
                                     f"expected {item['text']!r}, read {best!r}"
                                 )
-                            if score < render_checks.TEXT_PRESENT_MIN:
+                            if score < render_checks.settings().text_present_min:
                                 broken = True
                         visual_spotcheck["broken_overlays"] = broken
                     else:
