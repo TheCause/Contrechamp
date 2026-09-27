@@ -104,3 +104,7 @@ venv/
 
 # Local Wan / diffusers GPU environment
 .venv-wan/
+
+# Personal session files (never versioned)
+.claude-handoff.md
+CLAUDE.local.md
