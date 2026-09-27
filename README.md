@@ -188,7 +188,8 @@ And when a run is done, hit **▶ REPLAY RUN** — the whole production replays 
 ### Prerequisites
 
 - **Python 3.10+** — [python.org](https://www.python.org/downloads/)
-- **FFmpeg** — `brew install ffmpeg` / `sudo apt install ffmpeg` / [ffmpeg.org](https://ffmpeg.org/download.html)
+- **FFmpeg with libass + freetype** (for subtitle burn-in and text cards) — `brew install ffmpeg-full` (Homebrew's plain `ffmpeg` lacks the `subtitles` and `drawtext` filters; `ffmpeg-full` is keg-only, put `$(brew --prefix)/opt/ffmpeg-full/bin` first on PATH) / `sudo apt install ffmpeg` / a "full" build from [gyan.dev](https://www.gyan.dev/ffmpeg/builds/) on Windows
+- **Tesseract OCR** (lets the final review read on-screen text) — `brew install tesseract tesseract-lang` / `sudo apt install tesseract-ocr tesseract-ocr-<lang>` / [UB-Mannheim installer](https://github.com/UB-Mannheim/tesseract/wiki) on Windows. Optional: without it, set `review.ocr_required: false` in `config.yaml`
 - **Node.js 18+** — [nodejs.org](https://nodejs.org/)
 - **An AI coding assistant** — Claude Code, Cursor, Copilot, Windsurf, or Codex
 

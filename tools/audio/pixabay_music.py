@@ -131,8 +131,15 @@ class PixabayMusic(BaseTool):
     }
 
     def get_status(self) -> ToolStatus:
-        # Always available — no API key required
-        return ToolStatus.AVAILABLE
+        # No API key, but this scrapes pixabay.com pages: nothing proves it
+        # works until a call succeeds (observed: HTTP 403 on a real run).
+        return ToolStatus.DEGRADED
+
+    def status_reason(self) -> str:
+        return (
+            "unverified: scrapes pixabay.com without an API key; "
+            "a real run got HTTP 403. Prefer a local music_library/."
+        )
 
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
         return 0.0  # Pixabay Music is free

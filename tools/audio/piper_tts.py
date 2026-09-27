@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
+import sys
 import time
 from pathlib import Path
 from typing import Any
@@ -20,6 +22,13 @@ from tools.base_tool import (
     ToolStatus,
     ToolTier,
 )
+
+# Where voice models (<name>.onnx + <name>.onnx.json) are looked for, after
+# $PIPER_VOICES_DIR. The first directory holding at least one voice wins.
+DEFAULT_VOICE_DIRS = [
+    Path(__file__).resolve().parents[2] / "models" / "piper",
+    Path.home() / ".piper" / "models",
+]
 
 
 class PiperTTS(BaseTool):
@@ -38,8 +47,9 @@ class PiperTTS(BaseTool):
         "Install Piper TTS:\n"
         "  pip install piper-tts\n"
         "Or download from https://github.com/rhasspy/piper/releases\n"
-        "Then download a voice model:\n"
-        "  piper --download-dir ~/.piper/models --model en_US-lessac-medium"
+        "Then download at least one voice (piper is unusable without one):\n"
+        "  python -m piper.download_voices fr_FR-siwis-medium --data-dir models/piper\n"
+        "Voices are looked up in $PIPER_VOICES_DIR, models/piper/, then ~/.piper/models."
     )
     agent_skills = ["text-to-speech"]
 
@@ -95,17 +105,49 @@ class PiperTTS(BaseTool):
     side_effects = ["writes audio file to output_path"]
     user_visible_verification = ["Listen to generated audio for intelligibility"]
 
+    def piper_binary(self) -> str | None:
+        """piper on PATH, else next to the running interpreter (active venv)."""
+        found = shutil.which("piper")
+        if found:
+            return found
+        candidate = Path(sys.executable).parent / "piper"
+        return str(candidate) if candidate.exists() else None
+
+    def voices_dir(self) -> Path | None:
+        dirs = []
+        if os.environ.get("PIPER_VOICES_DIR"):
+            dirs.append(Path(os.environ["PIPER_VOICES_DIR"]))
+        dirs += DEFAULT_VOICE_DIRS
+        for d in dirs:
+            if d.is_dir() and any(d.glob("*.onnx")):
+                return d
+        return None
+
+    def installed_voices(self) -> list[str]:
+        d = self.voices_dir()
+        return sorted(p.stem for p in d.glob("*.onnx")) if d else []
+
     def get_status(self) -> ToolStatus:
-        if shutil.which("piper"):
+        if self.piper_binary() and self.installed_voices():
             return ToolStatus.AVAILABLE
         return ToolStatus.UNAVAILABLE
+
+    def status_reason(self) -> str:
+        if not self.piper_binary():
+            return "piper binary not found (PATH or active venv)"
+        if not self.installed_voices():
+            return "no piper voice model installed (see install_instructions)"
+        return ""
 
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
         return 0.0
 
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
         if self.get_status() != ToolStatus.AVAILABLE:
-            return ToolResult(success=False, error="Piper TTS not available. " + self.install_instructions)
+            return ToolResult(
+                success=False,
+                error=f"Piper TTS not available: {self.status_reason()}. " + self.install_instructions,
+            )
 
         start = time.time()
         try:
@@ -122,7 +164,8 @@ class PiperTTS(BaseTool):
 
         proc = subprocess.run(
             [
-                "piper",
+                self.piper_binary() or "piper",
+                "--data-dir", str(self.voices_dir()),
                 "--model", inputs.get("model", "en_US-lessac-medium"),
                 "--speaker", str(inputs.get("speaker_id", 0)),
                 "--length-scale", str(inputs.get("length_scale", 1.0)),

@@ -1,0 +1,142 @@
+# Lot 1 — Des contrôles qui mordent
+
+*Traduction française de [`lot1-checks-that-bite.md`](lot1-checks-that-bite.md) (version de référence, en anglais).*
+
+*Fork `TheCause/OpenMontage`, 27 sept 2026. Source : banc d'essai de 3 rendus réels (explainer
+vertical FR, épisode muet à carton, animatique), 0 €. 13 faux verts relevés, tous dans la revue
+finale de `video_compose` (`_run_final_review`) ou dans les statuts d'outils.*
+
+## Le problème, en une phrase
+
+La revue finale **affirme** des choses qu'elle ne **mesure** pas : `unreadable_text`,
+`broken_overlays`, `missing_assets` valent `False` par défaut et ne sont jamais calculés ;
+`music_present` vaut `True` dès que le volume moyen dépasse −50 dB ; un défaut hors d'une liste
+de six mots-clés laisse le statut à `pass`. Deux rendus différents — l'un cassé, l'autre bon —
+ont reçu un `visual_spotcheck` **identique**.
+
+## Principe
+
+> Un contrôle qui n'a pas tourné le **dit**. Un contrôle qui a tourné montre **ce qu'il a lu**.
+> `pass` n'existe que si tous les contrôles attendus ont tourné et qu'aucun défaut n'est ouvert.
+
+## Ce qui change
+
+### 1. Trois états au lieu de deux
+
+Chaque constat visuel/audio devient `true | false | null`. `null` = **non vérifié**, avec la
+raison dans `not_checked: {champ: raison}`. Plus aucune valeur par défaut rassurante.
+
+### 2. Échantillonnage par scène, pas par pourcentage
+
+Les 4 images à 10/35/65/90 % tombent au hasard des scènes (1 seule dans le carton du banc B).
+Nouveau : **une image au milieu de chaque segment** de `edit_decisions.cuts` (plafond 24),
+plus les 4 points historiques si `cuts` est absent.
+
+### 3. Texte à l'image : lu, pas supposé (OCR local, tesseract)
+
+- Si `edit_decisions` déclare du texte attendu (surimpressions, cartons, sous-titres) : OCR de
+  l'image du segment concerné, dans la langue du projet.
+- `unreadable_text = true` si le texte attendu n'est pas retrouvé (similarité de chaîne < seuil,
+  normalisation espaces/casse **désactivable** pour le texte sacré — lot 3).
+- **Mots collés** (défaut `CaptionOverlay` du banc A) : un mot lu de plus de 25 lettres, ou
+  l'absence d'espaces là où le texte attendu en a, est un défaut.
+- Le texte **lu** est écrit dans le rapport (`ocr_readings`), pour qu'un humain le compare.
+- Tesseract ou la langue absents → `null` + raison. Jamais `false`.
+
+### 4. Coutures et boucle
+
+- Sur les coupes déclarées **continues** (même source de part et d'autre : image figée, maintien,
+  `continuity: true` sur la coupe) : SSIM et luminance moyenne (filtres ffmpeg `ssim` et
+  `signalstats`, aucune dépendance Python nouvelle) sur les images de part et d'autre.
+  Défaut si SSIM < 0,90 ou saut de luminance > 4 points (banc B, tour 1 : 8,9 points ; tour 2 :
+  mauvaise image).
+- Si `edit_decisions.metadata.loop` est vrai : même mesure entre la dernière et la première image.
+- Les coupes franches entre plans différents ne sont **pas** mesurées (un saut y est normal).
+
+### 5. Musique : présence mesurée
+
+`music_present` = de l'énergie audio **entre** les phrases de narration. Mesure : `silencedetect`
+(−50 dB, 0,3 s) ; si les silences numériques couvrent les intervalles hors voix → `false`.
+Sans narration connue → mesure sur toute la piste. Si le plan de musique disait « pas de musique »,
+l'absence n'est pas un défaut.
+
+### 6. Statut honnête
+
+- `pass` : tous les contrôles attendus ont tourné, aucun défaut.
+- `revise` : au moins un défaut ouvert, **ou** un contrôle attendu à `null`.
+- `fail` : conteneur invalide (inchangé).
+- La liste de mots-clés « critiques » disparaît : **tout défaut ouvert empêche `pass`**.
+- Le schéma `final_review` suit : champs `boolean | null`, `not_checked`, `ocr_readings`,
+  `seams`, `frames_sampled` minimum 1.
+
+### 7. Statuts d'outils qui mentent (préflight)
+
+- `piper_tts` : `AVAILABLE` seulement si le binaire **et** au moins un modèle de voix sont
+  trouvés (banc A : « Unable to find voice »). Binaire cherché aussi dans le `bin/` de
+  l'environnement Python courant (banc : vu indisponible hors venv activé).
+- `pixabay_music` : pas `AVAILABLE` « sans configuration » sans preuve ; `DEGRADED` avec la raison
+  (banc A : HTTP 403).
+
+## Preuve exigée (règle du contrôle)
+
+Chaque contrôle est livré avec **le test qui le fait échouer** sur un défaut réel, et un test
+qui le laisse **silencieux** sur le cas sain :
+
+| Contrôle | Doit échouer sur | Doit se taire sur |
+|---|---|---|
+| OCR texte | sous-titre aux mots collés (fixture ffmpeg `drawtext`) | même texte bien espacé |
+| OCR texte | carton au texte altéré d'un mot | carton exact |
+| Couture | image figée assombrie de 9 points | image figée exacte |
+| Couture | image figée d'un autre plan | même plan |
+| Boucle | dernière image ≠ première | boucle propre |
+| Musique | narration seule, silences à −91 dB | narration + nappe à −30 dB |
+| Statut | un défaut non « critique » | rendu sans défaut |
+| `null` | tesseract absent (simulé) → `null` + raison, statut `revise` | — |
+
+Fixtures **synthétiques** (ffmpeg `lavfi`, `drawtext`) : aucun contenu du banc n'entre dans le
+dépôt public. Contrôle réel à part, **hors dépôt**, sur la machine de calcul : les rendus cassés et bons du banc
+doivent recevoir des verdicts **différents**.
+
+## Configuration et prérequis (complément « générique »)
+
+- **Seuils réglables** dans `config.yaml`, section `review:` (bornes validées par
+  `ReviewConfig` dans `lib/config_model.py`). `review.ocr_required: false` permet de travailler
+  sans tesseract : les contrôles de texte sont alors notés « non vérifiés » sans bloquer `pass`.
+- **tesseract** (+ données de langue) pour lire le texte à l'écran ; `make setup` le vérifie et
+  affiche la commande d'installation par système.
+- **ffmpeg avec libass + freetype** pour l'incrustation de sous-titres et les cartons FFmpeg ; la
+  formule Homebrew `ffmpeg` ne les a pas, utiliser `ffmpeg-full`. Le préflight le signale.
+- Les outils exposent `status_reason()` : la raison d'un statut non disponible.
+
+## Hors lot 1
+
+Correction de `CaptionOverlay`, sous-titres alignés sur le script (lot 2) ; profils muet / série /
+texte sacré (lot 3) ; `approval_policy` et fichier de montage unique (lot 4).
+
+## Résultat — épreuve sur rendus réels (27 sept 2026, hors dépôt)
+
+Mêmes rendus, revue d'origine contre revue du fork :
+
+| Rendu réel | Revue d'origine | Revue du fork |
+|---|---|---|
+| Explainer, sous-titres aux mots collés | `pass`, `unreadable_text: false`, `music_present: true` | `revise`, `unreadable_text: true`, `music_present: false` |
+| Même explainer, sous-titres réparés | `pass` (verdict identique au cassé) | `unreadable_text: false` |
+| Épisode muet, image figée assombrie | `revise` (pour « silence »), aucune couture mesurée | couture KO (SSIM 0,928, luminance +11), boucle KO |
+| Épisode muet, mauvaise image figée | `revise` (même verdict) | couture KO (SSIM 0,826), boucle KO |
+| Épisode muet, rendu bon | `revise` (même verdict) | couture OK (0,991), boucle OK (0,979) |
+
+La revue d'origine donnait **le même verdict** au rendu cassé et au bon ; celle du fork les
+sépare sur les deux paires. Les rendus sains restent `revise` pour des causes connues, hors lot 1 :
+« silence » sur une vidéo voulue muette (profil muet, lot 3), fichier de sous-titres introuvable
+par chemin relatif (lot 2).
+
+Statuts d'outils, vérifiés par appel réel : `piper_tts` trouvé dans le venv sans activation, voix
+retrouvée par son nom (2,15 s produites), `unavailable` + raison sans voix ; `pixabay_music`
+`degraded` + raison ; ffmpeg : 481 filtres lus, `drawtext` et `subtitles` absents signalés en
+préflight, et l'incrustation de sous-titres échoue avec un message clair.
+
+Contrôles vides trouvés **dans ma propre écriture** pendant le lot, et corrigés : une vidéo de
+test dont le changement d'image ne tombait pas au temps déclaré (les tests de couture passaient à
+vide) ; un seuil de mots collés à 26 lettres alors que les vrais défauts en font 22 et 24 ; un
+témoin « revue d'origine » qui exécutait en fait le nouveau code. Seuil OCR 140 : sa mutation
+survit (non prouvé nécessaire à la détection), gardé pour la complétude de lecture — dit dans le code.

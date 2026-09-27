@@ -853,7 +853,10 @@ def test_run_final_review_includes_transcript_comparison_section(tmp_path):
         "still appear with a 'skipped' issue entry — not be omitted."
     )
     tc = review["checks"]["transcript_comparison"]
-    assert any("not provided" in i for i in tc["issues"])
+    # No narration planned: the skip is recorded under not_checked instead of
+    # blocking "pass" — it must still be visible somewhere.
+    visible = list(tc["issues"]) + list((tc.get("not_checked") or {}).values())
+    assert any("not provided" in i for i in visible)
 
 
 def test_hyperframes_root_composition_has_data_start_and_duration(tmp_path):

@@ -31,3 +31,13 @@ paths:
   styles_dir: styles
   skills_dir: skills
   output_dir: output
+
+# Measured post-render checks (final_review). Defaults were calibrated on real
+# renders; tune them to your style. See docs/fork/lot1-checks-that-bite.md.
+review:
+  glued_word_min_len: 21         # caption token this long = words glued together
+  seam_min_ssim: 0.90            # continuity cuts (hold, freeze) must stay above
+  seam_max_luma_jump: 4.0        # ... and below this mean-luminance jump (0-255)
+  music_max_silence_ratio: 0.05  # music planned: max share of digital silence
+  text_match_min: 0.85           # expected on-screen text, loose match floor
+  ocr_required: true             # false: missing tesseract no longer blocks "pass"

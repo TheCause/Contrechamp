@@ -45,17 +45,27 @@
         },
         "visual_spotcheck": {
           "type": "object",
-          "description": "Sample frames inspected from opening, middle, climax, ending",
+          "description": "One frame per edit segment (4 legacy points without cuts). null = not checked, see not_checked.",
           "properties": {
-            "frames_sampled": { "type": "integer", "minimum": 4 },
+            "frames_sampled": { "type": "integer", "minimum": 1 },
             "frame_paths": {
               "type": "array",
               "items": { "type": "string" }
             },
             "black_frames_detected": { "type": "boolean" },
-            "broken_overlays": { "type": "boolean" },
-            "missing_assets": { "type": "boolean" },
-            "unreadable_text": { "type": "boolean" },
+            "broken_overlays": { "type": ["boolean", "null"] },
+            "missing_assets": { "type": ["boolean", "null"] },
+            "unreadable_text": { "type": ["boolean", "null"] },
+            "ocr_readings": {
+              "type": "array",
+              "description": "What OCR actually read on each sampled frame",
+              "items": { "type": "object" }
+            },
+            "not_checked": {
+              "type": "object",
+              "description": "Field -> reason, for every check that did not run",
+              "additionalProperties": { "type": "string" }
+            },
             "issues": {
               "type": "array",
               "items": { "type": "string" }
@@ -67,10 +77,30 @@
           "description": "Audio quality verification",
           "properties": {
             "narration_present": { "type": "boolean" },
-            "music_present": { "type": "boolean" },
+            "music_present": { "type": ["boolean", "null"] },
+            "music_measure": {
+              "type": "object",
+              "description": "Digital-silence ratio between phrases (silencedetect)"
+            },
             "unexpected_silence": { "type": "boolean" },
             "clipping_detected": { "type": "boolean" },
-            "mix_intelligible": { "type": "boolean" },
+            "mix_intelligible": { "type": ["boolean", "null"] },
+            "not_checked": {
+              "type": "object",
+              "additionalProperties": { "type": "string" }
+            },
+            "issues": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        },
+        "continuity": {
+          "type": "object",
+          "description": "SSIM + luminance across continuity cuts (same source, or cut.continuity) and across the loop point",
+          "properties": {
+            "seams": { "type": "array", "items": { "type": "object" } },
+            "loop": { "type": ["object", "null"] },
             "issues": {
               "type": "array",
               "items": { "type": "string" }

@@ -42,6 +42,7 @@ from pathlib import Path
 from typing import Any, Optional
 from urllib.parse import unquote, urlsplit
 
+from lib import ffmpeg_caps, render_checks
 from tools.base_tool import (
     BaseTool,
     Determinism,
@@ -2386,65 +2387,166 @@ class VideoCompose(BaseTool):
 
         issues.extend(technical_probe.get("issues", []))
 
-        # --- 2. Visual spotcheck: sample 4 frames ---
+        # --- 2. Visual spotcheck: one frame per edit segment, measured ---
+        # Every field is measured or left None with a reason in not_checked.
+        # (Before the fork: broken_overlays/missing_assets/unreadable_text were
+        # hard-coded False, and the black-frame test could never fire.)
         visual_spotcheck: dict[str, Any] = {
             "frames_sampled": 0,
             "frame_paths": [],
             "black_frames_detected": False,
-            "broken_overlays": False,
-            "missing_assets": False,
-            "unreadable_text": False,
+            "broken_overlays": None,
+            "missing_assets": None,
+            "unreadable_text": None,
+            "ocr_readings": [],
+            "not_checked": {},
             "issues": [],
         }
+        ed = edit_decisions or {}
+        ed_meta = ed.get("metadata") or {}
+        segments = render_checks.timeline_segments(ed.get("cuts"))
+        expected_text = ed_meta.get("expected_text") or []
+        text_expected = bool(
+            expected_text or (ed.get("subtitles") or {}).get("enabled") or ed.get("overlays")
+        )
+        ocr_lang = self._ocr_language(ed_meta.get("language"))
         duration = technical_probe.get("duration_seconds", 0)
+        frame_dir = output_path.parent / ".final_review_frames"
         if duration > 0 and technical_probe.get("valid_container"):
             try:
-                frame_dir = output_path.parent / ".final_review_frames"
-                frame_dir.mkdir(parents=True, exist_ok=True)
-                # Sample at 10%, 35%, 65%, 90% of duration
-                sample_points = [0.10, 0.35, 0.65, 0.90]
-                frame_paths = []
-                for i, pct in enumerate(sample_points):
-                    ts = round(duration * pct, 2)
-                    frame_path = frame_dir / f"review_frame_{i}.png"
-                    cmd = [
-                        "ffmpeg", "-y", "-ss", str(ts),
-                        "-i", str(output_path),
-                        "-frames:v", "1", "-q:v", "2",
-                        str(frame_path),
-                    ]
-                    subprocess.run(cmd, capture_output=True, timeout=15)
-                    if frame_path.exists():
-                        frame_paths.append(str(frame_path))
-
-                        # Check for black frames (file size heuristic:
-                        # a 1920x1080 PNG of pure black is ~5KB)
-                        if frame_path.stat().st_size < 2000:
+                samples = render_checks.sample_times(segments, duration)
+                frames: list[tuple[str | None, float, Path]] = []
+                for i, (seg_id, ts) in enumerate(samples):
+                    frame = render_checks.extract_frame(
+                        output_path, min(ts, max(duration - 0.05, 0)), frame_dir / f"review_frame_{i}.png"
+                    )
+                    if frame:
+                        frames.append((seg_id, ts, frame))
+                        if render_checks.frame_luma(frame) < render_checks.settings().black_frame_max_luma:
                             visual_spotcheck["black_frames_detected"] = True
-
-                visual_spotcheck["frames_sampled"] = len(frame_paths)
-                visual_spotcheck["frame_paths"] = frame_paths
-
-                if len(frame_paths) < 4:
+                visual_spotcheck["frames_sampled"] = len(frames)
+                visual_spotcheck["frame_paths"] = [str(f) for _, _, f in frames]
+                if len(frames) < len(samples):
                     visual_spotcheck["issues"].append(
-                        f"Only {len(frame_paths)}/4 frames extracted — some timestamps may be out of range"
+                        f"Only {len(frames)}/{len(samples)} frames extracted"
                     )
                 if visual_spotcheck["black_frames_detected"]:
                     visual_spotcheck["issues"].append(
                         "Black frame detected — possible missing asset or failed render segment"
                     )
+                    visual_spotcheck["missing_assets"] = True
+                else:
+                    visual_spotcheck["not_checked"]["missing_assets"] = (
+                        "no asset-level check beyond black frames"
+                    )
+
+                # OCR: read every sampled frame; glued words are unreadable text.
+                ocr_reason = None
+                glued: list[str] = []
+                for seg_id, ts, frame in frames:
+                    readings, ocr_reason = render_checks.ocr_readings(frame, ocr_lang)
+                    if readings is None:
+                        break
+                    best = max(readings, key=lambda r: sum(c.isalpha() for c in r))
+                    found = sorted({g for r in readings for g in render_checks.glued_words(r)})
+                    visual_spotcheck["ocr_readings"].append(
+                        {"segment": seg_id, "t": ts, "text": best, "glued_words": found}
+                    )
+                    glued += found
+                if ocr_reason:
+                    visual_spotcheck["ocr_readings"] = []
+                    visual_spotcheck["not_checked"]["unreadable_text"] = ocr_reason
+                    visual_spotcheck["not_checked"]["broken_overlays"] = ocr_reason
+                    if text_expected and render_checks.settings().ocr_required:
+                        visual_spotcheck["issues"].append(
+                            f"On-screen text expected but not checked: {ocr_reason} "
+                            "(install tesseract, or set review.ocr_required: false)"
+                        )
+                else:
+                    unreadable = bool(glued)
+                    if glued:
+                        visual_spotcheck["issues"].append(
+                            f"Glued words on screen (missing spaces): {', '.join(glued[:6])}"
+                        )
+                    if expected_text:
+                        broken = False
+                        for item in expected_text:
+                            mid = (float(item.get("start_seconds", 0)) + float(item.get("end_seconds", duration))) / 2
+                            frame = render_checks.extract_frame(
+                                output_path, min(mid, max(duration - 0.05, 0)),
+                                frame_dir / f"expected_{len(visual_spotcheck['ocr_readings'])}.png",
+                            )
+                            readings, _ = (
+                                render_checks.ocr_readings(frame, ocr_lang) if frame else (None, None)
+                            )
+                            exact = bool(item.get("exact"))
+                            score = max(
+                                (render_checks.text_similarity(item["text"], r, exact=exact)
+                                 for r in readings or []),
+                                default=0.0,
+                            )
+                            best = max(readings or [""], key=lambda r: sum(c.isalpha() for c in r))
+                            visual_spotcheck["ocr_readings"].append(
+                                {"expected": item["text"], "t": round(mid, 2), "text": best,
+                                 "similarity": round(score, 3), "exact": exact}
+                            )
+                            needed = 1.0 if exact else render_checks.settings().text_match_min
+                            if score < needed:
+                                unreadable = True
+                                visual_spotcheck["issues"].append(
+                                    f"Expected text not found at {mid:.1f}s "
+                                    f"(similarity {score:.2f}, {'exact' if exact else 'loose'}): "
+                                    f"expected {item['text']!r}, read {best!r}"
+                                )
+                            if score < render_checks.settings().text_present_min:
+                                broken = True
+                        visual_spotcheck["broken_overlays"] = broken
+                    else:
+                        visual_spotcheck["not_checked"]["broken_overlays"] = (
+                            "no expected_text declared in edit_decisions.metadata"
+                        )
+                    visual_spotcheck["unreadable_text"] = unreadable
             except Exception as e:
                 visual_spotcheck["issues"].append(f"Frame sampling error: {e}")
+        for field in ("unreadable_text", "broken_overlays", "missing_assets"):
+            if visual_spotcheck[field] is None:
+                visual_spotcheck["not_checked"].setdefault(field, "render could not be sampled")
 
         issues.extend(visual_spotcheck.get("issues", []))
+
+        # --- 2b. Continuity: seams across continuity cuts, and the loop point ---
+        continuity: dict[str, Any] = {"seams": [], "loop": None, "issues": []}
+        if duration > 0 and technical_probe.get("valid_container"):
+            try:
+                seams = render_checks.check_seams(
+                    output_path, segments, work_dir=frame_dir, fps=technical_probe.get("fps") or 24.0
+                )
+                continuity["seams"] = seams["seams"]
+                continuity["issues"] += seams["issues"]
+                if ed_meta.get("loop"):
+                    loop = render_checks.check_loop(output_path, work_dir=frame_dir)
+                    continuity["loop"] = loop
+                    if loop.get("ok") is False:
+                        continuity["issues"].append(
+                            f"Loop is not seamless: last->first SSIM {loop.get('ssim')}, "
+                            f"luminance jump {loop.get('luma_jump')}"
+                        )
+                    elif loop.get("ok") is None:
+                        continuity["issues"].append(
+                            f"Loop requested but not checked: {loop.get('reason')}"
+                        )
+            except Exception as e:
+                continuity["issues"].append(f"Continuity check error: {e}")
+        issues.extend(continuity["issues"])
 
         # --- 3. Audio spotcheck ---
         audio_spotcheck: dict[str, Any] = {
             "narration_present": False,
-            "music_present": False,
+            "music_present": None,
             "unexpected_silence": False,
             "clipping_detected": False,
-            "mix_intelligible": True,
+            "mix_intelligible": None,
+            "not_checked": {"mix_intelligible": "no intelligibility measure"},
             "issues": [],
         }
         if technical_probe.get("has_audio") and duration > 0:
@@ -2482,9 +2584,6 @@ class VideoCompose(BaseTool):
                     # Assume narration present if mean volume is reasonable
                     if mean_vol > -40:
                         audio_spotcheck["narration_present"] = True
-                    # Assume music present if audio exists (conservative)
-                    if mean_vol > -50:
-                        audio_spotcheck["music_present"] = True
 
                 if max_vol is not None and max_vol > -0.5:
                     audio_spotcheck["clipping_detected"] = True
@@ -2493,6 +2592,32 @@ class VideoCompose(BaseTool):
                     )
             except Exception as e:
                 audio_spotcheck["issues"].append(f"Audio analysis error: {e}")
+
+        # Music: measured as energy between phrases, not assumed from level.
+        music_expected = bool(
+            ed.get("music") or ((ed.get("audio") or {}).get("music"))
+        )
+        if technical_probe.get("has_audio") and duration > 0:
+            try:
+                measure = render_checks.detect_music(output_path)
+                audio_spotcheck["music_present"] = measure.get("music_present")
+                audio_spotcheck["music_measure"] = measure
+                if measure.get("music_present") is None:
+                    audio_spotcheck["not_checked"]["music_present"] = measure.get("reason", "")
+            except Exception as e:
+                audio_spotcheck["not_checked"]["music_present"] = f"music measure error: {e}"
+        else:
+            audio_spotcheck["music_present"] = False
+        if music_expected and audio_spotcheck["music_present"] is False:
+            ratio = (audio_spotcheck.get("music_measure") or {}).get("silence_ratio")
+            audio_spotcheck["issues"].append(
+                f"Music planned but absent: {ratio:.0%} of the audio is digital silence"
+                if ratio is not None else "Music planned but no audio stream"
+            )
+        elif music_expected and audio_spotcheck["music_present"] is None:
+            audio_spotcheck["issues"].append(
+                f"Music planned but not checked: {audio_spotcheck['not_checked'].get('music_present')}"
+            )
 
         issues.extend(audio_spotcheck.get("issues", []))
 
@@ -2640,15 +2765,25 @@ class VideoCompose(BaseTool):
         # --- 6. Transcript-vs-script comparison ---
         # Catches content-level TTS failures (the classic "Chirp reads `...`
         # as the word 'dot'" trap) that volume-based audio checks miss.
-        # Only runs when caller provides both the transcript and script; when
-        # skipped, issues list records that so the silence is visible.
+        # Only runs when caller provides both the transcript and script. A skip
+        # is an open issue when narration was planned, otherwise it is recorded
+        # under not_checked so the silence stays visible without blocking.
         transcript_comparison = self._compare_transcript_to_script(
             Path(narration_transcript_path) if narration_transcript_path else None,
             script_text,
         )
+        narration_expected = bool((ed.get("audio") or {}).get("narration"))
+        skipped = [i for i in transcript_comparison.get("issues", []) if " skipped:" in i]
+        if skipped and not narration_expected:
+            transcript_comparison["issues"] = [
+                i for i in transcript_comparison["issues"] if i not in skipped
+            ]
+            transcript_comparison["not_checked"] = {"transcript_matches_script": "; ".join(skipped)}
         issues.extend(transcript_comparison.get("issues", []))
 
         # --- 7. Determine overall status ---
+        # Any open issue blocks "pass" (before the fork, only six keywords did,
+        # and a review listing its own defects still said "pass").
         critical_issues = [
             i for i in issues
             if any(kw in i.lower() for kw in [
@@ -2662,8 +2797,8 @@ class VideoCompose(BaseTool):
             status = "revise"
             recommended_action = "re_render"
         elif issues:
-            status = "pass"
-            recommended_action = "present_to_user"
+            status = "revise"
+            recommended_action = "revise_edit"
         else:
             status = "pass"
             recommended_action = "present_to_user"
@@ -2680,6 +2815,7 @@ class VideoCompose(BaseTool):
                 "technical_probe": technical_probe,
                 "visual_spotcheck": visual_spotcheck,
                 "audio_spotcheck": audio_spotcheck,
+                "continuity": continuity,
                 "promise_preservation": promise_preservation,
                 "subtitle_check": subtitle_check,
                 "transcript_comparison": transcript_comparison,
@@ -2694,6 +2830,16 @@ class VideoCompose(BaseTool):
         )
 
         return final_review
+
+    @staticmethod
+    def _ocr_language(language: str | None) -> str:
+        """Map a project language ("fr", "fr-FR", "fra") to a tesseract code."""
+        codes = {"fr": "fra", "en": "eng", "es": "spa", "de": "deu", "it": "ita",
+                 "pt": "por", "nl": "nld", "zh": "chi_sim", "ja": "jpn", "ko": "kor"}
+        if not language:
+            return "eng"
+        lang = language.strip().lower()
+        return codes.get(lang.split("-")[0].split("_")[0], lang)
 
     @staticmethod
     def _parse_probe_fps(fps_str: str) -> float:
@@ -2716,6 +2862,8 @@ class VideoCompose(BaseTool):
             return ToolResult(success=False, error=f"Input not found: {input_path}")
         if not subtitle_path.exists():
             return ToolResult(success=False, error=f"Subtitle file not found: {subtitle_path}")
+        if "subtitles" in ffmpeg_caps.missing_filters():
+            return ToolResult(success=False, error=ffmpeg_caps.warning())
 
         style = inputs.get("subtitle_style", {})
         ass_style = self._build_subtitle_style(style)
