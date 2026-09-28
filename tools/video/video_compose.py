@@ -2441,6 +2441,9 @@ class VideoCompose(BaseTool):
                     )
 
                 # OCR: read every sampled frame; glued words are unreadable text.
+                # The expected text, when declared, lets short glued pages
+                # ("EVERYRIDERGOES") be told from one long word.
+                all_expected = " ".join(str(item.get("text", "")) for item in expected_text) or None
                 ocr_reason = None
                 glued: list[str] = []
                 for seg_id, ts, frame in frames:
@@ -2448,7 +2451,8 @@ class VideoCompose(BaseTool):
                     if readings is None:
                         break
                     best = max(readings, key=lambda r: sum(c.isalpha() for c in r))
-                    found = sorted({g for r in readings for g in render_checks.glued_words(r)})
+                    found = sorted({g for r in readings
+                                    for g in render_checks.glued_words(r, expected=all_expected)})
                     visual_spotcheck["ocr_readings"].append(
                         {"segment": seg_id, "t": ts, "text": best, "glued_words": found}
                     )
@@ -2486,10 +2490,19 @@ class VideoCompose(BaseTool):
                                 default=0.0,
                             )
                             best = max(readings or [""], key=lambda r: sum(c.isalpha() for c in r))
+                            item_glued = sorted({g for r in readings or []
+                                                 for g in render_checks.glued_words(r, expected=item["text"])})
                             visual_spotcheck["ocr_readings"].append(
                                 {"expected": item["text"], "t": round(mid, 2), "text": best,
-                                 "similarity": round(score, 3), "exact": exact}
+                                 "similarity": round(score, 3), "exact": exact,
+                                 "glued_words": item_glued}
                             )
+                            if item_glued:
+                                unreadable = True
+                                visual_spotcheck["issues"].append(
+                                    f"Glued words on screen at {mid:.1f}s (missing spaces): "
+                                    f"{', '.join(item_glued[:6])}"
+                                )
                             needed = 1.0 if exact else render_checks.settings().text_match_min
                             if score < needed:
                                 unreadable = True

@@ -89,6 +89,23 @@ def test_expected_text_altered_by_one_word_is_caught_in_exact_mode(tmp_path):
     assert good["status"] == "pass", good["issues_found"]
 
 
+@needs_tesseract
+def test_short_glued_caption_page_is_caught_against_expected_text(tmp_path):
+    # one 4-word caption page with its spaces lost: 18 letters, under the
+    # 21-letter threshold, and a loose similarity of 0.92 with the expected text
+    expected = {"start_seconds": 0, "end_seconds": 3.2, "text": "EVERY RIDER GOES DOWN"}
+    base = {"cuts": _cuts(("s1", "x", 0, 3.2)), "music": {"track": "bed"},
+            "metadata": {"language": "en", "expected_text": [expected]}}
+    glued = _video(tmp_path / "g.mp4", [(_frame(tmp_path / "g.png", "EVERYRIDERGOESDOWN"), 3.2)], audio=BED)
+    review = _review(glued, base)
+    assert review["checks"]["visual_spotcheck"]["unreadable_text"] is True, review["checks"]["visual_spotcheck"]
+    assert review["status"] == "revise"
+    spaced = _video(tmp_path / "s.mp4", [(_frame(tmp_path / "s.png", "EVERY RIDER GOES DOWN"), 3.2)], audio=BED)
+    good = _review(spaced, base)
+    assert good["checks"]["visual_spotcheck"]["unreadable_text"] is False, good["issues_found"]
+    assert good["status"] == "pass", good["issues_found"]
+
+
 def test_ocr_unavailable_is_null_with_reason_and_blocks_pass(tmp_path, monkeypatch):
     real_which = shutil.which
     monkeypatch.setattr(rc.shutil, "which", lambda n: None if n == "tesseract" else real_which(n))

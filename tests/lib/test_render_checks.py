@@ -85,6 +85,31 @@ def test_glued_words_catches_the_real_broken_caption_lines():
     assert rc.glued_words("'antibiotiquesinutiles") != []
 
 
+def test_glued_words_catches_short_glued_captions_against_expected_text():
+    # a 4-word caption page glued together stays under 21 letters (b4095ac's
+    # "EVERYRIDERGOES"): only the expected words can tell it from a long word
+    expected = "Every rider goes down. Not every rider gets up. L'homme qu'il voit pas"
+    for read in ("EVERYRIDERGOES", "EVERYRIDERGOESDOWN", "NOTEVERYRIDERGETS",
+                 "L'HOMMEQU'ILVOIT", "lhommequilvoitpas"):
+        assert rc.glued_words(read, expected=expected) != [], read
+
+
+def test_glued_words_silent_on_spaced_or_long_expected_words():
+    expected = "Every rider goes down. C'est extraordinaire, anticonstitutionnellement"
+    assert rc.glued_words("EVERY RIDER GOES DOWN.", expected=expected) == []
+    assert rc.glued_words("C'EST EXTRAORDINAIRE", expected=expected) == []
+    assert rc.glued_words("anticonstitutionnellement", expected=expected) == []
+
+
+def test_glued_words_catches_uppercase_punctuation_without_space():
+    assert rc.glued_words("DOWN.NOTEVERY") != []
+    assert rc.glued_words("GOES,DOWN") != []
+
+
+def test_glued_words_silent_on_acronyms_and_numbers():
+    assert rc.glued_words("S.N.C.F. U.S.A 3,5 12:30 DOWN. NOT") == []
+
+
 def test_text_similarity_exact_mode_catches_one_word_change():
     expected = "Pour vous, vous vous prescrivez des limites."
     altered = "Pour vous, vous vous assignez des limites."

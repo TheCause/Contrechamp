@@ -38,19 +38,40 @@ LEGACY_SAMPLE_POINTS = [0.10, 0.35, 0.65, 0.90]
 # --- Pure helpers -------------------------------------------------------------
 
 
-def glued_words(text: str | None, min_len: int | None = None) -> list[str]:
-    """Tokens that look like several words stuck together."""
+def _word_key(word: str) -> str:
+    return re.sub(r"[^\w]", "", word).lower()
+
+
+def glued_words(text: str | None, min_len: int | None = None,
+                expected: str | None = None) -> list[str]:
+    """Tokens that look like several words stuck together.
+
+    Without ``expected`` only long tokens and missing spaces after punctuation
+    are caught. A glued caption page of 3-4 short words ("EVERYRIDERGOES")
+    stays under any sane length threshold; given the text that should be on
+    screen, a token holding two consecutive expected words is glued.
+    """
     if not text:
         return []
     if min_len is None:
         min_len = settings().glued_word_min_len
+    keys = [_word_key(w) for w in (expected or "").split()]
+    known = set(keys)
+    pairs = {a + b for a, b in zip(keys, keys[1:]) if a and b and len(a + b) >= 4}
     glued = []
     for token in text.split():
         letters = re.sub(r"[^\w]", "", token)
+        if letters.lower() in known:
+            continue  # exactly a word that should be there, however long
         if len(letters) >= min_len:
             glued.append(token)
         elif re.search(r"[a-zà-ÿ][.,;:!?][A-Za-zÀ-ÿ0-9]", token):
             # "choix.En2016" — sentence punctuation with no space after it
+            glued.append(token)
+        elif re.search(r"[A-ZÀ-Þ]{2}[.,;:!?][A-ZÀ-Þ]{2}", token):
+            # "DOWN.NOTEVERY" — same in capitals; "S.N.C.F" stays silent
+            glued.append(token)
+        elif pairs and any(p in letters.lower() for p in pairs):
             glued.append(token)
     return glued
 
