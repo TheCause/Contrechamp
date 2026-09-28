@@ -77,6 +77,11 @@ def glued_words(text: str | None, min_len: int | None = None,
 
 
 def _normalize(text: str) -> str:
+    # OCR reads a typographic apostrophe as a straight one and cannot see a
+    # narrow no-break space: neither is a wording difference.
+    for a in ("’", "ʼ", "‘"):
+        text = text.replace(a, "'")
+    text = text.replace("\u202f", " ").replace("\u00a0", " ")
     return re.sub(r"\s+", " ", text).strip().lower()
 
 

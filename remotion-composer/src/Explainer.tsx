@@ -821,7 +821,6 @@ const OverlayRenderer: React.FC<{ overlay: Overlay; theme: ThemeConfig }> = ({
     return (
       <KeyPhraseCard
         text={overlay.text}
-        textColor={theme.textColor}
         accentColor={overlay.accentColor || theme.accentColor}
         position={overlay.position === "bottom" ? "bottom" : "center"}
       />

@@ -1,6 +1,9 @@
 import { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
 
 /**
+ * Light text on its own dark box whatever the theme: a light theme's dark
+ * textColor on this box was unreadable, so the Explainer does not pass it.
+ *
  * A "key phrase" card laid over a SHARP picture: one exact sentence of the
  * script, in a translucent box, wrapped between words only.
  *
@@ -36,7 +39,8 @@ export const KeyPhraseCard: React.FC<KeyPhraseCardProps> = ({
   );
   const short = Math.min(width, height);
   // ~9 % of the short side for a few words, down to ~5 % for a long sentence
-  const scale = text.length <= 40 ? 0.09 : text.length <= 90 ? 0.07 : 0.055;
+  const scale =
+    text.length <= 40 ? 0.09 : text.length <= 90 ? 0.07 : text.length <= 160 ? 0.055 : 0.042;
   const fontSize = Math.round(short * scale);
 
   return (

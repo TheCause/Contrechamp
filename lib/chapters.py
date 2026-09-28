@@ -33,8 +33,17 @@ def chapters(
     video_duration: float | None = None,
 ) -> dict[str, Any]:
     """sections: [{id, start, end}] in narration time; titles: {section id: title}."""
-    items = [s for s in sections if s.get("id") in titles]
     out, issues = [], []
+    known = {s.get("id") for s in sections}
+    for sid, title in titles.items():
+        if sid not in known:
+            issues.append(f"Chapter title for {sid!r}: no such section")
+        elif not str(title).strip():
+            issues.append(f"Chapter title for {sid!r} is empty")
+    items = sorted(
+        (s for s in sections if str(titles.get(s.get("id"), "")).strip() and s.get("start") is not None),
+        key=lambda s: s["start"],
+    )
     for s in items:
         t = to_final_time(s["start"], inserts)
         out.append({"id": s["id"], "title": titles[s["id"]], "seconds": t, "time": format_time(t)})
@@ -51,6 +60,11 @@ def chapters(
         to_final_time(items[-1]["end"], inserts) if items else None)
     ends.append(last_end)
     for c, end in zip(out, ends):
+        if video_duration is not None and c["seconds"] >= video_duration:
+            issues.append(
+                f"YouTube: chapter {c['id']!r} ({c['title']}) starts at {c['time']}, "
+                f"after the end of the video ({format_time(video_duration)})")
+            continue
         if end is not None and end - c["seconds"] < MIN_CHAPTER_SECONDS:
             issues.append(
                 f"YouTube: chapter {c['id']!r} ({c['title']}) is shorter than "

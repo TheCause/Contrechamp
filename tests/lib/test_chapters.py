@@ -60,3 +60,19 @@ def test_a_hook_whose_first_word_starts_after_zero_still_opens_at_zero():
     sections = [dict(SECTIONS[0], start=0.18)] + SECTIONS[1:]
     r = ch.chapters(sections, TITLES, inserts=[{"at": 6.0, "duration": 4.0}])
     assert r["chapters"][0]["time"] == "0:00" and r["issues"] == []
+
+
+def test_a_chapter_starting_after_the_end_of_the_video_is_reported():
+    r = ch.chapters(SECTIONS, TITLES, video_duration=100.0)
+    assert any("Rester immunisé" in i and "after the end" in i for i in r["issues"])
+
+
+def test_missing_or_empty_titles_are_reported():
+    r = ch.chapters(SECTIONS, {**TITLES, "s2": "  ", "ghost": "Fantôme"})
+    assert any("'s2'" in i and "empty" in i for i in r["issues"])
+    assert any("'ghost'" in i and "no such section" in i for i in r["issues"])
+
+
+def test_unsorted_sections_are_published_in_time_order():
+    r = ch.chapters(list(reversed(SECTIONS)), TITLES)
+    assert [c["id"] for c in r["chapters"]] == ["hook", "s1", "s2", "s3"]

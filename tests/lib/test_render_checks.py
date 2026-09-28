@@ -283,3 +283,7 @@ def test_music_present_when_a_bed_fills_the_gaps(tmp_path):
     video = _video(tmp_path / "v.mp4", [(frame, 3.2)], audio=bed)
     result = rc.detect_music(video)
     assert result["music_present"] is True
+
+
+def test_loose_ocr_match_ignores_apostrophe_and_narrow_space_variants():
+    assert rc.text_similarity("C’est vrai ?", "C'est vrai ?") == 1.0

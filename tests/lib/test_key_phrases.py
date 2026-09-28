@@ -47,3 +47,49 @@ def test_a_phrase_that_is_not_in_the_script_is_refused():
 def test_inserts_shift_the_cards_to_final_time():
     r = kp.plan(TIMING, [1], inserts=[{"at": 2.0, "duration": 4.0}])
     assert (r["overlays"][0]["in_seconds"], r["overlays"][0]["out_seconds"]) == (6.3, 9.0)
+
+
+# --- adversarial review and real run (28 Sept) --------------------------------------
+
+
+def test_a_card_squeezed_to_nothing_is_not_emitted():
+    timing = {"sentences": [
+        {"index": 0, "text": "Un.", "start": 1.0, "end": 1.2},
+        {"index": 1, "text": "Deux.", "start": 1.25, "end": 3.0}]}
+    r = kp.plan(timing, [0, 1])
+    assert [o["text"] for o in r["overlays"]] == ["Deux."]
+    assert any("Un." in i for i in r["issues"])
+
+
+def test_a_repeated_sentence_must_be_chosen_by_index():
+    timing = {"sentences": [
+        {"index": 0, "text": "On recommence.", "start": 1.0, "end": 2.0},
+        {"index": 1, "text": "On recommence.", "start": 9.0, "end": 10.0}]}
+    with pytest.raises(ValueError, match="appears 2 times"):
+        kp.plan(timing, ["On recommence."])
+    assert kp.plan(timing, [1])["overlays"][0]["in_seconds"] == 9.0
+
+
+def test_a_card_never_runs_into_the_insert_that_follows():
+    r = kp.plan(TIMING, [0], inserts=[{"at": 2.5, "duration": 4.0}])
+    assert r["overlays"][0]["out_seconds"] <= 2.5
+
+
+def test_a_card_never_runs_past_the_end_of_the_video():
+    r = kp.plan(TIMING, [2], video_duration=6.0)
+    assert r["overlays"][0]["out_seconds"] <= 6.0
+    assert any("shorter than" in i for i in r["issues"])
+
+
+def test_french_spaces_and_apostrophes_do_not_break_the_match():
+    timing = {"sentences": [{"index": 0, "text": "C'est vrai ?", "start": 0.0, "end": 2.5}]}
+    for spelling in ("C’est vrai ?", "Cʼest vrai ?", "C'est  vrai ?"):
+        assert kp.plan(timing, [spelling])["overlays"]
+
+
+def test_captions_under_a_card_are_removed_not_shown_twice():
+    captions = [{"word": "Rester", "startMs": 2300, "endMs": 2600},
+                {"word": "immunisé,", "startMs": 2600, "endMs": 3000},
+                {"word": "Voilà.", "startMs": 5100, "endMs": 5600}]
+    r = kp.plan(TIMING, [1], captions=captions)
+    assert [c["word"] for c in r["captions"]] == ["Voilà."]
