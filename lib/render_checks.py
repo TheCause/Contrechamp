@@ -312,3 +312,49 @@ def detect_music(video: Path) -> dict[str, Any]:
         "silence_ratio": round(ratio, 3),
         "silences": [[round(s, 2), round(e, 2)] for s, e in silences[:20]],
     }
+
+
+def loudness(video: Path) -> dict[str, Any]:
+    """Integrated loudness (LUFS) and true peak (dBTP) of the audio track."""
+    cmd = ["ffmpeg", "-v", "info", "-nostats", "-i", str(video), "-vn",
+           "-af", "ebur128=peak=true", "-f", "null", "-"]
+    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+    summary = (proc.stderr or "").rsplit("Summary:", 1)
+    if len(summary) < 2:
+        return {"integrated_lufs": None, "reason": "ebur128 printed no summary (no audio stream?)"}
+    i = re.search(r"I:\s+(-?[0-9.]+|-inf) LUFS", summary[1])
+    peak = re.search(r"Peak:\s+(-?[0-9.]+|-inf) dBFS", summary[1])
+    value = lambda m: None if not m or m.group(1) == "-inf" else float(m.group(1))
+    return {"integrated_lufs": value(i), "true_peak_dbtp": value(peak)}
+
+
+def window_volume(video: Path, start: float, end: float) -> float | None:
+    """Mean volume (dB) of the audio between start and end."""
+    cmd = ["ffmpeg", "-v", "info", "-nostats", "-ss", f"{max(start, 0.0):.3f}", "-to", f"{end:.3f}",
+           "-i", str(video), "-vn", "-af", "volumedetect", "-f", "null", "-"]
+    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+    m = re.search(r"mean_volume:\s+(-?[0-9.]+|-inf) dB", proc.stderr or "")
+    return None if not m or m.group(1) == "-inf" else float(m.group(1))
+
+
+def check_last_sentence(video: Path, start: float, end: float, duration: float) -> dict[str, Any]:
+    """The last narrated sentence must end inside the video and stay audible."""
+    cfg = settings()
+    out: dict[str, Any] = {"start": round(start, 2), "end": round(end, 2), "duration": round(duration, 2),
+                           "issues": []}
+    if end > duration - cfg.last_sentence_min_margin_s:
+        out["issues"].append(
+            f"Last sentence ends at {end:.2f}s but the video ends at {duration:.2f}s: it is cut")
+    # A fade eats the END of the sentence: averaged over the whole sentence a
+    # 4 s fade-out only cost 7 dB, on its last second it cost 13 dB.
+    whole = window_volume(video, 0.0, duration)
+    tail_end = min(end, duration)
+    last = window_volume(video, max(start, tail_end - 1.0), tail_end)
+    out["mix_mean_db"], out["last_second_mean_db"] = whole, last
+    if whole is None or last is None:
+        out["not_checked"] = "could not measure the volume of the last sentence"
+    elif whole - last > cfg.last_sentence_max_drop_db:
+        out["issues"].append(
+            f"Last second of the last sentence is {whole - last:.1f} dB under the mix: "
+            "faded out or inaudible")
+    return out

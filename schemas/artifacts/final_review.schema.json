@@ -82,6 +82,14 @@
               "type": "object",
               "description": "Digital-silence ratio between phrases (silencedetect)"
             },
+            "loudness": {
+              "type": "object",
+              "description": "Integrated loudness (LUFS) and true peak (dBTP), measured with ebur128"
+            },
+            "last_sentence": {
+              "type": "object",
+              "description": "Last narrated sentence: its end vs the video end, its volume vs the whole mix"
+            },
             "unexpected_silence": { "type": "boolean" },
             "clipping_detected": { "type": "boolean" },
             "mix_intelligible": { "type": ["boolean", "null"] },

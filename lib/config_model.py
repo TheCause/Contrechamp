@@ -87,6 +87,15 @@ class ReviewConfig(BaseModel):
     # When text is expected on screen but OCR (tesseract) cannot run:
     # True -> the review cannot "pass"; False -> recorded under not_checked only.
     ocr_required: bool = True
+    # Narration loudness: below this integrated level the voice is too quiet
+    # (a mixer once flattened a finished narration to about -30 LUFS). Kept
+    # under broadcast R128 (-23 LUFS) so compliant masters never trip it.
+    loudness_min_lufs: float = Field(-26.0, ge=-70.0, le=0.0)
+    # Last sentence: it must end before the video does, and not sit this many
+    # dB under the whole mix on its last second (a fade-out once swallowed
+    # the last 4 seconds).
+    last_sentence_max_drop_db: float = Field(8.0, ge=0.0, le=60.0)
+    last_sentence_min_margin_s: float = Field(0.1, ge=0.0, le=10.0)
 
 
 class OpenMontageConfig(BaseModel):

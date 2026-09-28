@@ -41,3 +41,5 @@ review:
   music_max_silence_ratio: 0.05  # music planned: max share of digital silence
   text_match_min: 0.85           # expected on-screen text, loose match floor
   ocr_required: true             # false: missing tesseract no longer blocks "pass"
+  loudness_min_lufs: -26         # integrated loudness floor (R128 -23, YouTube -14)
+  last_sentence_max_drop_db: 8   # last second of speech this much under the mix = faded

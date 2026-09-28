@@ -2632,6 +2632,44 @@ class VideoCompose(BaseTool):
                 f"Music planned but not checked: {audio_spotcheck['not_checked'].get('music_present')}"
             )
 
+        # Loudness: a finished narration flattened to about -30 LUFS once
+        # passed every level check above.
+        if technical_probe.get("has_audio") and duration > 0:
+            try:
+                level = render_checks.loudness(output_path)
+                audio_spotcheck["loudness"] = level
+                lufs = level.get("integrated_lufs")
+                floor = render_checks.settings().loudness_min_lufs
+                if lufs is None:
+                    audio_spotcheck["not_checked"]["loudness"] = level.get("reason", "no measure")
+                elif lufs < floor:
+                    audio_spotcheck["issues"].append(
+                        f"Integrated loudness {lufs:.1f} LUFS is under {floor:.0f} LUFS: voice too quiet")
+            except Exception as e:
+                audio_spotcheck["not_checked"]["loudness"] = f"loudness measure error: {e}"
+
+        # Last sentence: needs the narration timing (script_timing output) and
+        # the offset of the narration in the final video (intro, cold open).
+        timing = ed_meta.get("narration_timing")
+        if isinstance(timing, (str, Path)) and Path(timing).exists():
+            timing = json.loads(Path(timing).read_text(encoding="utf-8"))
+        sentences = (timing or {}).get("sentences") if isinstance(timing, dict) else None
+        if sentences and technical_probe.get("has_audio") and duration > 0:
+            offset = float(ed_meta.get("narration_offset_s") or 0.0)
+            last = sentences[-1]
+            try:
+                ending = render_checks.check_last_sentence(
+                    output_path, last["start"] + offset, last["end"] + offset, duration)
+                audio_spotcheck["last_sentence"] = ending
+                audio_spotcheck["issues"].extend(ending["issues"])
+                if ending.get("not_checked"):
+                    audio_spotcheck["not_checked"]["last_sentence"] = ending["not_checked"]
+            except Exception as e:
+                audio_spotcheck["not_checked"]["last_sentence"] = f"last sentence check error: {e}"
+        else:
+            audio_spotcheck["not_checked"]["last_sentence"] = (
+                "no narration_timing (script_timing output) in edit_decisions.metadata")
+
         issues.extend(audio_spotcheck.get("issues", []))
 
         # --- 4. Promise preservation ---
