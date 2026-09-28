@@ -92,9 +92,12 @@ class ReviewConfig(BaseModel):
     # under broadcast R128 (-23 LUFS) so compliant masters never trip it.
     loudness_min_lufs: float = Field(-26.0, ge=-70.0, le=0.0)
     # Last sentence: it must end before the video does, and not sit this many
-    # dB under the whole mix on its last second (a fade-out once swallowed
-    # the last 4 seconds).
-    last_sentence_max_drop_db: float = Field(8.0, ge=0.0, le=60.0)
+    # dB under the whole mix on its last WORD (a fade-out once swallowed the
+    # last 4 seconds). Measured on 15 real sentences (a channel's voice and
+    # its clones): a healthy last word sits -4.9 to 12.5 dB under the mix
+    # (short final words fall off); a 1.3 s fade swallowing it, 35.7 dB. A
+    # cut under a music bed (11.2 dB) is caught by listening, not by level.
+    last_sentence_max_drop_db: float = Field(20.0, ge=0.0, le=60.0)
     last_sentence_min_margin_s: float = Field(0.1, ge=0.0, le=10.0)
     # The end of the final mix is transcribed: the last sentence must be found
     # in it (a voice cut under a music bed kept a normal level).

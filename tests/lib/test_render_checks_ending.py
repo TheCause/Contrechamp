@@ -43,8 +43,10 @@ def test_quiet_mix_is_measured_below_the_floor(tmp_path):
 
 
 def test_faded_last_sentence_is_flagged(tmp_path):
+    # the 4 s fade-out that swallowed a channel's last sentence: the last word
+    # ends with the fade (measured 25 dB under the mix here)
     v = _video(tmp_path / "fade.mp4", volume_db=12, fade_last_s=4.0)
-    r = rc.check_last_sentence(v, 4.0, 5.8, 6.0)
+    r = rc.check_last_sentence(v, 4.0, 6.0, 6.2, last_word=(5.7, 6.0))
     assert any("faded out" in i for i in r["issues"]), r
 
 
@@ -57,6 +59,15 @@ def test_last_sentence_past_the_end_is_flagged_as_cut(tmp_path):
 def test_a_short_outro_fade_after_the_voice_is_tolerated(tmp_path):
     v = _video(tmp_path / "outro.mp4", volume_db=12, fade_last_s=1.0)
     assert rc.check_last_sentence(v, 4.0, 5.8, 6.0)["issues"] == []
+
+
+def test_a_naturally_falling_last_word_is_not_a_fade(tmp_path):
+    # healthy French last words measured 12.5 dB under the mix at worst
+    v = _video(tmp_path / "fall.mp4", volume_db=12)
+    whole = rc.window_volume(v, 0, 6.0)
+    assert rc.settings().last_sentence_max_drop_db > 12.5
+    r = rc.check_last_sentence(v, 4.0, 5.8, 6.0, last_word=(5.55, 5.8))
+    assert not any("Last word" in i for i in r["issues"]), (whole, r)
 
 
 def test_healthy_ending_is_silent(tmp_path):
@@ -98,8 +109,9 @@ def test_last_sentence_heard_passes(tmp_path):
 
 
 def test_a_short_fade_swallowing_the_last_word_is_caught_on_that_word(tmp_path):
+    # the fade ends before the last word does: the word is swallowed (real case: 35.7 dB)
     v = _video(tmp_path / "fade13.mp4", volume_db=12, fade_last_s=1.3, seconds=6.0)
-    r = rc.check_last_sentence(v, 4.0, 5.9, 6.0, last_word=(5.4, 5.9))
+    r = rc.check_last_sentence(v, 4.0, 6.0, 6.2, last_word=(5.75, 6.0))
     assert any("Last word" in i for i in r["issues"]), r
 
 
