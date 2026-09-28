@@ -188,6 +188,7 @@ class RemotionCaptionBurn(BaseTool):
 
         for seg in segments:
             words = seg.get("words", [])
+            block: list[dict] = []
             if words:
                 for w in words:
                     raw = w["word"].strip()
@@ -198,32 +199,78 @@ class RemotionCaptionBurn(BaseTool):
                         trailing = raw[-1]
                     if fixed != raw and not fixed.endswith(trailing):
                         fixed = fixed + trailing
-                    captions.append({
+                    block.append({
                         "word": fixed,
                         "startMs": int(w["start"] * 1000),
                         "endMs": int(w["end"] * 1000),
                     })
-                # A segment is a sentence / caption line. CaptionOverlay
-                # supports `pageBreakAfter` but nothing set it, so pagination
-                # ran straight through segment boundaries and mixed the tail of
-                # one line with the head of the next ("...GOES DOWN" + "NOT..."
-                # rendered as one page reading "DOWN NOT EVERY RIDER GETS").
-                if captions:
-                    captions[-1]["pageBreakAfter"] = True
             elif "text" in seg:
                 text_words = seg["text"].strip().split()
                 dur = seg["end"] - seg["start"]
                 per_word = dur / max(len(text_words), 1)
                 for i, tw in enumerate(text_words):
                     fixed = corr.get(tw.lower().strip(".,!?;:"), tw)
-                    captions.append({
+                    block.append({
                         "word": fixed,
                         "startMs": int((seg["start"] + i * per_word) * 1000),
                         "endMs": int((seg["start"] + (i + 1) * per_word) * 1000),
                     })
-                if captions:
-                    captions[-1]["pageBreakAfter"] = True
+            captions += self._finish_block(block)
         return captions
+
+    # Punctuation that a transcript can emit as its own token ("vrai ?" in
+    # French typography). Rendered as a separate caption word it got a
+    # breakable space before it and could land alone on a line or a page.
+    _SPACED_CLOSERS = "?!:;»"
+    _SENTENCE_END = re.compile(r"[.!?…]+[\"'»”’)\]]*$")
+    _ABBREVIATIONS = {"m.", "mm.", "mme.", "mlle.", "dr.", "mr.", "mrs.", "ms.", "st.", "vs."}
+
+    @classmethod
+    def _is_sentence_end(cls, word: str) -> bool:
+        w = word.strip()
+        if not cls._SENTENCE_END.search(w):
+            return False
+        if w.lower() in cls._ABBREVIATIONS or re.fullmatch(r"[^\W\d_]\.", w):
+            return False  # "M. Dupont", "J. Smith"
+        return True
+
+    @classmethod
+    def _finish_block(cls, block: list[dict]) -> list[dict]:
+        """Attach stray punctuation, then mark page breaks.
+
+        A block is one transcript segment or one SRT cue. Pages break after
+        every sentence end and at the end of the block: CaptionOverlay honours
+        `pageBreakAfter`, and without it pagination ran through sentence and
+        segment boundaries ("...GOES DOWN" + "NOT..." rendered as one page
+        reading "DOWN NOT EVERY RIDER GETS").
+        """
+        out: list[dict] = []
+        pending_open = ""
+        opener: dict | None = None
+        for cap in block:
+            word = cap["word"].strip()
+            if word and not any(ch.isalnum() for ch in word):
+                if word.startswith("«"):
+                    pending_open += word + "\u202f"
+                    opener = opener or cap
+                    continue
+                if out:
+                    sep = "\u202f" if word[0] in cls._SPACED_CLOSERS else ""
+                    out[-1]["word"] += sep + word
+                    out[-1]["endMs"] = max(out[-1]["endMs"], cap["endMs"])
+                    continue
+            if pending_open:
+                cap = {**cap, "word": pending_open + cap["word"], "startMs": opener["startMs"]}
+                pending_open, opener = "", None
+            out.append(dict(cap))
+        if pending_open:  # an opening quote with nothing after it: keep it as is
+            out.append({**opener, "word": pending_open.rstrip("\u202f")})
+        for cap in out:
+            if cls._is_sentence_end(cap["word"]):
+                cap["pageBreakAfter"] = True
+        if out:
+            out[-1]["pageBreakAfter"] = True
+        return out
 
     def _srt_to_word_captions(
         self, srt_path: str, corrections: dict[str, str] | None = None
@@ -260,13 +307,15 @@ class RemotionCaptionBurn(BaseTool):
             text = " ".join(lines[2:]).strip()
             words = text.split()
             per_word = (end_ms - start_ms) / max(len(words), 1)
+            block: list[dict] = []
             for i, w in enumerate(words):
                 fixed = corr.get(w.lower().strip(".,!?;:"), w)
-                captions.append({
+                block.append({
                     "word": fixed,
                     "startMs": int(start_ms + i * per_word),
                     "endMs": int(start_ms + (i + 1) * per_word),
                 })
+            captions += self._finish_block(block)
         return captions
 
     # ------------------------------------------------------------------ #

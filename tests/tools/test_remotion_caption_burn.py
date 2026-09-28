@@ -81,3 +81,57 @@ def test_props_video_src_is_relative_to_public(tmp_path, monkeypatch):
     assert not props["videoSrc"].startswith("public/"), props["videoSrc"]
     assert props["videoSrc"] == "talking-head/clip.mp4"
     assert (root / "public" / props["videoSrc"]).exists()
+
+
+# --- Page breaks at sentence ends, and on SRT cues -----------------------------
+
+
+def test_sentence_end_inside_a_segment_breaks_the_page():
+    # a Whisper segment is not a sentence: "voit." must not share a page with "Oui"
+    segments = [{"words": _words(("L'homme", 0.0), ("qu'il", 0.3), ("voit.", 0.6), ("Oui", 0.9))}]
+    caps = RemotionCaptionBurn()._segments_to_word_captions(segments)
+    assert _breaks(caps) == [("L'homme", False), ("qu'il", False), ("voit.", True), ("Oui", True)]
+
+
+def test_text_path_breaks_after_each_sentence():
+    segments = [{"text": "Bonjour à tous. Ça va bien", "start": 0.0, "end": 2.0}]
+    caps = RemotionCaptionBurn()._segments_to_word_captions(segments)
+    assert _breaks(caps) == [
+        ("Bonjour", False), ("à", False), ("tous.", True),
+        ("Ça", False), ("va", False), ("bien", True),
+    ]
+
+
+def test_abbreviations_do_not_break_the_page():
+    segments = [{"text": "M. Dupont et J. Martin arrivent", "start": 0.0, "end": 2.0}]
+    caps = RemotionCaptionBurn()._segments_to_word_captions(segments)
+    assert [w for w, b in _breaks(caps) if b] == ["arrivent"]
+
+
+def test_srt_breaks_the_page_at_each_cue(tmp_path):
+    srt = tmp_path / "subs.srt"
+    srt.write_text(
+        "1\n00:00:00,000 --> 00:00:01,000\nUn deux\n\n"
+        "2\n00:00:01,000 --> 00:00:02,000\nTrois quatre\n",
+        encoding="utf-8",
+    )
+    caps = RemotionCaptionBurn()._srt_to_word_captions(str(srt))
+    assert _breaks(caps) == [("Un", False), ("deux", True), ("Trois", False), ("quatre", True)]
+
+
+# --- Stray punctuation tokens (French typography) ------------------------------
+
+
+def test_isolated_punctuation_sticks_to_its_word():
+    segments = [{"text": "Alors c'est bien vrai ? Oui , « vraiment » !", "start": 0.0, "end": 3.0}]
+    caps = RemotionCaptionBurn()._segments_to_word_captions(segments)
+    words = [c["word"] for c in caps]
+    assert words == ["Alors", "c'est", "bien", "vrai\u202f?", "Oui,", "«\u202fvraiment\u202f»\u202f!"]
+    assert caps[3]["pageBreakAfter"] is True  # "vrai ?" ends the sentence
+    assert caps[3]["endMs"] > caps[3]["startMs"]
+
+
+def test_ordinary_words_are_left_alone():
+    segments = [{"text": "Every rider goes down", "start": 0.0, "end": 1.2}]
+    caps = RemotionCaptionBurn()._segments_to_word_captions(segments)
+    assert [c["word"] for c in caps] == ["Every", "rider", "goes", "down"]
