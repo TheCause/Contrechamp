@@ -701,6 +701,7 @@ class TestCapabilityMetadata:
             "kling_official",
             "openai",
             "piper",
+            "voxcpm",
         }
 
 
