@@ -17,15 +17,15 @@ SECTIONS = [
     {"id": "s2", "start": 70.5, "end": 140.0},
     {"id": "s3", "start": 140.5, "end": 200.0},
 ]
-TITLES = {"hook": "Pluribus", "s1": "La ruche", "s2": "Les niveaux", "s3": "Rester immunisé"}
+TITLES = {"hook": "Le pitch", "s1": "Le contexte", "s2": "Les chiffres", "s3": "La conclusion"}
 
 
 def test_an_intro_after_the_hook_shifts_the_following_chapters():
     r = ch.chapters(SECTIONS, TITLES, inserts=[{"at": 6.0, "duration": 4.0}])
     assert [(c["time"], c["title"]) for c in r["chapters"]] == [
-        ("0:00", "Pluribus"), ("0:10", "La ruche"), ("1:14", "Les niveaux"), ("2:24", "Rester immunisé")]
+        ("0:00", "Le pitch"), ("0:10", "Le contexte"), ("1:14", "Les chiffres"), ("2:24", "La conclusion")]
     assert r["issues"] == []
-    assert r["description"].splitlines()[1] == "0:10 La ruche"
+    assert r["description"].splitlines()[1] == "0:10 Le contexte"
 
 
 def test_without_insert_times_are_the_narration_times():
@@ -64,7 +64,7 @@ def test_a_hook_whose_first_word_starts_after_zero_still_opens_at_zero():
 
 def test_a_chapter_starting_after_the_end_of_the_video_is_reported():
     r = ch.chapters(SECTIONS, TITLES, video_duration=100.0)
-    assert any("Rester immunisé" in i and "after the end" in i for i in r["issues"])
+    assert any("La conclusion" in i and "after the end" in i for i in r["issues"])
 
 
 def test_missing_or_empty_titles_are_reported():

@@ -12,17 +12,17 @@ sys.path.insert(0, str(ROOT))
 from lib import key_phrases as kp  # noqa: E402
 
 TIMING = {"sentences": [
-    {"index": 0, "text": "La ruche pense pour nous.", "start": 1.0, "end": 2.2},
-    {"index": 1, "text": "Rester immunisé, c'est choisir.", "start": 2.3, "end": 5.0},
+    {"index": 0, "text": "La machine pense pour nous.", "start": 1.0, "end": 2.2},
+    {"index": 1, "text": "Choisir, c'est renoncer.", "start": 2.3, "end": 5.0},
     {"index": 2, "text": "Voilà.", "start": 5.1, "end": 5.6},
 ]}
 
 
 def test_cards_take_the_exact_sentence_and_its_voice_times():
-    r = kp.plan(TIMING, ["Rester immunisé, c'est choisir."])
-    assert r["overlays"] == [{"type": "key_phrase", "text": "Rester immunisé, c'est choisir.",
+    r = kp.plan(TIMING, ["Choisir, c'est renoncer."])
+    assert r["overlays"] == [{"type": "key_phrase", "text": "Choisir, c'est renoncer.",
                               "in_seconds": 2.3, "out_seconds": 5.0}]
-    assert r["expected_text"] == [{"text": "Rester immunisé, c'est choisir.",
+    assert r["expected_text"] == [{"text": "Choisir, c'est renoncer.",
                                    "start_seconds": 2.3, "end_seconds": 5.0, "exact": False}]
     assert r["issues"] == []
 
@@ -41,7 +41,7 @@ def test_a_card_never_overlaps_the_next_one_and_says_when_too_short():
 
 def test_a_phrase_that_is_not_in_the_script_is_refused():
     with pytest.raises(ValueError, match="not a sentence of the script"):
-        kp.plan(TIMING, ["Rester immunisé c'est choisir."])  # comma dropped
+        kp.plan(TIMING, ["Choisir c'est renoncer."])  # comma dropped
 
 
 def test_inserts_shift_the_cards_to_final_time():
@@ -88,8 +88,8 @@ def test_french_spaces_and_apostrophes_do_not_break_the_match():
 
 
 def test_captions_under_a_card_are_removed_not_shown_twice():
-    captions = [{"word": "Rester", "startMs": 2300, "endMs": 2600},
-                {"word": "immunisé,", "startMs": 2600, "endMs": 3000},
+    captions = [{"word": "Choisir,", "startMs": 2300, "endMs": 2600},
+                {"word": "c'est", "startMs": 2600, "endMs": 3000},
                 {"word": "Voilà.", "startMs": 5100, "endMs": 5600}]
     r = kp.plan(TIMING, [1], captions=captions)
     assert [c["word"] for c in r["captions"]] == ["Voilà."]
@@ -98,7 +98,7 @@ def test_captions_under_a_card_are_removed_not_shown_twice():
 def test_the_caption_page_before_a_card_stops_when_the_card_starts():
     # seen on a real render: "où le public l'entend." stayed on screen under the card
     captions = [{"word": "Avant.", "startMs": 500, "endMs": 900},
-                {"word": "Rester", "startMs": 2300, "endMs": 2600},
+                {"word": "Choisir,", "startMs": 2300, "endMs": 2600},
                 {"word": "Voilà.", "startMs": 5100, "endMs": 5600}]
     kept = kp.plan(TIMING, [1], captions=captions)["captions"]
     before = kept[0]

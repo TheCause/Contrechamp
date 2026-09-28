@@ -215,14 +215,14 @@ def test_elision_split_after_the_apostrophe_is_rejoined():
 
 
 def test_hyphenated_inversions_split_by_the_transcriber_are_rejoined():
-    # measured on the M4: large-v3 writes "passe -t -il", "texte -là"
+    # measured on a real render: large-v3 writes "passe -t -il", "texte -là"
     heard = _said(["que", "se", "passe", "-t", "-il", "avec", "ce", "texte", "-là"])
     t = st.time_script("Que se passe-t-il avec ce texte-là ?", heard)
     assert t["report"]["fidelity"] == 1.0, t["report"]
 
 
 def test_a_number_heard_in_digits_counts_as_said():
-    # measured on the M4: "trente" heard "30"
+    # measured on a real render: "trente" heard "30"
     t = st.time_script("Il parle trente secondes.", _said(["il", "parle", "30", "secondes"]))
     assert t["report"]["fidelity"] == 1.0 and t["words"][2]["match"] == "spoken_form"
 
