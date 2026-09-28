@@ -117,3 +117,6 @@ _local/
 .final_review_frames/
 # ... and by remotion_caption_burn when it reads its captions back
 .caption_review_frames/
+
+# Local voice references (cloned voices never enter the public repo)
+voices/

@@ -84,6 +84,57 @@ print("VOXCPM_OUTPUT=" + str(out))
 """
 
 
+# Official `voxcpm` package (PyTorch, MPS/CUDA/CPU), run by the interpreter named
+# in VOXCPM2_PYTHON (a separate venv: voxcpm needs Python < 3.13). Weights come
+# from the Hugging Face cache (openbmb/VoxCPM2, Apache-2.0), offline.
+_OFFICIAL_SCRIPT = r"""
+import json, os
+from pathlib import Path
+
+inputs = json.loads(os.environ["VOXCPM_INPUTS"])
+
+import soundfile as sf
+import torch
+from voxcpm import VoxCPM
+
+model = VoxCPM.from_pretrained(inputs["model_id"], load_denoiser=False, local_files_only=True)
+if inputs.get("seed") is not None:
+    torch.manual_seed(int(inputs["seed"]))
+kwargs = dict(
+    text=inputs["text"],
+    cfg_value=inputs["cfg_value"],
+    inference_timesteps=inputs["inference_timesteps"],
+    retry_badcase=True,
+)
+if inputs.get("ref_audio"):
+    kwargs["reference_wav_path"] = inputs["ref_audio"]
+    if inputs.get("mode") == "ultimate":
+        kwargs["prompt_wav_path"] = inputs["ref_audio"]
+        kwargs["prompt_text"] = inputs["ref_text"]
+wav = model.generate(**kwargs)
+out = Path(inputs["work_dir"]) / "voxcpm.wav"
+sf.write(str(out), wav, model.tts_model.sample_rate)
+print("VOXCPM_OUTPUT=" + str(out))
+"""
+
+_OFFICIAL_MODEL_ID = "openbmb/VoxCPM2"
+# Defaults per engine: the MLX values come from #608's tuning; the official
+# engine's from French cloning benches (cfg 1.5-1.8, 30 steps).
+_DEFAULTS = {
+    "mlx": {"cfg_value": 2.5, "inference_timesteps": 50},
+    "voxcpm": {"cfg_value": 1.8, "inference_timesteps": 30},
+}
+_VOICE_KEYS = ("cfg_value", "inference_timesteps", "seed", "mode", "backend")
+
+
+def _voices_dir(inputs: dict[str, Any]) -> Path:
+    return Path(
+        inputs.get("voices_dir")
+        or os.environ.get("OPENMONTAGE_VOICES_DIR")
+        or _PROJECT_ROOT / "voices"
+    )
+
+
 class VoxCPM2TTS(BaseTool):
     name = "voxcpm2_tts"
     version = "0.1.0"
@@ -100,7 +151,11 @@ class VoxCPM2TTS(BaseTool):
         "Install VoxCPM2 MLX:\n"
         "  pip install 'mlx-audio[tts]'\n"
         "  huggingface-cli download mlx-community/VoxCPM2-4bit --local-dir models/VoxCPM2-4bit\n"
-        "  (or VoxCPM2-bf16 for final renders; set VOXCPM2_MODEL_DIR to use a custom location)"
+        "  (or VoxCPM2-bf16 for final renders; set VOXCPM2_MODEL_DIR to use a custom location)\n"
+        "Or the official engine in its own venv (Python < 3.13):\n"
+        "  python3.12 -m venv ~/voxcpm-venv && ~/voxcpm-venv/bin/pip install voxcpm soundfile\n"
+        "  ~/voxcpm-venv/bin/python -c \"from voxcpm import VoxCPM; VoxCPM.from_pretrained('openbmb/VoxCPM2')\"\n"
+        "  export VOXCPM2_PYTHON=~/voxcpm-venv/bin/python"
     )
     agent_skills = ["text-to-speech"]
 
@@ -145,6 +200,28 @@ class VoxCPM2TTS(BaseTool):
                 "type": "string",
                 "description": "Style instruction (e.g. 'Istanbul agzi ile telaffuz et. Ton: Neseli'). Used when ref_audio is absent.",
             },
+            "voice": {
+                "type": "string",
+                "description": (
+                    "Named local voice: <voices_dir>/<voice>.wav (reference), .txt (its "
+                    "transcript) and optional .json (cfg_value, inference_timesteps, seed, "
+                    "mode, backend). voices_dir = OPENMONTAGE_VOICES_DIR or ./voices "
+                    "(gitignored: voice references never enter the repository)."
+                ),
+            },
+            "voices_dir": {"type": "string"},
+            "backend": {
+                "type": "string",
+                "enum": ["auto", "mlx", "voxcpm"],
+                "default": "auto",
+                "description": "mlx = mlx-audio model in models/; voxcpm = official package via VOXCPM2_PYTHON; auto = mlx if present, else voxcpm.",
+            },
+            "mode": {
+                "type": "string",
+                "enum": ["reference", "ultimate"],
+                "default": "reference",
+                "description": "Official engine only. reference = clone the timbre; ultimate = also continue from the reference take (needs its transcript), closest to the original delivery.",
+            },
             "output_path": {"type": "string"},
             "model_path": {"type": "string"},
             "cfg_value": {
@@ -170,7 +247,9 @@ class VoxCPM2TTS(BaseTool):
         cpu_cores=4, ram_mb=6144, vram_mb=0, disk_mb=5120, network_required=False
     )
     retry_policy = RetryPolicy(max_retries=1, retryable_errors=["timeout"])
-    idempotency_key_fields = ["text", "ref_audio", "cfg_value", "inference_timesteps", "seed"]
+    idempotency_key_fields = [
+        "text", "ref_audio", "voice", "backend", "mode", "cfg_value", "inference_timesteps", "seed",
+    ]
     side_effects = ["writes audio file to output_path"]
     user_visible_verification = ["Listen to generated audio for voice match"]
 
@@ -194,22 +273,68 @@ class VoxCPM2TTS(BaseTool):
             return d
         return None
 
+    @staticmethod
+    def _official_python() -> str | None:
+        exe = os.environ.get("VOXCPM2_PYTHON", "").strip()
+        return exe if exe and os.access(os.path.expanduser(exe), os.X_OK) else None
+
+    def _backend(self, requested: str = "auto") -> str | None:
+        """The engine to run, or None when the requested one is not installed."""
+        mlx = self._resolve_model_dir() is not None
+        official = self._official_python() is not None
+        if requested == "mlx":
+            return "mlx" if mlx else None
+        if requested == "voxcpm":
+            return "voxcpm" if official else None
+        return "mlx" if mlx else ("voxcpm" if official else None)
+
     def get_status(self) -> ToolStatus:
-        return ToolStatus.AVAILABLE if self._resolve_model_dir() else ToolStatus.UNAVAILABLE
+        return ToolStatus.AVAILABLE if self._backend() else ToolStatus.UNAVAILABLE
 
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
         return 0.0  # Local inference, no cost
 
+    def _resolve_voice(self, inputs: dict[str, Any]) -> dict[str, Any]:
+        """Merge a named voice's reference and defaults under the explicit inputs."""
+        name = inputs.get("voice")
+        if not name:
+            return dict(inputs)
+        vdir = _voices_dir(inputs)
+        wav = vdir / f"{name}.wav"
+        if not wav.exists():
+            known = sorted(p.stem for p in vdir.glob("*.wav")) if vdir.is_dir() else []
+            raise ValueError(f"Voice {name!r} not found in {vdir} (known: {known or 'none'})")
+        merged: dict[str, Any] = {"ref_audio": str(wav)}
+        txt = vdir / f"{name}.txt"
+        if txt.exists():
+            merged["ref_text"] = txt.read_text(encoding="utf-8").strip()
+        meta = vdir / f"{name}.json"
+        if meta.exists():
+            data = json.loads(meta.read_text(encoding="utf-8"))
+            merged.update({k: data[k] for k in _VOICE_KEYS if k in data})
+        merged.update({k: v for k, v in inputs.items() if v is not None})
+        return merged
+
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
-        if self.get_status() != ToolStatus.AVAILABLE:
+        try:
+            inputs = self._resolve_voice(inputs)
+        except (ValueError, json.JSONDecodeError) as exc:
+            return ToolResult(success=False, error=str(exc))
+        requested = inputs.get("backend", "auto")
+        backend = self._backend(requested)
+        if backend is None:
             return ToolResult(
                 success=False,
-                error="VoxCPM2 model not found locally. Download mlx-community/VoxCPM2-bf16 or VoxCPM2-4bit into models/",
+                error=(
+                    f"VoxCPM2 backend {requested!r} not found locally. Download "
+                    "mlx-community/VoxCPM2-bf16 or VoxCPM2-4bit into models/, or set "
+                    "VOXCPM2_PYTHON to an interpreter with the official voxcpm package."
+                ),
             )
 
         start = time.time()
         try:
-            result = self._generate(inputs)
+            result = self._generate(inputs, backend)
         except Exception as exc:
             return ToolResult(success=False, error=f"VoxCPM2 generation failed: {exc}")
 
@@ -231,13 +356,21 @@ class VoxCPM2TTS(BaseTool):
             )
         return text
 
-    def _generate(self, inputs: dict[str, Any]) -> ToolResult:
+    def _generate(self, inputs: dict[str, Any], backend: str = "mlx") -> ToolResult:
         ref_audio = inputs.get("ref_audio")
         if ref_audio and not Path(ref_audio).exists():
             return ToolResult(success=False, error=f"Reference audio not found: {ref_audio}")
 
-        model_dir = self._resolve_model_dir()
-        model_path = inputs.get("model_path") or str(model_dir)
+        defaults = _DEFAULTS[backend]
+        if backend == "mlx":
+            model_dir = self._resolve_model_dir()
+            model_path = inputs.get("model_path") or str(model_dir)
+            interpreter, script, cwd = sys.executable, _GENERATE_SCRIPT, str(model_dir.parent)
+        else:
+            model_path = inputs.get("model_path") or _OFFICIAL_MODEL_ID
+            interpreter = os.path.expanduser(self._official_python())
+            script, cwd = _OFFICIAL_SCRIPT, None
+        mode = inputs.get("mode", "reference")
 
         ref_text = inputs.get("ref_text")
         if ref_audio and not ref_text:
@@ -248,9 +381,11 @@ class VoxCPM2TTS(BaseTool):
 
         payload = {
             "model_path": model_path,
+            "model_id": model_path,
+            "mode": mode,
             "text": inputs["text"],
-            "cfg_value": float(inputs.get("cfg_value", 2.5)),
-            "inference_timesteps": int(inputs.get("inference_timesteps", 50)),
+            "cfg_value": float(inputs.get("cfg_value", defaults["cfg_value"])),
+            "inference_timesteps": int(inputs.get("inference_timesteps", defaults["inference_timesteps"])),
             "max_tokens": int(inputs.get("max_tokens", 2000)),
             "seed": inputs.get("seed", 42),
             "instruct": inputs.get("instruct"),
@@ -270,16 +405,16 @@ class VoxCPM2TTS(BaseTool):
             with tempfile.NamedTemporaryFile(
                 "w", suffix="_voxcpm_generate.py", delete=False
             ) as script_file:
-                script_file.write(_GENERATE_SCRIPT)
+                script_file.write(script)
                 script_path = script_file.name
 
             try:
                 proc = subprocess.run(
-                    [sys.executable, script_path],
+                    [interpreter, script_path],
                     capture_output=True,
                     text=True,
                     timeout=900,
-                    cwd=str(model_dir.parent),
+                    cwd=cwd or work_dir,
                     env=env,
                 )
             finally:
@@ -307,6 +442,10 @@ class VoxCPM2TTS(BaseTool):
             success=True,
             data={
                 "provider": self.provider,
+                "backend": backend,
+                "voice": inputs.get("voice"),
+                "mode": mode if backend == "voxcpm" else None,
+                "seed": payload["seed"],
                 "model": Path(model_path).name,
                 "ref_audio": str(ref_audio) if ref_audio else None,
                 "ref_text": ref_text,

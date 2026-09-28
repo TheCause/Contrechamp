@@ -106,3 +106,89 @@ def test_execute_refuses_when_unavailable(tmp_path, monkeypatch):
 
 def test_estimate_cost_is_zero():
     assert VoxCPM2TTS().estimate_cost({"text": "x"}) == 0.0
+
+
+# ---- Official engine + named voices (fork) ----
+
+import json as _json
+import os as _os
+import subprocess as _subprocess
+
+
+@pytest.fixture
+def official_python(tmp_path, monkeypatch):
+    exe = tmp_path / "python"
+    exe.write_text("#!/bin/sh\n")
+    exe.chmod(0o755)
+    monkeypatch.setattr(voxcpm2_module, "_MODEL_DIRS", [tmp_path / "no-mlx-model"])
+    monkeypatch.setenv("VOXCPM2_PYTHON", str(exe))
+    return exe
+
+
+@pytest.fixture
+def voices(tmp_path):
+    d = tmp_path / "voices"
+    d.mkdir()
+    (d / "chaine.wav").write_bytes(b"RIFF")
+    (d / "chaine.txt").write_text("Texte de la prise.\n", encoding="utf-8")
+    (d / "chaine.json").write_text(_json.dumps({"cfg_value": 1.5, "mode": "ultimate", "seed": 7}))
+    return d
+
+
+def _capture_run(monkeypatch):
+    seen = {}
+
+    def fake_run(cmd, **kwargs):
+        seen["cmd"] = cmd
+        seen["script"] = Path(cmd[1]).read_text()
+        seen["payload"] = _json.loads(kwargs["env"]["VOXCPM_INPUTS"])
+        out = Path(seen["payload"]["work_dir"]) / "voxcpm.wav"
+        out.write_bytes(b"RIFF")
+        return _subprocess.CompletedProcess(cmd, 0, stdout=f"VOXCPM_OUTPUT={out}\n", stderr="")
+
+    monkeypatch.setattr(voxcpm2_module.subprocess, "run", fake_run)
+    return seen
+
+
+def test_official_engine_makes_the_tool_available_without_mlx_model(official_python):
+    tool = VoxCPM2TTS()
+    assert tool.get_status() is ToolStatus.AVAILABLE
+    assert tool._backend() == "voxcpm"
+
+
+def test_no_engine_at_all_is_unavailable(tmp_path, monkeypatch):
+    monkeypatch.setattr(voxcpm2_module, "_MODEL_DIRS", [tmp_path / "nowhere"])
+    monkeypatch.delenv("VOXCPM2_PYTHON", raising=False)
+    assert VoxCPM2TTS().get_status() is ToolStatus.UNAVAILABLE
+
+
+def test_named_voice_runs_the_official_engine_with_its_reference(official_python, voices, tmp_path, monkeypatch):
+    seen = _capture_run(monkeypatch)
+    out = tmp_path / "out.wav"
+    r = VoxCPM2TTS().execute({"text": "Bonjour.", "voice": "chaine",
+                              "voices_dir": str(voices), "output_path": str(out)})
+    assert r.success, r.error
+    assert seen["cmd"][0] == str(official_python)
+    assert "from voxcpm import VoxCPM" in seen["script"]
+    p = seen["payload"]
+    assert p["ref_audio"] == str((voices / "chaine.wav").resolve())
+    assert p["ref_text"] == "Texte de la prise."
+    assert (p["mode"], p["cfg_value"], p["seed"], p["inference_timesteps"]) == ("ultimate", 1.5, 7, 30)
+    assert r.data["backend"] == "voxcpm" and r.data["voice"] == "chaine" and out.exists()
+
+
+def test_explicit_inputs_win_over_the_voice_defaults(official_python, voices, tmp_path, monkeypatch):
+    seen = _capture_run(monkeypatch)
+    VoxCPM2TTS().execute({"text": "Bonjour.", "voice": "chaine", "voices_dir": str(voices),
+                          "cfg_value": 2.0, "output_path": str(tmp_path / "o.wav")})
+    assert seen["payload"]["cfg_value"] == 2.0
+
+
+def test_unknown_voice_names_the_known_ones(official_python, voices):
+    r = VoxCPM2TTS().execute({"text": "x", "voice": "absente", "voices_dir": str(voices)})
+    assert not r.success and "chaine" in r.error
+
+
+def test_requested_engine_that_is_missing_is_refused(official_python):
+    r = VoxCPM2TTS().execute({"text": "x", "backend": "mlx"})
+    assert not r.success and "'mlx'" in r.error
