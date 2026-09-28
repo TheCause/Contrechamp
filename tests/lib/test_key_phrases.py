@@ -93,3 +93,14 @@ def test_captions_under_a_card_are_removed_not_shown_twice():
                 {"word": "Voilà.", "startMs": 5100, "endMs": 5600}]
     r = kp.plan(TIMING, [1], captions=captions)
     assert [c["word"] for c in r["captions"]] == ["Voilà."]
+
+
+def test_the_caption_page_before_a_card_stops_when_the_card_starts():
+    # seen on a real render: "où le public l'entend." stayed on screen under the card
+    captions = [{"word": "Avant.", "startMs": 500, "endMs": 900},
+                {"word": "Rester", "startMs": 2300, "endMs": 2600},
+                {"word": "Voilà.", "startMs": 5100, "endMs": 5600}]
+    kept = kp.plan(TIMING, [1], captions=captions)["captions"]
+    before = kept[0]
+    assert before["word"] == "Avant." and before["holdUntilMs"] == 2300 and before["pageBreakAfter"]
+    assert "holdUntilMs" not in captions[0]  # the caller's list is not mutated

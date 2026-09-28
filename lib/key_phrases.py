@@ -85,8 +85,14 @@ def plan(
     result: dict[str, Any] = {"overlays": overlays, "expected_text": expected, "issues": issues}
     if captions is not None:
         windows = [(o["in_seconds"] * 1000, o["out_seconds"] * 1000) for o in overlays]
-        result["captions"] = [
-            c for c in captions
-            if not any(a < c["endMs"] and c["startMs"] < b for a, b in windows)
-        ]
+        kept = [dict(c) for c in captions
+                if not any(a < c["endMs"] and c["startMs"] < b for a, b in windows)]
+        # CaptionOverlay holds a page until the next one starts: the page
+        # before a card would stay on screen under it (seen on a real render).
+        for a, _ in windows:
+            before = [c for c in kept if c["endMs"] <= a]
+            if before:
+                before[-1]["pageBreakAfter"] = True
+                before[-1]["holdUntilMs"] = int(a)
+        result["captions"] = kept
     return result

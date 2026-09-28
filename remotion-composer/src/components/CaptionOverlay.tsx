@@ -16,6 +16,9 @@ export interface WordCaption {
   // Force a page break after this word (e.g. sentence or scene boundaries).
   // Useful for CJK captions where pages should align with clause boundaries.
   pageBreakAfter?: boolean;
+  // Stop showing this word's page at this time, even if the next page starts
+  // later (a key-phrase card takes the screen: the page must not stay under it).
+  holdUntilMs?: number;
 }
 
 type CaptionOverlayProps = {
@@ -161,7 +164,11 @@ export const CaptionOverlay: React.FC<CaptionOverlayProps> = ({
     <AbsoluteFill>
       {pages.map((page, i) => {
         const fromFrame = Math.round((page.startMs / 1000) * fps);
-        const nextStart = pages[i + 1]?.startMs ?? page.endMs + 500;
+        const lastWord = page.words[page.words.length - 1];
+        const nextStart = Math.min(
+          pages[i + 1]?.startMs ?? page.endMs + 500,
+          lastWord?.holdUntilMs ?? Number.POSITIVE_INFINITY
+        );
         const duration = Math.max(
           1,
           Math.round(((nextStart - page.startMs) / 1000) * fps)
