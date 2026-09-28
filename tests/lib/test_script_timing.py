@@ -117,3 +117,15 @@ def test_a_short_skipped_run_in_a_well_covered_script_passes():
     t = st.time_script(" ".join(said) + ".", heard)
     assert t["report"]["status"] == "pass"
     assert [g["words"] for g in t["report"]["gaps"]] == [1]
+
+
+def test_french_elisions_split_by_the_transcriber_are_rejoined():
+    # Real faster-whisper large-v3 output on French: "l 'intention", "Aujourd 'hui".
+    script = "Mais l'intention d'un auteur. Aujourd'hui, c'est mon parti pris."
+    heard = [{"word": w, "start": i * 0.3, "end": i * 0.3 + 0.25} for i, w in enumerate(
+        [" Mais", " l", " 'intention", " d", " 'un", " auteur.", " Aujourd", " 'hui,",
+         " c", " 'est", " mon", " parti", " pris."])]
+    t = st.time_script(script, heard)
+    assert t["report"]["fidelity"] == 1.0, t["report"]
+    intention = t["words"][1]
+    assert (intention["word"], intention["start"], intention["end"]) == ("l'intention", 0.3, 0.85)

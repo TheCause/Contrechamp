@@ -76,7 +76,7 @@ def time_script(
         if words and words[-1]["sentence"] == sentence:
             sentence += 1  # a section always closes its last sentence
 
-    heard = [w for w in word_timestamps if normalize(w.get("word", ""))]
+    heard = _rejoin_elisions([w for w in word_timestamps if normalize(w.get("word", ""))])
     report: dict[str, Any] = {
         "script_words": 0, "heard_words": len(heard), "exact": 0, "substituted": 0, "spanned": 0,
         "interpolated": 0, "fidelity": 0.0, "timing_coverage": 0.0, "gaps": [],
@@ -143,6 +143,22 @@ def time_script(
         "captions": _captions(words),
         "report": report,
     }
+
+
+def _rejoin_elisions(heard: list[dict]) -> list[dict]:
+    """faster-whisper splits French elisions: "l 'intention", "Aujourd 'hui".
+
+    A heard token that starts with an apostrophe belongs to the previous one.
+    """
+    out: list[dict] = []
+    for w in heard:
+        token = w["word"].strip()
+        if out and token[:1] in ("'", "’"):
+            prev = out[-1]
+            out[-1] = {**prev, "word": prev["word"].rstrip() + token, "end": w["end"]}
+        else:
+            out.append(dict(w))
+    return out
 
 
 def _interpolate(words: list[dict], idx: list[int]) -> None:
