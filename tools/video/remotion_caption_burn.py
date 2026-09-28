@@ -34,6 +34,7 @@ import json
 import math
 import re
 import shutil
+import subprocess
 import time
 from pathlib import Path
 from typing import Any
@@ -590,14 +591,34 @@ class RemotionCaptionBurn(BaseTool):
         overlays = inputs.get("overlays")
 
         # Choose render method
+        remotion_failure = None
+        result = None
         if not force_ffmpeg and self._remotion_available():
-            result = self._render_remotion(
-                input_path, output_path, captions,
-                words_per_page, font_size, highlight_color,
-                overlays=overlays,
-            )
-        else:
+            try:
+                result = self._render_remotion(
+                    input_path, output_path, captions,
+                    words_per_page, font_size, highlight_color,
+                    overlays=overlays,
+                )
+            except subprocess.CalledProcessError as exc:
+                # A failed Remotion render used to escape execute() as an
+                # exception: no ToolResult, no fallback. Fall back to FFmpeg
+                # and say so, so the plainer render is never mistaken for
+                # the animated one.
+                detail = str(exc)
+                stderr = exc.stderr if isinstance(exc.stderr, str) else ""
+                if stderr and stderr.strip() not in detail:
+                    detail = f"{detail}\n{stderr.strip()}"
+                remotion_failure = detail[-2000:]
+        if result is None:
             result = self._render_ffmpeg(input_path, output_path, captions)
+            if remotion_failure is not None:
+                result.data["remotion_failure"] = remotion_failure
+                if not result.success:
+                    result.error = (
+                        f"Remotion render failed ({remotion_failure[-300:]}); "
+                        f"FFmpeg fallback failed too: {result.error}"
+                    )
 
         if result.success:
             review = self._review_captions(output_path, captions, inputs.get("language"))

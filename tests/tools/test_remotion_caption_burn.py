@@ -16,6 +16,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from lib import render_checks as rc  # noqa: E402
+from tools.base_tool import ToolResult  # noqa: E402
 from tools.video.remotion_caption_burn import RemotionCaptionBurn  # noqa: E402
 
 needs_tesseract = pytest.mark.skipif(not shutil.which("tesseract"), reason="tesseract not installed")
@@ -228,3 +229,57 @@ def test_real_ocr_catches_a_short_glued_page(tmp_path, monkeypatch):
         monkeypatch.setattr(rc, "extract_frame", fake_extract)
         review = RemotionCaptionBurn()._review_captions(str(out), CAPTIONS, language="en")
         assert review["status"] == status, review
+
+
+# --- A failed Remotion render falls back to FFmpeg, and says so ----------------
+# Measured on a real render (lot 2): a Remotion render failure raised ToolCommandError
+# out of execute() — no ToolResult, no FFmpeg fallback.
+
+
+def _burn_with_remotion_outcome(tmp_path, monkeypatch, *, remotion_fails):
+    from tools.base_tool import ToolCommandError
+
+    video = tmp_path / "clip.mp4"
+    video.write_bytes(b"stub")
+    out = tmp_path / "out.mp4"
+    calls = []
+
+    def fake_remotion(self, input_path, output_path, *a, **k):
+        calls.append("remotion")
+        if remotion_fails:
+            raise ToolCommandError(1, ["npx", "remotion", "render"], stderr="TypeError: boom")
+        Path(output_path).write_bytes(b"stub")
+        return ToolResult(success=True, data={"method": "remotion"})
+
+    def fake_ffmpeg(self, input_path, output_path, captions):
+        calls.append("ffmpeg")
+        Path(output_path).write_bytes(b"stub")
+        return ToolResult(success=True, data={"method": "ffmpeg_fallback"})
+
+    monkeypatch.setattr(RemotionCaptionBurn, "_remotion_available", lambda self: True)
+    monkeypatch.setattr(RemotionCaptionBurn, "_render_remotion", fake_remotion)
+    monkeypatch.setattr(RemotionCaptionBurn, "_render_ffmpeg", fake_ffmpeg)
+    monkeypatch.setattr(
+        RemotionCaptionBurn, "_review_captions",
+        lambda self, *a, **k: {"status": "not_checked", "reason": "test"},
+    )
+    result = RemotionCaptionBurn().execute({
+        "input_path": str(video), "output_path": str(out),
+        "segments": [{"text": "Bonjour à tous", "start": 0.0, "end": 1.0}],
+    })
+    return result, calls
+
+
+def test_failed_remotion_render_falls_back_to_ffmpeg_and_says_so(tmp_path, monkeypatch):
+    result, calls = _burn_with_remotion_outcome(tmp_path, monkeypatch, remotion_fails=True)
+    assert calls == ["remotion", "ffmpeg"]
+    assert result.success, result.error
+    assert result.data["method"] == "ffmpeg_fallback"
+    assert "boom" in result.data["remotion_failure"]
+
+
+def test_successful_remotion_render_reports_no_failure(tmp_path, monkeypatch):
+    result, calls = _burn_with_remotion_outcome(tmp_path, monkeypatch, remotion_fails=False)
+    assert calls == ["remotion"]
+    assert result.data["method"] == "remotion"
+    assert "remotion_failure" not in result.data
