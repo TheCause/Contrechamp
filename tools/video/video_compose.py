@@ -2672,6 +2672,22 @@ class VideoCompose(BaseTool):
 
         issues.extend(audio_spotcheck.get("issues", []))
 
+        # Credits: every third-party asset needs a read licence and its credit.
+        credits_check: dict[str, Any] = {"issues": [], "warnings": [], "not_checked": {}}
+        registry = ed_meta.get("credits")
+        if isinstance(registry, (str, Path)) and Path(registry).exists():
+            registry = json.loads(Path(registry).read_text(encoding="utf-8"))
+        if isinstance(registry, dict):
+            from lib import credits as credits_lib
+
+            used = ed_meta.get("third_party_assets") or [
+                e["asset"] for e in registry.get("entries", []) if e.get("asset")]
+            credits_check.update(credits_lib.check(registry, used))
+            issues.extend(credits_check["issues"])
+        else:
+            credits_check["not_checked"]["credits"] = (
+                "no credits registry in edit_decisions.metadata.credits")
+
         # --- 4. Promise preservation ---
         promise_preservation: dict[str, Any] = {
             "delivery_promise_honored": True,
@@ -2866,6 +2882,7 @@ class VideoCompose(BaseTool):
                 "technical_probe": technical_probe,
                 "visual_spotcheck": visual_spotcheck,
                 "audio_spotcheck": audio_spotcheck,
+                "credits": credits_check,
                 "continuity": continuity,
                 "promise_preservation": promise_preservation,
                 "subtitle_check": subtitle_check,

@@ -160,3 +160,22 @@ def test_music_declared_but_absent_is_an_issue(tmp_path):
     assert any("music" in i.lower() for i in with_music["issues_found"])
     no_music_planned = _review(video, {"cuts": cuts})
     assert not any("music" in i.lower() for i in no_music_planned["issues_found"])
+
+
+def test_credits_registry_is_checked_when_declared(tmp_path):
+    video = _two_shots(tmp_path)
+    registry = {"monetized": False, "entries": [
+        {"asset": "presse/photo.jpg", "title": "Photo", "author": "X", "license": "CC-BY-4.0"}]}
+    ed = {"cuts": _cuts(("s1", "x", 0, 1.6), ("s2", "y", 0, 1.6)), "music": {"track": "bed"},
+          "metadata": {"language": "en", "credits": registry}}
+    review = _review(video, ed)
+    assert any("requires attribution" in i for i in review["issues_found"])
+    assert review["status"] != "pass"
+
+
+def test_credits_without_registry_are_not_checked_not_passed(tmp_path):
+    video = _two_shots(tmp_path)
+    ed = {"cuts": _cuts(("s1", "x", 0, 1.6), ("s2", "y", 0, 1.6)), "music": {"track": "bed"},
+          "metadata": {"language": "en"}}
+    review = _review(video, ed)
+    assert "credits" in review["checks"]["credits"]["not_checked"]
