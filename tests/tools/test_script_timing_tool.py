@@ -17,16 +17,17 @@ def _transcription(tmp_path, words):
 
 
 def test_tool_reads_a_transcriber_file_and_writes_the_timing(tmp_path):
-    words = [{"word": " Bonjour", "start": 0.0, "end": 0.4}, {"word": " Clode", "start": 0.5, "end": 0.9}]
+    said = ["Bonjour", "à", "tous", "voici", "Clode", "qui", "répond"]
+    words = [{"word": f" {w}", "start": i * 0.5, "end": i * 0.5 + 0.4} for i, w in enumerate(said)]
     out = tmp_path / "timing.json"
     r = ScriptTiming().execute({
-        "text": "Bonjour Claude.",
+        "text": "Bonjour à tous, voici Claude qui répond.",
         "transcription_path": str(_transcription(tmp_path, words)),
         "output_path": str(out),
     })
     assert r.success and r.data["status"] == "pass"
     saved = json.loads(out.read_text(encoding="utf-8"))
-    assert [c["word"] for c in saved["captions"]] == ["Bonjour", "Claude."]
+    assert [c["word"] for c in saved["captions"]] == ["Bonjour", "à", "tous,", "voici", "Claude", "qui", "répond."]
 
 
 def test_tool_fails_when_nothing_was_heard(tmp_path):

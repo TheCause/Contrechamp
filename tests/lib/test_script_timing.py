@@ -96,8 +96,8 @@ def test_a_number_said_in_letters_takes_the_span_really_spoken():
                    ("cent", 1.2), ("soixante-huit", 1.5), ("cartes", 2.0))
     t = st.time_script(script, heard)
     sept, cent68 = t["words"][3], t["words"][4]
-    assert (sept["word"], sept["match"], sept["start"]) == ("7", "spanned", 0.6)
-    assert (cent68["word"], cent68["match"], cent68["end"]) == ("168", "spanned", 1.75)
+    assert (sept["word"], sept["match"], sept["start"]) == ("7", "spoken_form", 0.6)
+    assert (cent68["word"], cent68["match"], cent68["end"]) == ("168", "spoken_form", 1.75)
     assert t["report"]["status"] == "pass" and t["report"]["gaps"] == []
 
 
@@ -129,3 +129,122 @@ def test_french_elisions_split_by_the_transcriber_are_rejoined():
     assert t["report"]["fidelity"] == 1.0, t["report"]
     intention = t["words"][1]
     assert (intention["word"], intention["start"], intention["end"]) == ("l'intention", 0.3, 0.85)
+
+
+# --- adversarial review (28 Sept) ------------------------------------------------
+
+
+def _said(words, t0=0.0, step=0.3):
+    return [{"word": f" {w}", "start": round(t0 + i * step, 3), "end": round(t0 + i * step + 0.25, 3)}
+            for i, w in enumerate(words)]
+
+
+def test_a_script_said_entirely_wrong_is_not_pass():
+    script = "Le chat dort sur le canapé rouge depuis ce matin."
+    for heard in (_said("il pleut fort à Lyon et les bus sont en retard".split()),   # 11 words
+                  _said("il pleut fort à Lyon les bus sont en retard".split())):     # 10 words
+        t = st.time_script(script, heard)
+        assert t["report"]["status"] == "revise", t["report"]
+
+
+def test_a_passage_replaced_by_one_word_is_a_gap():
+    script = "Voici la partie très importante sur la sécurité des données personnelles."
+    heard = _said("voici la suite".split())
+    t = st.time_script(script, heard)
+    assert t["report"]["status"] == "revise"
+    assert max(g["words"] for g in t["report"]["gaps"]) >= 8
+
+
+def test_words_added_by_the_voice_are_reported():
+    base = [f"mot{i}" for i in range(40)]
+    looped = base[:20] + ["et", "puis"] * 6 + base[20:]
+    t = st.time_script(" ".join(base) + ".", _said(looped))
+    assert t["report"]["status"] == "revise"
+    assert t["report"]["extras"][0]["words"] == 12
+
+
+def test_a_filler_word_is_not_an_extra():
+    base = [f"mot{i}" for i in range(20)]
+    t = st.time_script(" ".join(base) + ".", _said(base[:10] + ["euh"] + base[10:]))
+    assert t["report"]["status"] == "pass" and t["report"]["extras"] == []
+
+
+def test_a_repeated_passage_is_aligned_on_the_right_occurrence():
+    refrain = "le modèle lit le texte et le modèle répond".split()
+    script_words = refrain + [f"a{i}" for i in range(10)] + refrain + [f"b{i}" for i in range(10)]
+    heard = refrain + [f"a{i}" for i in range(10)] + refrain + [f"b{i}" for i in range(10)]
+    skipped = heard[:12] + heard[22:]   # skip a3..a9 and "le modèle lit": 10 words
+    t = st.time_script(" ".join(script_words) + ".", _said(skipped))
+    gaps = t["report"]["gaps"]
+    assert [g["words"] for g in gaps] == [10], gaps
+    assert gaps[0]["text"].startswith("a3") and gaps[0]["text"].endswith("lit")
+
+
+def test_punctuation_only_script_fails_cleanly():
+    t = st.time_script("…", _said(["bonjour"]))
+    assert t["report"]["status"] == "fail"
+    t = st.time_script({"sections": [{"id": "a", "text": "—"}]}, _said(["bonjour"]))
+    assert t["report"]["status"] == "fail"
+
+
+def test_opening_quote_or_dash_starts_with_its_word():
+    for script in ("« Bonjour », dit-il.", "— Bonjour, dit-il."):
+        caps = st.time_script(script, _said(["bonjour", "dit-il"], t0=1.0))["captions"]
+        starts = [c["startMs"] for c in caps]
+        assert starts == sorted(starts), caps
+        assert caps[0]["startMs"] == 1000 and caps[0]["endMs"] > caps[0]["startMs"], caps
+
+
+def test_non_monotonic_heard_times_never_give_negative_durations():
+    heard = [{"word": w, "start": s, "end": s + 0.2} for w, s in
+             [("il", 0.0), ("y", 0.2), ("a", 0.4), ("sept", 1.0), ("mille", 0.9),
+              ("cent", 0.8), ("soixante-huit", 0.7), ("cartes", 2.0)]]
+    t = st.time_script("Il y a 7 168 cartes.", heard)
+    assert all(w["end"] >= w["start"] for w in t["words"])
+    assert all(c["endMs"] >= c["startMs"] for c in t["captions"])
+
+
+def test_heard_word_without_times_is_skipped_not_a_crash():
+    heard = _said(["bonjour", "à", "tous"]) + [{"word": " fin", "start": None, "end": None}]
+    assert st.time_script("Bonjour à tous.", heard)["report"]["status"] == "pass"
+
+
+def test_elision_split_after_the_apostrophe_is_rejoined():
+    heard = _said(["l'", "homme", "qu'", "il", "voit"])
+    assert st.time_script("L'homme qu'il voit.", heard)["report"]["fidelity"] == 1.0
+
+
+def test_hyphenated_inversions_split_by_the_transcriber_are_rejoined():
+    # measured on the M4: large-v3 writes "passe -t -il", "texte -là"
+    heard = _said(["que", "se", "passe", "-t", "-il", "avec", "ce", "texte", "-là"])
+    t = st.time_script("Que se passe-t-il avec ce texte-là ?", heard)
+    assert t["report"]["fidelity"] == 1.0, t["report"]
+
+
+def test_a_number_heard_in_digits_counts_as_said():
+    # measured on the M4: "trente" heard "30"
+    t = st.time_script("Il parle trente secondes.", _said(["il", "parle", "30", "secondes"]))
+    assert t["report"]["fidelity"] == 1.0 and t["words"][2]["match"] == "spoken_form"
+
+
+def test_captions_keep_the_script_typography():
+    script = "Dupont — le maire — arrive à 50 % du temps."
+    heard = _said("dupont le maire arrive à 50 du temps".split())
+    caps = st.time_script(script, heard)["captions"]
+    shown = " ".join(c["word"] for c in caps).replace(" ", " ")
+    assert shown == script
+
+
+def test_unrelated_words_of_the_same_count_are_not_timed_as_substitutions():
+    script = [f"mot{i}" for i in range(20)]
+    heard = script[:8] + ["pomme", "table", "vélo"] + script[11:]
+    t = st.time_script(" ".join(script) + ".", _said(heard))
+    assert [t["words"][i]["match"] for i in (8, 9, 10)] == ["interpolated"] * 3
+
+
+def test_many_approximate_words_fall_under_the_fidelity_floor():
+    script = "Claude calcule chaque matrice pendant que Gemini génère chaque image."
+    heard = _said("clode calcul chaque matrise pendant que jemini génère chaque imag".split())
+    t = st.time_script(script, heard)
+    assert t["report"]["timing_coverage"] == 1.0
+    assert t["report"]["fidelity"] < 0.8 and t["report"]["status"] == "revise"

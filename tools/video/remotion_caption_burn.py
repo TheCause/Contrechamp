@@ -230,7 +230,7 @@ class RemotionCaptionBurn(BaseTool):
     # Punctuation that a transcript can emit as its own token ("vrai ?" in
     # French typography). Rendered as a separate caption word it got a
     # breakable space before it and could land alone on a line or a page.
-    _SPACED_CLOSERS = "?!:;»"
+    _SPACED_CLOSERS = "?!:;»%"
     _SENTENCE_END = re.compile(r"[.!?…]+[\"'»”’)\]]*$")
     _ABBREVIATIONS = {"m.", "mm.", "mme.", "mlle.", "dr.", "mr.", "mrs.", "ms.", "st.", "vs."}
 
@@ -261,6 +261,12 @@ class RemotionCaptionBurn(BaseTool):
             if word and not any(ch.isalnum() for ch in word):
                 if word.startswith("«"):
                     pending_open += word + "\u202f"
+                    opener = opener or cap
+                    continue
+                if word[0] in "—–":
+                    # dialogue dash or incise: it opens what follows, with a
+                    # normal space ("Dupont — le maire — arrive.")
+                    pending_open += word + " "
                     opener = opener or cap
                     continue
                 if out:
