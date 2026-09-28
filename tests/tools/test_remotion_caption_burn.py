@@ -6,13 +6,19 @@ before it, next to a test that stays silent on a healthy input.
 """
 
 import json
+import shutil
 import sys
 from pathlib import Path
+
+import pytest
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+from lib import render_checks as rc  # noqa: E402
 from tools.video.remotion_caption_burn import RemotionCaptionBurn  # noqa: E402
+
+needs_tesseract = pytest.mark.skipif(not shutil.which("tesseract"), reason="tesseract not installed")
 
 
 def _words(*items):
@@ -135,3 +141,90 @@ def test_ordinary_words_are_left_alone():
     segments = [{"text": "Every rider goes down", "start": 0.0, "end": 1.2}]
     caps = RemotionCaptionBurn()._segments_to_word_captions(segments)
     assert [c["word"] for c in caps] == ["Every", "rider", "goes", "down"]
+
+
+# --- The rendered captions are read back (OCR), or say they were not ----------
+
+CAPTIONS = [
+    {"word": w, "startMs": i * 300, "endMs": (i + 1) * 300, **({"pageBreakAfter": True} if i == 3 else {})}
+    for i, w in enumerate(["Every", "rider", "goes", "down"])
+]
+
+
+def _review_with(monkeypatch, tmp_path, readings=None, reason=None, frame=True):
+    out = tmp_path / "out.mp4"
+    out.write_bytes(b"stub")
+
+    def fake_extract(video, t, dest):
+        if not frame:
+            return None
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_bytes(b"png")
+        return dest
+
+    monkeypatch.setattr(rc, "extract_frame", fake_extract)
+    monkeypatch.setattr(rc, "ocr_readings", lambda path, lang="eng": (readings, reason))
+    return RemotionCaptionBurn()._review_captions(str(out), CAPTIONS, language="en")
+
+
+def test_glued_caption_on_the_rendered_frame_is_reported(tmp_path, monkeypatch):
+    review = _review_with(monkeypatch, tmp_path, readings=["EVERYRIDERGOES DOWN"])
+    assert review["status"] == "revise"
+    assert "EVERYRIDERGOES" in review["glued_words"]
+    assert review["frames_checked"] >= 1
+
+
+def test_spaced_caption_on_the_rendered_frame_passes(tmp_path, monkeypatch):
+    review = _review_with(monkeypatch, tmp_path, readings=["EVERY RIDER GOES DOWN"])
+    assert review["status"] == "pass", review
+    assert review["glued_words"] == []
+
+
+def test_missing_ocr_is_not_checked_never_pass(tmp_path, monkeypatch):
+    review = _review_with(monkeypatch, tmp_path, reason="tesseract not installed")
+    assert review["status"] == "not_checked"
+    assert "tesseract" in review["reason"]
+
+
+def test_no_frame_extracted_is_not_checked(tmp_path, monkeypatch):
+    review = _review_with(monkeypatch, tmp_path, frame=False)
+    assert review["status"] == "not_checked"
+    assert review["reason"]
+
+
+def test_execute_attaches_the_caption_review(tmp_path, monkeypatch):
+    video = tmp_path / "clip.mp4"
+    video.write_bytes(b"stub")
+    out = tmp_path / "out.mp4"
+
+    def fake_ffmpeg(self, input_path, output_path, captions):
+        Path(output_path).write_bytes(b"stub")
+        from tools.base_tool import ToolResult
+        return ToolResult(success=True, data={"method": "ffmpeg_fallback"}, artifacts=[output_path])
+
+    monkeypatch.setattr(RemotionCaptionBurn, "_render_ffmpeg", fake_ffmpeg)
+    monkeypatch.setattr(rc, "ocr_readings", lambda path, lang="eng": (None, "tesseract not installed"))
+    monkeypatch.setattr(rc, "extract_frame", lambda v, t, dest: dest)
+    result = RemotionCaptionBurn().execute({
+        "input_path": str(video), "output_path": str(out), "force_ffmpeg": True,
+        "segments": [{"text": "Every rider goes down", "start": 0.0, "end": 1.2}],
+    })
+    assert result.success, result.error
+    assert result.data["caption_review"]["status"] == "not_checked"
+
+
+@needs_tesseract
+def test_real_ocr_catches_a_short_glued_page(tmp_path, monkeypatch):
+    from tests.lib.test_render_checks import _frame
+    glued = _frame(tmp_path / "glued.png", "EVERYRIDERGOESDOWN")
+    spaced = _frame(tmp_path / "spaced.png", "EVERY RIDER GOES DOWN")
+    out = tmp_path / "out.mp4"
+    out.write_bytes(b"stub")
+    for image, status in ((glued, "revise"), (spaced, "pass")):
+        def fake_extract(video, t, dest, image=image):
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy(image, dest)
+            return dest
+        monkeypatch.setattr(rc, "extract_frame", fake_extract)
+        review = RemotionCaptionBurn()._review_captions(str(out), CAPTIONS, language="en")
+        assert review["status"] == status, review

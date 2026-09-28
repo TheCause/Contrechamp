@@ -115,3 +115,5 @@ _sources*/
 _local/
 # Frames and OCR variants written next to a render by final_review
 .final_review_frames/
+# ... and by remotion_caption_burn when it reads its captions back
+.caption_review_frames/

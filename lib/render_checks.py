@@ -218,6 +218,16 @@ def ocr_readings(path: Path, lang: str = "eng") -> tuple[list[str] | None, str |
     return readings, None
 
 
+def ocr_language(language: str | None) -> str:
+    """Map a project language ("fr", "fr-FR", "fra") to a tesseract code."""
+    codes = {"fr": "fra", "en": "eng", "es": "spa", "de": "deu", "it": "ita",
+             "pt": "por", "nl": "nld", "zh": "chi_sim", "ja": "jpn", "ko": "kor"}
+    if not language:
+        return "eng"
+    lang = language.strip().lower()
+    return codes.get(lang.split("-")[0].split("_")[0], lang)
+
+
 def _letters(text: str) -> int:
     return sum(ch.isalpha() for ch in text)
 

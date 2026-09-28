@@ -2847,12 +2847,7 @@ class VideoCompose(BaseTool):
     @staticmethod
     def _ocr_language(language: str | None) -> str:
         """Map a project language ("fr", "fr-FR", "fra") to a tesseract code."""
-        codes = {"fr": "fra", "en": "eng", "es": "spa", "de": "deu", "it": "ita",
-                 "pt": "por", "nl": "nld", "zh": "chi_sim", "ja": "jpn", "ko": "kor"}
-        if not language:
-            return "eng"
-        lang = language.strip().lower()
-        return codes.get(lang.split("-")[0].split("_")[0], lang)
+        return render_checks.ocr_language(language)
 
     @staticmethod
     def _parse_probe_fps(fps_str: str) -> float:

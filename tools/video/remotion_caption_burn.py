@@ -38,6 +38,7 @@ import time
 from pathlib import Path
 from typing import Any
 
+from lib import render_checks
 from tools.base_tool import (
     BaseTool,
     Determinism,
@@ -131,6 +132,13 @@ class RemotionCaptionBurn(BaseTool):
                     "left_panel, right_panel, full_overlay), and component-"
                     "specific props (text, stat, chartData, etc.). "
                     "See asset_manifest overlays from the asset-director."
+                ),
+            },
+            "language": {
+                "type": "string",
+                "description": (
+                    "Caption language (\"fr\", \"en\", ...). Used to read the "
+                    "burned captions back with OCR; defaults to English."
                 ),
             },
             "force_ffmpeg": {
@@ -491,6 +499,50 @@ class RemotionCaptionBurn(BaseTool):
             artifacts=[output_path],
         )
 
+    # ------------------------------------------------------------------ #
+    #  Read the burned captions back
+    # ------------------------------------------------------------------ #
+
+    REVIEW_FRAMES = 4
+
+    def _review_captions(
+        self, output_path: str, captions: list[dict], language: str | None = None
+    ) -> dict[str, Any]:
+        """OCR a few frames of the output and look for glued caption words.
+
+        This tool is not followed by video_compose's final review, so without
+        this nothing read its output. A review that could not run says
+        "not_checked" with the reason; it never reads as "pass".
+        """
+        expected = " ".join(c["word"] for c in captions)
+        step = max(len(captions) / self.REVIEW_FRAMES, 1)
+        picked = sorted({int(i * step) for i in range(self.REVIEW_FRAMES) if int(i * step) < len(captions)})
+        work = Path(output_path).parent / ".caption_review_frames"
+        lang = render_checks.ocr_language(language)
+        readings_out: list[dict] = []
+        glued: list[str] = []
+        for n, idx in enumerate(picked):
+            cap = captions[idx]
+            t = (cap["startMs"] + cap["endMs"]) / 2000
+            frame = render_checks.extract_frame(Path(output_path), t, work / f"caption_{n}.png")
+            if not frame:
+                continue
+            readings, reason = render_checks.ocr_readings(frame, lang)
+            if readings is None:
+                return {"status": "not_checked", "reason": reason, "frames_checked": 0}
+            found = sorted({g for r in readings for g in render_checks.glued_words(r, expected=expected)})
+            best = max(readings, key=lambda r: sum(ch.isalpha() for ch in r)) if readings else ""
+            readings_out.append({"t": round(t, 2), "text": best, "glued_words": found})
+            glued += [g for g in found if g not in glued]
+        if not readings_out:
+            return {"status": "not_checked", "reason": "no frame could be extracted", "frames_checked": 0}
+        return {
+            "status": "revise" if glued else "pass",
+            "frames_checked": len(readings_out),
+            "glued_words": glued,
+            "readings": readings_out,
+        }
+
     @staticmethod
     def _ms_to_srt(ms: int) -> str:
         h = ms // 3600000
@@ -546,6 +598,15 @@ class RemotionCaptionBurn(BaseTool):
             )
         else:
             result = self._render_ffmpeg(input_path, output_path, captions)
+
+        if result.success:
+            review = self._review_captions(output_path, captions, inputs.get("language"))
+            result.data["caption_review"] = review
+            if review["status"] == "revise":
+                result.data["caption_review_issue"] = (
+                    "Glued words on screen (missing spaces): "
+                    + ", ".join(review["glued_words"][:6])
+                )
 
         result.duration_seconds = round(time.time() - start, 2)
         return result
