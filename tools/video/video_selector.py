@@ -20,6 +20,7 @@ class VideoSelector(BaseTool):
     provider = "selector"
     stability = ToolStability.BETA
     runtime = ToolRuntime.HYBRID
+    delegates_cost = True  # the provider it routes to is the one charged
     agent_skills = ["ai-video-gen", "create-video", "ltx2", "gemini-omni", "atlas-cloud"]
 
     # Operations that REQUIRE motion: an image-only tool (image_selector) is not

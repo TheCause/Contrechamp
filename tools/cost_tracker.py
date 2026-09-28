@@ -57,6 +57,9 @@ class CostTracker:
         self.cost_log_path = cost_log_path
         self.entries: list[dict[str, Any]] = []
         self._approved_tools: set[str] = set()
+        # Approvals that hold for this process only (e.g. taken from an
+        # environment variable). Never written to cost_log.json.
+        self._session_approved_tools: set[str] = set()
 
         if cost_log_path and cost_log_path.exists():
             self._load()
@@ -133,7 +136,7 @@ class CostTracker:
 
         # Check new paid tool approval
         if self.require_approval_for_new_paid_tool and estimated > 0:
-            if entry["tool"] not in self._approved_tools:
+            if entry["tool"] not in (self._approved_tools | self._session_approved_tools):
                 if self.mode != BudgetMode.OBSERVE:
                     raise ApprovalRequiredError(
                         f"First paid use of tool {entry['tool']!r} requires approval"
@@ -160,6 +163,10 @@ class CostTracker:
         """Mark a tool as approved for paid operations."""
         self._approved_tools.add(tool)
         self._save()
+
+    def approve_tool_for_session(self, tool: str) -> None:
+        """Approve a tool for this tracker's lifetime only, without persisting it."""
+        self._session_approved_tools.add(tool)
 
     def reconcile(self, entry_id: str, actual_usd: float, success: bool = True) -> None:
         """Reconcile actual spend after tool execution."""

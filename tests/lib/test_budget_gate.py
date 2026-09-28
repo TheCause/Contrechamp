@@ -69,12 +69,26 @@ def _project(tmp_path):
                         style_playbook="clean-professional")
 
 
-def test_ungoverned_outside_a_project(tmp_path, monkeypatch):
-    """A call with no owning project is left alone."""
+def test_cap_refuses_paid_call_outside_a_project(tmp_path, monkeypatch):
+    """No project means no cost_log.json to account against. In cap mode the
+    gate cannot prove the call fits the ceiling, so it must refuse rather than
+    wave it through (an agent writing to /tmp used to spend without limit)."""
     monkeypatch.setenv("OPENMONTAGE_BUDGET_MODE", "cap")
     monkeypatch.setenv("OPENMONTAGE_BUDGET_TOTAL_USD", "0.0")
-    result = FakePaidTool().execute({"cost": 5.0})
-    assert result.success is True
+    with pytest.raises(BudgetExceededError):
+        FakePaidTool().execute({"cost": 5.0})
+    with pytest.raises(BudgetExceededError):
+        FakePaidTool().execute({"cost": 5.0, "output_path": str(tmp_path / "x.png")})
+
+
+def test_outside_a_project_free_or_non_cap_calls_pass(tmp_path, monkeypatch):
+    """Silent side: a free call in cap mode, and any call in warn mode, still
+    run outside a project."""
+    monkeypatch.setenv("OPENMONTAGE_BUDGET_MODE", "cap")
+    monkeypatch.setenv("OPENMONTAGE_BUDGET_TOTAL_USD", "0.0")
+    assert FakePaidTool().execute({"cost": 0.0}).success
+    monkeypatch.setenv("OPENMONTAGE_BUDGET_MODE", "warn")
+    assert FakePaidTool().execute({"cost": 5.0}).success
 
 
 def test_cap_mode_refuses_to_exceed_budget(tmp_path, monkeypatch):
@@ -168,3 +182,235 @@ def test_kill_switch_disables_the_gate(tmp_path, monkeypatch):
     monkeypatch.setenv("OPENMONTAGE_BUDGET_MODE", "cap")
     monkeypatch.setenv("OPENMONTAGE_BUDGET_TOTAL_USD", "0.0")
     assert FakePaidTool().execute({"project_dir": str(project), "cost": 9.0}).success
+
+
+# ---------------------------------------------------------------------------
+# Repairs after an adversarial audit of the #601 cherry-pick. Each defect has
+# a test that fails on it and a test that stays silent on the healthy case.
+# ---------------------------------------------------------------------------
+
+def _strict(monkeypatch, total="0.0"):
+    monkeypatch.setenv("OPENMONTAGE_BUDGET_MODE", "cap")
+    monkeypatch.setenv("OPENMONTAGE_BUDGET_TOTAL_USD", total)
+    monkeypatch.setenv("OPENMONTAGE_APPROVE_TOOLS", "*")
+    monkeypatch.setenv("OPENMONTAGE_SINGLE_ACTION_USD", "999")
+
+
+def test_current_ceiling_wins_over_ceiling_stored_in_log(tmp_path, monkeypatch):
+    """Lowering the ceiling on a project that already has a cost_log.json must
+    bite. The log used to overwrite the configured ceiling on load."""
+    project = _project(tmp_path)
+    monkeypatch.setenv("OPENMONTAGE_BUDGET_MODE", "observe")
+    monkeypatch.setenv("OPENMONTAGE_BUDGET_TOTAL_USD", "10.0")
+    monkeypatch.setenv("OPENMONTAGE_APPROVE_TOOLS", "*")
+    FakePaidTool().execute({"project_dir": str(project), "cost": 0.10})
+    assert json.loads((project / "cost_log.json").read_text())["budget_total_usd"] == 10.0
+
+    budget.reset_trackers()  # a new process
+    _strict(monkeypatch, total="0.0")
+    with pytest.raises(BudgetExceededError):
+        FakePaidTool().execute({"project_dir": str(project), "cost": 0.10})
+
+
+def test_existing_log_within_current_ceiling_still_passes(tmp_path, monkeypatch):
+    project = _project(tmp_path)
+    _strict(monkeypatch, total="10.0")
+    FakePaidTool().execute({"project_dir": str(project), "cost": 0.10})
+    budget.reset_trackers()
+    assert FakePaidTool().execute({"project_dir": str(project), "cost": 0.10}).success
+
+
+@pytest.mark.parametrize("damage", ["corrupt", "directory"])
+def test_unreadable_cost_log_refuses_paid_call(tmp_path, monkeypatch, damage):
+    """An unreadable log used to switch the gate off in silence."""
+    project = _project(tmp_path)
+    log = project / "cost_log.json"
+    if damage == "corrupt":
+        log.write_text("{not json")
+    else:
+        log.mkdir()
+    _strict(monkeypatch, total="100.0")
+    with pytest.raises(ApprovalRequiredError, match="cost_log.json"):
+        FakePaidTool().execute({"project_dir": str(project), "cost": 5.0})
+
+
+def test_unreadable_cost_log_does_not_block_free_calls(tmp_path, monkeypatch):
+    project = _project(tmp_path)
+    (project / "cost_log.json").write_text("{not json")
+    _strict(monkeypatch, total="100.0")
+    assert FakePaidTool().execute({"project_dir": str(project), "cost": 0.0}).success
+
+
+def test_unwritable_cost_log_is_a_governance_refusal(tmp_path, monkeypatch):
+    """Same policy for an unwritable log: a refusal that says why, not a raw
+    PermissionError from deep inside the tracker."""
+    import os
+
+    if hasattr(os, "geteuid") and os.geteuid() == 0:
+        pytest.skip("root ignores directory permissions")
+    project = _project(tmp_path)
+    monkeypatch.setenv("OPENMONTAGE_BUDGET_MODE", "observe")
+    project.chmod(0o500)
+    try:
+        with pytest.raises(ApprovalRequiredError, match="cost_log.json"):
+            FakePaidTool().execute({"project_dir": str(project), "cost": 1.0})
+    finally:
+        project.chmod(0o755)
+
+
+@pytest.mark.parametrize("runtime", [ToolRuntime.HYBRID, ToolRuntime.LOCAL_GPU,
+                                     ToolRuntime.LOCAL])
+def test_paid_estimate_is_governed_whatever_the_runtime(tmp_path, monkeypatch, runtime):
+    """image_gen (HYBRID) calls OpenAI/FAL itself; comfyui_video (LOCAL_GPU)
+    drives paid partner nodes. Only API tools used to be governed."""
+    project = _project(tmp_path)
+    _strict(monkeypatch)
+
+    class Paid(FakePaidTool):
+        name = f"fake_paid_{runtime.value}"
+
+    Paid.runtime = runtime
+    with pytest.raises(BudgetExceededError):
+        Paid().execute({"project_dir": str(project), "cost": 0.05})
+
+
+def test_real_image_gen_openai_is_governed(tmp_path, monkeypatch):
+    from tools.graphics.image_gen import ImageGen
+
+    project = _project(tmp_path)
+    _strict(monkeypatch)
+    reached = []
+    monkeypatch.setattr(ImageGen, "_generate_openai",
+                        lambda self, inputs: reached.append(1) or ToolResult(success=True))
+    with pytest.raises(BudgetExceededError):
+        ImageGen().execute({"project_dir": str(project), "provider": "openai", "prompt": "x"})
+    assert reached == [], "the paid provider was reached despite a 0 USD cap"
+
+
+def test_real_comfyui_partner_node_is_governed(tmp_path, monkeypatch):
+    from tools.video.comfyui_video import ComfyUIVideo
+
+    class Offline(ComfyUIVideo):
+        """Real runtime and estimate; execute never touches a server."""
+
+        def execute(self, inputs):
+            return ToolResult(success=True, cost_usd=self.estimate_cost(inputs))
+
+    project = _project(tmp_path)
+    _strict(monkeypatch)
+    with pytest.raises(BudgetExceededError):
+        Offline().execute({"project_dir": str(project),
+                           "model_family": "seedance_2.5", "duration": 10})
+    # Silent side: the free local family is not charged.
+    assert Offline().execute({"project_dir": str(project), "model_family": "wan2.2"}).success
+
+
+def test_selector_delegation_is_charged_once(tmp_path, monkeypatch):
+    """A selector estimates its provider's cost; charging both would double
+    count. Only the provider opens an entry."""
+    project = _project(tmp_path)
+    _strict(monkeypatch, total="10.0")
+
+    class Selector(FakePaidTool):
+        name = "fake_selector"
+        runtime = ToolRuntime.HYBRID
+        delegates_cost = True
+
+        def execute(self, inputs):
+            return FakePaidTool().execute(dict(inputs))
+
+    assert Selector().execute({"project_dir": str(project), "cost": 0.20}).success
+    entries = json.loads((project / "cost_log.json").read_text())["entries"]
+    assert [e["tool"] for e in entries] == ["fake_paid_tool"]
+
+
+def test_real_selectors_declare_delegation():
+    from tools.audio.tts_selector import TTSSelector
+    from tools.graphics.image_selector import ImageSelector
+    from tools.video.video_selector import VideoSelector
+
+    for cls in (ImageSelector, TTSSelector, VideoSelector):
+        assert getattr(cls, "delegates_cost", False) is True, cls.__name__
+
+
+def _events(project):
+    path = project / "events.jsonl"
+    if not path.is_file():
+        return []
+    return [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+
+
+@pytest.mark.parametrize("var,value", [
+    ("OPENMONTAGE_BUDGET_DISABLED", "1"),
+    ("OPENMONTAGE_APPROVE_TOOLS", "*"),
+    ("OPENMONTAGE_SINGLE_ACTION_USD", "999"),
+])
+def test_escape_hatch_leaves_a_trace(tmp_path, monkeypatch, var, value):
+    """An escape hatch used to be invisible: no log, no event, nothing."""
+    project = _project(tmp_path)
+    monkeypatch.setenv("OPENMONTAGE_BUDGET_MODE", "observe")
+    monkeypatch.delenv("OPENMONTAGE_BUDGET_TOTAL_USD", raising=False)
+    monkeypatch.delenv("OPENMONTAGE_SINGLE_ACTION_USD", raising=False)
+    monkeypatch.setenv(var, value)
+    FakePaidTool().execute({"project_dir": str(project), "cost": 0.30})
+    overrides = [e for e in _events(project) if e.get("event") == "budget_override"]
+    assert overrides, "paid call under an escape hatch left no budget_override event"
+    assert var in overrides[0]["overrides"]
+
+
+def test_no_override_event_without_escape_hatch(tmp_path, monkeypatch):
+    project = _project(tmp_path)
+    for var in ("OPENMONTAGE_BUDGET_MODE", "OPENMONTAGE_BUDGET_TOTAL_USD",
+                "OPENMONTAGE_SINGLE_ACTION_USD", "OPENMONTAGE_APPROVE_TOOLS",
+                "OPENMONTAGE_BUDGET_DISABLED"):
+        monkeypatch.delenv(var, raising=False)
+    tracker = budget.tracker_for(project)
+    tracker.approve_tool("fake_paid_tool")  # a real, recorded human approval
+    FakePaidTool().execute({"project_dir": str(project), "cost": 0.30})
+    assert not [e for e in _events(project) if e.get("event") == "budget_override"]
+
+
+def test_env_approval_is_not_persisted(tmp_path, monkeypatch):
+    """An approval taken from the environment must end with the environment."""
+    project = _project(tmp_path)
+    monkeypatch.setenv("OPENMONTAGE_BUDGET_MODE", "warn")
+    monkeypatch.setenv("OPENMONTAGE_BUDGET_TOTAL_USD", "100.0")
+    monkeypatch.setenv("OPENMONTAGE_APPROVE_TOOLS", "fake_paid_tool")
+    assert FakePaidTool().execute({"project_dir": str(project), "cost": 0.20}).success
+    assert "fake_paid_tool" not in json.loads(
+        (project / "cost_log.json").read_text())["approved_tools"]
+
+    budget.reset_trackers()
+    monkeypatch.delenv("OPENMONTAGE_APPROVE_TOOLS")
+    with pytest.raises(ApprovalRequiredError):
+        FakePaidTool().execute({"project_dir": str(project), "cost": 0.20})
+
+
+def _config(tmp_path, monkeypatch, text):
+    root = tmp_path / "repo"
+    root.mkdir(exist_ok=True)
+    if text is not None:
+        (root / "config.yaml").write_text(text)
+    monkeypatch.setattr(budget, "_REPO_ROOT", root)
+    monkeypatch.delenv("OPENMONTAGE_BUDGET_MODE", raising=False)
+    return budget._budget_config()
+
+
+@pytest.mark.parametrize("text", [
+    "budget:\n  mode: capp\n  total_usd: 0\n",
+    "budget: [mode: cap\n  total_usd: 0\n",
+])
+def test_unreadable_budget_config_falls_back_to_cap(tmp_path, monkeypatch, text):
+    """A typo in the owner's budget block used to relax the gate to warn."""
+    from lib.config_model import BudgetMode
+
+    assert _config(tmp_path, monkeypatch, text)["mode"] == BudgetMode.CAP
+
+
+@pytest.mark.parametrize("text,expected", [
+    ("budget:\n  mode: warn\n", "warn"),
+    ("budget:\n  mode: observe\n", "observe"),
+    (None, "warn"),  # no config.yaml at all: upstream default
+])
+def test_readable_budget_config_is_respected(tmp_path, monkeypatch, text, expected):
+    assert _config(tmp_path, monkeypatch, text)["mode"].value == expected
