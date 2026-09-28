@@ -8,6 +8,7 @@ export { CaptionOverlay } from "./CaptionOverlay";
 export { SectionTitle } from "./SectionTitle";
 export { StatReveal } from "./StatReveal";
 export { HeroTitle } from "./HeroTitle";
+export { KeyPhraseCard } from "./KeyPhraseCard";
 export { ParticleOverlay } from "./ParticleOverlay";
 export { AnimeScene } from "./AnimeScene";
 export { TerminalScene } from "./TerminalScene";
