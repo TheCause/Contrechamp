@@ -179,3 +179,30 @@ def test_credits_without_registry_are_not_checked_not_passed(tmp_path):
           "metadata": {"language": "en"}}
     review = _review(video, ed)
     assert "credits" in review["checks"]["credits"]["not_checked"]
+
+
+def test_malformed_metadata_is_not_checked_not_a_crash(tmp_path):
+    video = _two_shots(tmp_path)
+    ed = {"cuts": _cuts(("s1", "x", 0, 1.6), ("s2", "y", 0, 1.6)), "music": {"track": "bed"},
+          "metadata": {"language": "en", "credits": {"entries": "oops"},
+                       "narration_timing": {"sentences": [{"text": "x"}]}}}
+    review = _review(video, ed)
+    assert "credits" in review["checks"]["credits"]["not_checked"] or review["checks"]["credits"]["issues"] == []
+    assert "last_sentence" in review["checks"]["audio_spotcheck"]["not_checked"]
+
+
+def test_planned_narration_with_unchecked_ending_cannot_pass(tmp_path):
+    video = _two_shots(tmp_path)
+    ed = {"cuts": _cuts(("s1", "x", 0, 1.6), ("s2", "y", 0, 1.6)), "music": {"track": "bed"},
+          "audio": {"narration": {"src": "narration.wav"}}, "metadata": {"language": "en"}}
+    review = _review(video, ed)
+    assert any("last sentence not checked" in i for i in review["issues_found"])
+    assert review["status"] != "pass"
+
+
+def test_credit_coverage_is_named_when_assets_are_not_declared(tmp_path):
+    video = _two_shots(tmp_path)
+    registry = {"entries": [{"asset": "a.jpg", "title": "A", "license": "cc0"}]}
+    ed = {"cuts": _cuts(("s1", "x", 0, 1.6), ("s2", "y", 0, 1.6)), "music": {"track": "bed"},
+          "metadata": {"language": "en", "credits": registry}}
+    assert "coverage" in _review(video, ed)["checks"]["credits"]["not_checked"]

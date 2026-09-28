@@ -2650,43 +2650,77 @@ class VideoCompose(BaseTool):
 
         # Last sentence: needs the narration timing (script_timing output) and
         # the offset of the narration in the final video (intro, cold open).
-        timing = ed_meta.get("narration_timing")
-        if isinstance(timing, (str, Path)) and Path(timing).exists():
-            timing = json.loads(Path(timing).read_text(encoding="utf-8"))
-        sentences = (timing or {}).get("sentences") if isinstance(timing, dict) else None
-        if sentences and technical_probe.get("has_audio") and duration > 0:
-            offset = float(ed_meta.get("narration_offset_s") or 0.0)
-            last = sentences[-1]
-            try:
+        narration_expected = bool((ed.get("audio") or {}).get("narration"))
+        try:
+            timing = ed_meta.get("narration_timing")
+            if isinstance(timing, (str, Path)) and Path(timing).exists():
+                timing = json.loads(Path(timing).read_text(encoding="utf-8"))
+            sentences = (timing or {}).get("sentences") if isinstance(timing, dict) else None
+            if sentences and technical_probe.get("has_audio") and duration > 0:
+                offset = float(ed_meta.get("narration_offset_s") or 0.0)
+                last = sentences[-1]
+                spoken = [w for w in (timing.get("words") or [])
+                          if w.get("match") != "punctuation" and w.get("sentence") == last.get("index")]
+                last_word = ((spoken[-1]["start"] + offset, spoken[-1]["end"] + offset)
+                             if spoken else None)
+                cfg = render_checks.settings()
+                language = ed_meta.get("language")
+
+                def _transcribe(wav: Path) -> list[dict]:
+                    from tools.analysis.transcriber import Transcriber
+
+                    r = Transcriber().execute({"input_path": str(wav), "language": language,
+                                               "model_size": cfg.last_sentence_model})
+                    if not r.success:
+                        raise RuntimeError(r.error)
+                    return r.data.get("word_timestamps", [])
+
                 ending = render_checks.check_last_sentence(
-                    output_path, last["start"] + offset, last["end"] + offset, duration)
+                    output_path, last["start"] + offset, last["end"] + offset, duration,
+                    last_word=last_word, expected_text=last.get("text"), transcribe=_transcribe)
                 audio_spotcheck["last_sentence"] = ending
                 audio_spotcheck["issues"].extend(ending["issues"])
-                if ending.get("not_checked"):
-                    audio_spotcheck["not_checked"]["last_sentence"] = ending["not_checked"]
-            except Exception as e:
-                audio_spotcheck["not_checked"]["last_sentence"] = f"last sentence check error: {e}"
-        else:
-            audio_spotcheck["not_checked"]["last_sentence"] = (
-                "no narration_timing (script_timing output) in edit_decisions.metadata")
+                for key, reason in ending.get("not_checked", {}).items():
+                    audio_spotcheck["not_checked"][f"last_sentence_{key}"] = reason
+            else:
+                audio_spotcheck["not_checked"]["last_sentence"] = (
+                    "no narration_timing (script_timing output) in edit_decisions.metadata")
+        except Exception as e:
+            audio_spotcheck["not_checked"]["last_sentence"] = f"last sentence check error: {e}"
+        if narration_expected:
+            # consistent with transcript_comparison: an unmeasured narration
+            # check is an open issue when narration was planned
+            for key in ("loudness", "last_sentence", "last_sentence_heard", "last_sentence_level"):
+                if key in audio_spotcheck["not_checked"]:
+                    audio_spotcheck["issues"].append(
+                        f"Narration planned but {key.replace('_', ' ')} not checked: "
+                        f"{audio_spotcheck['not_checked'][key]}")
 
         issues.extend(audio_spotcheck.get("issues", []))
 
         # Credits: every third-party asset needs a read licence and its credit.
         credits_check: dict[str, Any] = {"issues": [], "warnings": [], "not_checked": {}}
-        registry = ed_meta.get("credits")
-        if isinstance(registry, (str, Path)) and Path(registry).exists():
-            registry = json.loads(Path(registry).read_text(encoding="utf-8"))
-        if isinstance(registry, dict):
-            from lib import credits as credits_lib
+        try:
+            registry = ed_meta.get("credits")
+            if isinstance(registry, (str, Path)) and Path(registry).exists():
+                registry = json.loads(Path(registry).read_text(encoding="utf-8"))
+            if isinstance(registry, dict):
+                from lib import credits as credits_lib
 
-            used = ed_meta.get("third_party_assets") or [
-                e["asset"] for e in registry.get("entries", []) if e.get("asset")]
-            credits_check.update(credits_lib.check(registry, used))
-            issues.extend(credits_check["issues"])
-        else:
-            credits_check["not_checked"]["credits"] = (
-                "no credits registry in edit_decisions.metadata.credits")
+                declared = ed_meta.get("third_party_assets")
+                used = declared or [
+                    e["asset"] for e in registry.get("entries", []) if isinstance(e, dict) and e.get("asset")]
+                credits_check.update(credits_lib.check(registry, used))
+                if not declared:
+                    credits_check["not_checked"]["coverage"] = (
+                        "third_party_assets not declared: only the registry's own entries were "
+                        "checked, an asset used but missing from the registry cannot be seen")
+                issues.extend(credits_check["issues"])
+            else:
+                credits_check["not_checked"]["credits"] = (
+                    "no credits registry in edit_decisions.metadata.credits")
+        except Exception as e:
+            credits_check["not_checked"]["credits"] = f"credits check error: {type(e).__name__}: {e}"
 
         # --- 4. Promise preservation ---
         promise_preservation: dict[str, Any] = {

@@ -14,6 +14,7 @@ source_url, on_screen, in_description}]}.
 """
 from __future__ import annotations
 
+import re
 from typing import Any
 
 # licence id -> (display, attribution required, commercial use allowed)
@@ -39,6 +40,13 @@ LICENSES: dict[str, tuple[str, bool, bool]] = {
 }
 
 
+def _licence_id(raw: Any) -> str:
+    """'CC BY-SA 4.0', 'cc_by_4.0', 'CC-BY 4.0' -> 'cc-by-sa-4.0' / 'cc-by-4.0'."""
+    t = re.sub(r"[\s_]+", "-", str(raw).strip().lower())
+    t = re.sub(r"-+", "-", t)
+    return {"cc-zero": "cc0", "cc0-1.0": "cc0", "apache-2": "apache-2.0", "ofl": "ofl-1.1"}.get(t, t)
+
+
 def check(registry: dict[str, Any], used_assets: list[str]) -> dict[str, Any]:
     monetized = bool(registry.get("monetized"))
     entries = {e["asset"]: e for e in registry.get("entries", [])}
@@ -48,7 +56,7 @@ def check(registry: dict[str, Any], used_assets: list[str]) -> dict[str, Any]:
         if e is None:
             issues.append(f"{asset}: no credit entry (read its licence and add it to the registry)")
             continue
-        lic = LICENSES.get(str(e.get("license", "")).lower())
+        lic = LICENSES.get(_licence_id(e.get("license", "")))
         if lic is None:
             issues.append(f"{asset}: unknown licence {e.get('license')!r} (read it and name it)")
             continue

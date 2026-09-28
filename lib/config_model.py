@@ -96,6 +96,10 @@ class ReviewConfig(BaseModel):
     # the last 4 seconds).
     last_sentence_max_drop_db: float = Field(8.0, ge=0.0, le=60.0)
     last_sentence_min_margin_s: float = Field(0.1, ge=0.0, le=10.0)
+    # The end of the final mix is transcribed: the last sentence must be found
+    # in it (a voice cut under a music bed kept a normal level).
+    last_sentence_min_heard: float = Field(0.6, ge=0.0, le=1.0)
+    last_sentence_model: str = "small"
 
 
 class OpenMontageConfig(BaseModel):

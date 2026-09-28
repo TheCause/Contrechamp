@@ -325,7 +325,12 @@ def loudness(video: Path) -> dict[str, Any]:
     i = re.search(r"I:\s+(-?[0-9.]+|-inf) LUFS", summary[1])
     peak = re.search(r"Peak:\s+(-?[0-9.]+|-inf) dBFS", summary[1])
     value = lambda m: None if not m or m.group(1) == "-inf" else float(m.group(1))
-    return {"integrated_lufs": value(i), "true_peak_dbtp": value(peak)}
+    lufs = value(i)
+    if lufs is not None and lufs <= -69.9:
+        # -70 LUFS is ebur128's absolute gate: nothing loud enough to measure
+        return {"integrated_lufs": None, "true_peak_dbtp": value(peak),
+                "reason": "no measurable loudness (under the -70 LUFS gate: silent)"}
+    return {"integrated_lufs": lufs, "true_peak_dbtp": value(peak)}
 
 
 def window_volume(video: Path, start: float, end: float) -> float | None:
@@ -337,24 +342,61 @@ def window_volume(video: Path, start: float, end: float) -> float | None:
     return None if not m or m.group(1) == "-inf" else float(m.group(1))
 
 
-def check_last_sentence(video: Path, start: float, end: float, duration: float) -> dict[str, Any]:
-    """The last narrated sentence must end inside the video and stay audible."""
+def check_last_sentence(
+    video: Path,
+    start: float,
+    end: float,
+    duration: float,
+    *,
+    last_word: tuple[float, float] | None = None,
+    expected_text: str | None = None,
+    transcribe: Any = None,
+) -> dict[str, Any]:
+    """The last narrated sentence must end inside the video and be HEARD.
+
+    Volume alone cannot tell: a voice cut under a music bed keeps a normal
+    level. When ``expected_text`` and a ``transcribe(wav_path) -> words``
+    callable are given, the end of the final mix is transcribed and the last
+    sentence must be found in it. The level check measures the last WORD
+    (``last_word``), where a fade bites hardest, or the last second.
+    """
     cfg = settings()
     out: dict[str, Any] = {"start": round(start, 2), "end": round(end, 2), "duration": round(duration, 2),
-                           "issues": []}
+                           "issues": [], "not_checked": {}}
     if end > duration - cfg.last_sentence_min_margin_s:
         out["issues"].append(
             f"Last sentence ends at {end:.2f}s but the video ends at {duration:.2f}s: it is cut")
-    # A fade eats the END of the sentence: averaged over the whole sentence a
-    # 4 s fade-out only cost 7 dB, on its last second it cost 13 dB.
     whole = window_volume(video, 0.0, duration)
     tail_end = min(end, duration)
-    last = window_volume(video, max(start, tail_end - 1.0), tail_end)
-    out["mix_mean_db"], out["last_second_mean_db"] = whole, last
+    w0, w1 = last_word if last_word else (max(start, tail_end - 1.0), tail_end)
+    w1 = min(w1, duration)
+    last = window_volume(video, w0, w1) if w1 > w0 else None
+    out["mix_mean_db"], out["last_word_mean_db"] = whole, last
     if whole is None or last is None:
-        out["not_checked"] = "could not measure the volume of the last sentence"
+        out["not_checked"]["level"] = "could not measure the volume of the last word"
     elif whole - last > cfg.last_sentence_max_drop_db:
         out["issues"].append(
-            f"Last second of the last sentence is {whole - last:.1f} dB under the mix: "
-            "faded out or inaudible")
+            f"Last word is {whole - last:.1f} dB under the mix: faded out or inaudible")
+    if expected_text and transcribe is not None:
+        try:
+            from lib.script_timing import time_script
+
+            wav = Path(video).with_name(Path(video).stem + ".last_sentence.wav")
+            a, b = max(0.0, start - 0.3), min(duration, end + 0.6)
+            subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", f"{a:.3f}", "-to", f"{b:.3f}",
+                            "-i", str(video), "-vn", "-ac", "1", "-ar", "16000", str(wav)],
+                           check=True, capture_output=True, timeout=120)
+            words = transcribe(wav)
+            wav.unlink(missing_ok=True)
+            report = time_script(expected_text, words)["report"]
+            out["heard"] = " ".join(str(w.get("word", "")).strip() for w in words)
+            out["heard_fidelity"] = report["fidelity"]
+            if report["fidelity"] < cfg.last_sentence_min_heard:
+                out["issues"].append(
+                    f"Last sentence not heard in the final mix (fidelity {report['fidelity']:.2f}): "
+                    f"expected {expected_text!r}, heard {out['heard']!r}")
+        except Exception as exc:
+            out["not_checked"]["heard"] = f"could not transcribe the end of the mix: {type(exc).__name__}: {exc}"
+    else:
+        out["not_checked"]["heard"] = "no expected text or no transcriber for the end of the mix"
     return out

@@ -49,3 +49,9 @@ def test_non_commercial_is_a_warning_until_the_channel_is_monetized():
     assert r["issues"] == [] and any("not monetized" in w for w in r["warnings"])
     r = cr.check(_reg(POSTER, monetized=True), ["presse/affiche.jpg"])
     assert any("non-commercial" in i for i in r["issues"])
+
+
+def test_usual_licence_spellings_are_recognised():
+    for spelling in ("CC BY 4.0", "cc_by_4.0", "CC-BY 4.0", "cc-by-4.0"):
+        r = cr.check(_reg(dict(VOICE, license=spelling)), ["voice:fr_FR-siwis-medium"])
+        assert r["issues"] == [], (spelling, r)
