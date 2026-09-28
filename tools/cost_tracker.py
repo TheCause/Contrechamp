@@ -25,6 +25,7 @@ class EntryStatus(str, Enum):
     COMPLETED = "completed"
     FAILED = "failed"
     REFUNDED = "refunded"
+    REFUSED = "refused"
 
 
 class BudgetExceededError(Exception):
@@ -125,6 +126,34 @@ class CostTracker:
         """
         entry = self._find(entry_id)
         estimated = entry["estimated_usd"]
+        try:
+            self._check_reservation(entry, estimated)
+        except (BudgetExceededError, ApprovalRequiredError) as exc:
+            # Close the entry: a refusal left at "estimated" reads as a pending
+            # spend that nothing will ever settle.
+            entry["status"] = EntryStatus.REFUSED.value
+            entry["refusal"] = str(exc)
+            entry["reserved_usd"] = 0.0
+            entry["timestamp"] = self._now()
+            self._save()
+            raise
+
+        entry["status"] = EntryStatus.RESERVED.value
+        entry["reserved_usd"] = estimated
+        entry["timestamp"] = self._now()
+        self._save()
+
+    def _check_reservation(self, entry: dict, estimated: float) -> None:
+        """Raise the refusal that applies to this reservation, if any."""
+        over_budget = estimated > self.usable_budget_usd
+        over_budget_message = (
+            f"Reservation of ${estimated:.2f} exceeds usable budget "
+            f"${self.usable_budget_usd:.2f}"
+        )
+        # In cap mode the ceiling speaks first: asking for an approval that
+        # the ceiling would refuse anyway names the wrong cause.
+        if over_budget and self.mode == BudgetMode.CAP:
+            raise BudgetExceededError(over_budget_message)
 
         # Check single-action approval threshold
         if estimated > self.single_action_approval_usd:
@@ -143,21 +172,9 @@ class CostTracker:
                     )
 
         # Check budget
-        if estimated > self.usable_budget_usd:
-            message = (
-                f"Reservation of ${estimated:.2f} exceeds usable budget "
-                f"${self.usable_budget_usd:.2f}"
-            )
-            if self.mode == BudgetMode.CAP:
-                raise BudgetExceededError(message)
-            if self.mode == BudgetMode.WARN:
-                entry["budget_warning"] = True
-                entry["budget_warning_message"] = message
-
-        entry["status"] = EntryStatus.RESERVED.value
-        entry["reserved_usd"] = estimated
-        entry["timestamp"] = self._now()
-        self._save()
+        if over_budget and self.mode == BudgetMode.WARN:
+            entry["budget_warning"] = True
+            entry["budget_warning_message"] = over_budget_message
 
     def approve_tool(self, tool: str) -> None:
         """Mark a tool as approved for paid operations."""
