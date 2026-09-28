@@ -7,6 +7,7 @@ module docstring for the rules.
 """
 from __future__ import annotations
 
+import json
 import time
 from pathlib import Path
 from typing import Any
@@ -81,8 +82,12 @@ class NarrateScript(BaseTool):
             return ToolResult(success=False, error=f"TTS tool {inputs.get('tts_tool')!r} not found")
         tts_inputs = dict(inputs.get("tts_inputs") or {})
 
-        def synthesize(text: str, path: Path) -> None:
-            r = tts.execute({**tts_inputs, "text": text, "output_path": str(path)})
+        def synthesize(text: str, path: Path, attempt: int = 0) -> None:
+            call = {**tts_inputs, "text": text, "output_path": str(path)}
+            if attempt:
+                # a regeneration is a new take: the same seed gave the same file
+                call["seed"] = int(tts_inputs.get("seed", 42)) + attempt
+            r = tts.execute(call)
             if not r.success:
                 raise RuntimeError(f"{tts.name} failed on a chunk: {r.error}")
 
@@ -91,11 +96,17 @@ class NarrateScript(BaseTool):
             from tools.analysis.transcriber import Transcriber
 
             def transcribe(path: Path) -> list[dict]:
-                r = Transcriber().execute({
-                    "input_path": str(path),
-                    "language": inputs.get("language", "fr"),
-                    "model_size": inputs.get("model_size", "medium"),
-                })
+                try:
+                    r = Transcriber().execute({
+                        "input_path": str(path),
+                        "language": inputs.get("language", "fr"),
+                        "model_size": inputs.get("model_size", "medium"),
+                    })
+                except Exception as exc:  # e.g. model not in the offline cache
+                    raise RuntimeError(
+                        f"transcriber could not run on {path.name} "
+                        f"(model {inputs.get('model_size', 'medium')!r}): {type(exc).__name__}: {exc}"
+                    ) from exc
                 if not r.success:
                     raise RuntimeError(f"transcriber failed on {path.name}: {r.error}")
                 return r.data.get("word_timestamps", [])
@@ -108,6 +119,7 @@ class NarrateScript(BaseTool):
                 transcribe,
                 project_dir=Path(inputs["project_dir"]) if inputs.get("project_dir") else None,
                 require_approval=inputs.get("require_approval", True),
+                voice_key=json.dumps({"tool": tts.name, **tts_inputs}, sort_keys=True, default=str),
                 only=inputs.get("only"),
                 replan=inputs.get("replan", False),
                 min_fidelity=float(inputs.get("min_fidelity", 0.8)),

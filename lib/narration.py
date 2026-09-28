@@ -17,7 +17,12 @@ Lessons carried over from a channel's production method (sept. 2026):
   synthesized again.
 - **What was said is checked, per chunk.** Each chunk is transcribed and
   aligned on its text (lib.script_timing); a chunk heard below the fidelity
-  threshold is ``suspect`` and the narration is ``revise``.
+  threshold (0.9), with a gap or with added words (a looping voice), is
+  ``suspect`` and the narration is ``revise``. Transcripts are cached by
+  audio content. A single dropped word (a lost negation) stays under every
+  threshold: listening remains part of the job.
+- **A regenerated chunk is a new take**: its attempt number is passed to the
+  voice, which shifts its seed (the same seed gave the same file).
 """
 from __future__ import annotations
 
@@ -33,7 +38,7 @@ from lib import script_timing
 
 DEFAULT_TARGET_WORDS = 75   # ~30 s of French narration
 DEFAULT_MIN_WORDS = 35
-DEFAULT_MIN_FIDELITY = 0.8
+DEFAULT_MIN_FIDELITY = 0.9
 GAP_IN_SECTION_MS = 250
 GAP_BETWEEN_SECTIONS_MS = 600
 
@@ -61,8 +66,11 @@ def fingerprint(script: Any) -> str:
 
 def approval_status(project_dir: Path | None, script: Any) -> dict:
     """Is ``script`` the text approved at the ``script`` stage of this project?"""
+    if not spoken_sections(script):
+        return {"status": "not_checked", "reason": "the script has no spoken text"}
     if project_dir is None:
-        return {"status": "not_checked", "reason": "no project_dir given"}
+        return {"status": "not_checked",
+                "reason": "no project_dir given: require_approval needs it (or pass require_approval=False)"}
     path = Path(project_dir) / "checkpoint_script.json"
     if not path.exists():
         return {"status": "not_checked", "reason": f"no script checkpoint at {path}"}
@@ -165,28 +173,43 @@ def load_or_plan(plan_path: Path, script: Any, *, replan: bool = False, **kw) ->
     return fresh, how
 
 
-def chunk_audio_path(out_dir: Path, chunk: dict) -> Path:
-    return out_dir / f"{chunk['id']}_{chunk['text_fingerprint']}.wav"
+def chunk_audio_path(out_dir: Path, chunk: dict, voice_key: str = "") -> Path:
+    """Audio keyed by chunk id, text AND voice settings: a new voice, seed or
+    engine never silently reuses audio made with the previous one."""
+    voice = hashlib.sha256(voice_key.encode("utf-8")).hexdigest()[:8]
+    return out_dir / f"{chunk['id']}_{chunk['text_fingerprint']}_{voice}.wav"
+
+
+def _sha(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def narrate(
     script: Any,
     out_dir: Path,
-    synthesize: Callable[[str, Path], None],
+    synthesize: Callable[[str, Path, int], None],
     transcribe: Callable[[Path], list[dict]] | None = None,
     *,
     project_dir: Path | None = None,
     require_approval: bool = True,
+    voice_key: str = "",
     only: list[str] | None = None,
     replan: bool = False,
     min_fidelity: float = DEFAULT_MIN_FIDELITY,
     target_words: int = DEFAULT_TARGET_WORDS,
     min_words: int = DEFAULT_MIN_WORDS,
 ) -> dict:
-    """Synthesize the chunks that need it, check each one, join them into narration.wav."""
+    """Synthesize the chunks that need it, check each one, join them into narration.wav.
+
+    ``synthesize(text, path, attempt)``: attempt is 0 for a first take and
+    counts regenerations of that chunk, so a seeded voice gives a new take
+    instead of the same file. ``voice_key`` names the voice settings.
+    """
     approval = approval_status(project_dir, script)
+    if not spoken_sections(script):
+        return {"status": "refused", "approval": approval, "chunks": []}
     if approval["status"] in ("changed_since_approval", "not_approved") or (
-        require_approval and project_dir is not None and approval["status"] != "approved"
+        require_approval and approval["status"] != "approved"
     ):
         return {"status": "refused", "approval": approval, "chunks": []}
 
@@ -201,21 +224,38 @@ def narrate(
     if unknown:
         raise ValueError(f"Unknown chunk ids {sorted(unknown)}; plan has {[c['id'] for c in chunks]}")
 
+    attempts_path = out_dir / "narration_attempts.json"
+    attempts = json.loads(attempts_path.read_text(encoding="utf-8")) if attempts_path.exists() else {}
     for c in chunks:
-        path = chunk_audio_path(out_dir, c)
+        path = chunk_audio_path(out_dir, c, voice_key)
         c["audio"] = str(path)
         c["synthesized"] = False
+        key = path.name
         if not path.exists() or c["id"] in wanted:
-            synthesize(c["text"], path)
+            attempt = attempts.get(key, -1) + 1 if path.exists() else 0
+            synthesize(c["text"], path, attempt)
+            attempts[key] = attempt
             c["synthesized"] = True
+        c["attempt"] = attempts.get(key, 0)
         if transcribe is None:
             c["check"] = "not_checked"
             continue
-        timing = script_timing.time_script(c["text"], transcribe(path))
+        # transcripts are cached by audio content: an unchanged chunk is not heard again
+        cache = path.with_suffix(".words.json")
+        digest = _sha(path)
+        cached = json.loads(cache.read_text(encoding="utf-8")) if cache.exists() else {}
+        if cached.get("audio_sha256") == digest:
+            heard = cached["words"]
+        else:
+            heard = transcribe(path)
+            cache.write_text(json.dumps({"audio_sha256": digest, "words": heard}, ensure_ascii=False),
+                             encoding="utf-8")
+        timing = script_timing.time_script(c["text"], heard)
         c["fidelity"] = timing["report"]["fidelity"]
         c["gaps"] = timing["report"]["gaps"]
         c["check"] = "suspect" if c["fidelity"] < min_fidelity or timing["report"]["status"] != "pass" else "ok"
 
+    attempts_path.write_text(json.dumps(attempts, indent=1), encoding="utf-8")
     narration = out_dir / "narration.wav"
     _join(chunks, narration)
 
@@ -228,6 +268,7 @@ def narrate(
     return {
         "status": status,
         "approval": approval,
+        "approval_waived": not require_approval,
         "plan": how,
         "narration": str(narration),
         "chunks": chunks,
@@ -249,8 +290,10 @@ def _join(chunks: list[dict], out: Path, sample_rate: int = 48000) -> None:
                 f"aevalsrc=0:d={gap / 1000}:s={sample_rate},aformat=channel_layouts=mono[s{i}]")
             labels.append(f"[s{i}]")
     graph = ";".join(filters) + ";" + "".join(labels) + f"concat=n={len(labels)}:v=0:a=1[out]"
-    subprocess.run(
+    proc = subprocess.run(
         ["ffmpeg", "-v", "error", "-y", *inputs, "-filter_complex", graph, "-map", "[out]",
          "-c:a", "pcm_s16le", str(out)],
-        check=True, capture_output=True, text=True,
+        capture_output=True, text=True,
     )
+    if proc.returncode != 0:
+        raise RuntimeError(f"ffmpeg could not join the chunks into {out.name}: {proc.stderr.strip()[-500:]}")

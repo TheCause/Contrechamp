@@ -192,3 +192,27 @@ def test_unknown_voice_names_the_known_ones(official_python, voices):
 def test_requested_engine_that_is_missing_is_refused(official_python):
     r = VoxCPM2TTS().execute({"text": "x", "backend": "mlx"})
     assert not r.success and "'mlx'" in r.error
+
+
+def test_ultimate_voice_never_runs_silently_on_mlx(fake_model, official_python, monkeypatch):
+    # official_python emptied _MODEL_DIRS: put the MLX model back, both engines present
+    monkeypatch.setattr(voxcpm2_module, "_MODEL_DIRS", [fake_model])
+    tool = VoxCPM2TTS()
+    assert tool._backend("auto", "reference") == "mlx"
+    assert tool._backend("auto", "ultimate") == "voxcpm"
+    assert tool._backend("mlx", "ultimate") is None
+
+
+def test_invalid_voice_file_is_refused(official_python, voices):
+    (voices / "chaine.json").write_text('{"mode": "ultimat", "cfg_value": "fort"}')
+    r = VoxCPM2TTS().execute({"text": "x", "voice": "chaine", "voices_dir": str(voices)})
+    assert not r.success and "invalid value" in r.error
+    (voices / "chaine.json").write_text("null")
+    r = VoxCPM2TTS().execute({"text": "x", "voice": "chaine", "voices_dir": str(voices)})
+    assert not r.success and "JSON object" in r.error
+
+
+def test_a_directory_is_not_an_interpreter(tmp_path, monkeypatch):
+    monkeypatch.setattr(voxcpm2_module, "_MODEL_DIRS", [tmp_path / "none"])
+    monkeypatch.setenv("VOXCPM2_PYTHON", str(tmp_path))
+    assert VoxCPM2TTS().get_status() is ToolStatus.UNAVAILABLE

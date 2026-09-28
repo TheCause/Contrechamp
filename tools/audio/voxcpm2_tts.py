@@ -275,13 +275,19 @@ class VoxCPM2TTS(BaseTool):
 
     @staticmethod
     def _official_python() -> str | None:
-        exe = os.environ.get("VOXCPM2_PYTHON", "").strip()
-        return exe if exe and os.access(os.path.expanduser(exe), os.X_OK) else None
+        exe = os.path.expanduser(os.environ.get("VOXCPM2_PYTHON", "").strip())
+        return exe if exe and os.path.isfile(exe) and os.access(exe, os.X_OK) else None
 
-    def _backend(self, requested: str = "auto") -> str | None:
-        """The engine to run, or None when the requested one is not installed."""
+    def _backend(self, requested: str = "auto", mode: str = "reference") -> str | None:
+        """The engine to run, or None when the requested one is not installed.
+
+        mode=ultimate exists only on the official engine: auto picks it, and
+        an explicit mlx request is refused rather than run without the mode.
+        """
         mlx = self._resolve_model_dir() is not None
         official = self._official_python() is not None
+        if mode == "ultimate":
+            return "voxcpm" if official and requested in ("auto", "voxcpm") else None
         if requested == "mlx":
             return "mlx" if mlx else None
         if requested == "voxcpm":
@@ -311,6 +317,18 @@ class VoxCPM2TTS(BaseTool):
         meta = vdir / f"{name}.json"
         if meta.exists():
             data = json.loads(meta.read_text(encoding="utf-8"))
+            if not isinstance(data, dict):
+                raise ValueError(f"{meta}: a voice file must hold a JSON object")
+            checks = {
+                "cfg_value": lambda v: isinstance(v, (int, float)) and not isinstance(v, bool),
+                "inference_timesteps": lambda v: isinstance(v, int) and not isinstance(v, bool) and v > 0,
+                "seed": lambda v: isinstance(v, int) and not isinstance(v, bool),
+                "mode": lambda v: v in ("reference", "ultimate"),
+                "backend": lambda v: v in ("auto", "mlx", "voxcpm"),
+            }
+            bad = [k for k in _VOICE_KEYS if k in data and not checks[k](data[k])]
+            if bad:
+                raise ValueError(f"{meta}: invalid value for {bad}")
             merged.update({k: data[k] for k in _VOICE_KEYS if k in data})
         merged.update({k: v for k, v in inputs.items() if v is not None})
         return merged
@@ -321,12 +339,14 @@ class VoxCPM2TTS(BaseTool):
         except (ValueError, json.JSONDecodeError) as exc:
             return ToolResult(success=False, error=str(exc))
         requested = inputs.get("backend", "auto")
-        backend = self._backend(requested)
+        mode = inputs.get("mode", "reference")
+        backend = self._backend(requested, mode)
         if backend is None:
             return ToolResult(
                 success=False,
                 error=(
-                    f"VoxCPM2 backend {requested!r} not found locally. Download "
+                    f"VoxCPM2 backend {requested!r} (mode {mode!r}) not found locally. mode=ultimate "
+                    "needs the official engine (VOXCPM2_PYTHON). Download "
                     "mlx-community/VoxCPM2-bf16 or VoxCPM2-4bit into models/, or set "
                     "VOXCPM2_PYTHON to an interpreter with the official voxcpm package."
                 ),

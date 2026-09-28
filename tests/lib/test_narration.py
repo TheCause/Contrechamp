@@ -27,19 +27,20 @@ def _script(n_sentences=(11, 2), words=10):
     ]}
 
 
-def _tone(path: Path, seconds=0.2, rate=24000):
+def _tone(path: Path, seconds=0.2, rate=24000, pitch=8):
     with wave.open(str(path), "w") as w:
         w.setnchannels(1); w.setsampwidth(2); w.setframerate(rate)
-        w.writeframes(b"".join(struct.pack("<h", int(3000 * math.sin(i / 8))) for i in range(int(rate * seconds))))
+        w.writeframes(b"".join(struct.pack("<h", int(3000 * math.sin(i / pitch))) for i in range(int(rate * seconds))))
 
 
 class FakeVoice:
     def __init__(self):
         self.calls = []
 
-    def __call__(self, text, path):
+    def __call__(self, text, path, attempt=0):
         self.calls.append(text)
-        _tone(path)
+        self.attempts = getattr(self, "attempts", []) + [attempt]
+        _tone(path, pitch=8 + attempt)   # a new take sounds different
 
 
 def _hear_exactly(text_by_path):
@@ -104,7 +105,9 @@ def test_unapproved_project_is_refused_and_no_project_is_not_checked(tmp_path):
     r = nar.narrate(script, tmp_path / "o1", FakeVoice(), project_dir=tmp_path / "proj")
     assert r["status"] == "refused"
     r = nar.narrate(script, tmp_path / "o2", FakeVoice())
-    assert r["approval"]["status"] == "not_checked" and r["status"] == "not_checked"
+    assert r["status"] == "refused" and "project_dir" in r["approval"]["reason"]
+    r = nar.narrate(script, tmp_path / "o3", FakeVoice(), require_approval=False)
+    assert r["approval"]["status"] == "not_checked" and r["approval_waived"] is True
 
 
 # --- stable ids and partial regeneration -------------------------------------
@@ -113,10 +116,10 @@ def test_unapproved_project_is_refused_and_no_project_is_not_checked(tmp_path):
 def test_regenerating_one_chunk_touches_only_that_chunk(tmp_path):
     script = _script((11, 2))
     voice = FakeVoice()
-    nar.narrate(script, tmp_path, voice)
+    nar.narrate(script, tmp_path, voice, require_approval=False)
     assert len(voice.calls) == 3
     voice.calls.clear()
-    r = nar.narrate(script, tmp_path, voice, only=["c02"])
+    r = nar.narrate(script, tmp_path, voice, only=["c02"], require_approval=False)
     assert r["plan"] == "reused" and len(voice.calls) == 1
     assert voice.calls[0] == r["chunks"][1]["text"]
 
@@ -124,20 +127,20 @@ def test_regenerating_one_chunk_touches_only_that_chunk(tmp_path):
 def test_editing_one_chunk_keeps_ids_and_resynthesizes_only_it(tmp_path):
     script = _script((11, 2))
     voice = FakeVoice()
-    nar.narrate(script, tmp_path, voice)
+    nar.narrate(script, tmp_path, voice, require_approval=False)
     voice.calls.clear()
     edited = json.loads(json.dumps(script))
     edited["sections"][1]["text"] = edited["sections"][1]["text"].replace("fin1_0.", "autre.")
-    r = nar.narrate(edited, tmp_path, voice)
+    r = nar.narrate(edited, tmp_path, voice, require_approval=False)
     assert r["plan"] == "updated" and [c["id"] for c in r["chunks"]] == ["c01", "c02", "c03"]
     assert voice.calls == [r["chunks"][2]["text"]]
 
 
 def test_a_new_cut_is_never_renumbered_silently(tmp_path):
-    nar.narrate(_script((11, 2)), tmp_path, FakeVoice())
+    nar.narrate(_script((11, 2)), tmp_path, FakeVoice(), require_approval=False)
     with pytest.raises(ValueError, match="replan=True"):
-        nar.narrate(_script((11, 2, 3)), tmp_path, FakeVoice())
-    r = nar.narrate(_script((11, 2, 3)), tmp_path, FakeVoice(), replan=True)
+        nar.narrate(_script((11, 2, 3)), tmp_path, FakeVoice(), require_approval=False)
+    r = nar.narrate(_script((11, 2, 3)), tmp_path, FakeVoice(), replan=True, require_approval=False)
     assert r["plan"] == "replanned" and len(r["chunks"]) == 4
 
 
@@ -150,12 +153,12 @@ def test_a_chunk_heard_wrong_is_suspect(tmp_path):
     by_id = {c["text_fingerprint"]: c["text"] for c in chunks}
 
     def heard(path):
-        text = by_id[path.stem.split("_", 1)[1]]
+        text = by_id[path.stem.split("_")[1]]
         if path.stem.startswith("c02"):
             text = " ".join(text.split()[:20])  # the voice stopped early
         return text
 
-    r = nar.narrate(script, tmp_path, FakeVoice(), _hear_exactly(heard))
+    r = nar.narrate(script, tmp_path, FakeVoice(), _hear_exactly(heard), require_approval=False)
     assert r["status"] == "revise" and r["suspect"] == ["c02"]
 
 
@@ -163,5 +166,75 @@ def test_chunks_heard_right_pass(tmp_path):
     script = _script((11, 2))
     by_id = {c["text_fingerprint"]: c["text"] for c in nar.plan_chunks(script)}
     r = nar.narrate(script, tmp_path, FakeVoice(),
-                    _hear_exactly(lambda p: by_id[p.stem.split("_", 1)[1]]))
+                    _hear_exactly(lambda p: by_id[p.stem.split("_")[1]]), require_approval=False)
     assert r["status"] == "pass" and r["suspect"] == []
+
+
+
+# --- adversarial review (28 Sept) ------------------------------------------------
+
+
+def test_changing_the_voice_resynthesizes_instead_of_reusing_audio(tmp_path):
+    script = _script((2,))
+    voice = FakeVoice()
+    nar.narrate(script, tmp_path, voice, require_approval=False, voice_key="voiceA")
+    voice.calls.clear()
+    nar.narrate(script, tmp_path, voice, require_approval=False, voice_key="voiceA")
+    assert voice.calls == []
+    nar.narrate(script, tmp_path, voice, require_approval=False, voice_key="voiceB")
+    assert len(voice.calls) == 1
+
+
+def test_an_empty_approved_script_approves_nothing(tmp_path):
+    _approve(tmp_path / "proj", {"sections": []})
+    r = nar.narrate(_script((2,)), tmp_path / "o", FakeVoice(), project_dir=tmp_path / "proj")
+    assert r["status"] == "refused"
+    r = nar.narrate({"sections": []}, tmp_path / "o2", FakeVoice(), require_approval=False)
+    assert r["status"] == "refused"
+
+
+def test_regenerating_a_chunk_asks_the_voice_for_a_new_take(tmp_path):
+    script = _script((2,))
+    voice = FakeVoice()
+    nar.narrate(script, tmp_path, voice, require_approval=False)
+    nar.narrate(script, tmp_path, voice, only=["c01"], require_approval=False)
+    nar.narrate(script, tmp_path, voice, only=["c01"], require_approval=False)
+    assert voice.attempts == [0, 1, 2]
+
+
+def test_unchanged_chunks_are_not_transcribed_again(tmp_path):
+    script = _script((11, 2))
+    by_id = {c["text_fingerprint"]: c["text"] for c in nar.plan_chunks(script)}
+    heard_paths = []
+
+    def transcribe(path):
+        heard_paths.append(path.name)
+        return _hear_exactly(lambda p: by_id[p.stem.split("_")[1]])(path)
+
+    nar.narrate(script, tmp_path, FakeVoice(), transcribe, require_approval=False)
+    heard_paths.clear()
+    nar.narrate(script, tmp_path, FakeVoice(), transcribe, only=["c02"], require_approval=False)
+    assert [p.split("_")[0] for p in heard_paths] == ["c02"]
+
+
+def test_a_voice_that_loops_makes_the_chunk_suspect(tmp_path):
+    script = _script((2,))
+    text = nar.plan_chunks(script)[0]["text"]
+    looped = lambda p: " ".join(text.split()[:10] + ["et", "puis"] * 5 + text.split()[10:])
+    r = nar.narrate(script, tmp_path, FakeVoice(), _hear_exactly(looped), require_approval=False)
+    assert r["suspect"] == ["c01"]
+
+
+def test_a_failed_join_is_a_clear_error(tmp_path):
+    script = _script((2,))
+
+    def broken(text, path, attempt=0):
+        path.write_bytes(b"not audio")
+
+    with pytest.raises(RuntimeError, match="could not join"):
+        nar.narrate(script, tmp_path, broken, require_approval=False)
+
+
+def test_two_empty_scripts_never_approve_each_other(tmp_path):
+    _approve(tmp_path / "proj", {"sections": []})
+    assert nar.approval_status(tmp_path / "proj", {"text": "anything"})["status"] != "approved"
