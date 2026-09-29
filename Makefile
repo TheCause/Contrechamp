@@ -65,7 +65,7 @@ setup: ensure-venv
 	$(PIP) install piper-tts || echo "  [skip] piper-tts install failed — TTS will use cloud providers instead"
 	@echo ""
 	@echo "==> Checking render-review tools (OCR + ffmpeg text filters)..."
-	@$(RUN_PYTHON) -c "from lib import ffmpeg_caps as f; w=[x for x in (f.ocr_warning(), f.warning()) if x]; [print('  [warn] '+x) for x in w]; print('    tesseract and ffmpeg text filters OK') if not w else None" || echo "  [skip] render-review check failed"
+	@"$(RUN_PYTHON)" -c "from lib import ffmpeg_caps as f; w=[x for x in (f.ocr_warning(), f.warning()) if x]; [print('  [warn] '+x) for x in w]; print('    tesseract and ffmpeg text filters OK') if not w else None" || echo "  [skip] render-review check failed"
 	@echo ""
 	@echo "==> Installing HyperFrames runtime (cache-warm via npx)..."
 	@echo "    Pulls the 'hyperframes' npm package into the local npx cache so the"
