@@ -1,27 +1,15 @@
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="assets/monty-dark.svg">
-    <img src="assets/monty-light.svg" alt="Monty the Clapper — the official mascot of OpenMontage" width="200">
-  </picture>
-</p>
+<h1 align="center">Contrechamp</h1>
 
-<p align="center"><sub><em>Monty the Clapper — the official mascot of OpenMontage</em></sub></p>
+> **Independent project derived from OpenMontage.** Contrechamp is a modified
+> version of [calesthio/OpenMontage](https://github.com/calesthio/OpenMontage),
+> maintained separately since 27 September 2026 and distributed under the same
+> licence, **AGPL-3.0**. All credit for the original work goes to calesthio and
+> the OpenMontage contributors. What changed and who wrote it:
+> [`NOTICE`](NOTICE) and [`docs/fork/`](docs/fork/). Below, "OpenMontage"
+> names the original design this project keeps; the links to its website,
+> sponsors, discussions and issues belong to the original project.
 
-<h1 align="center">OpenMontage</h1>
-
-> **Independent derived project.** This repository is a modified version of
-> [calesthio/OpenMontage](https://github.com/calesthio/OpenMontage), maintained
-> separately since 27 September 2026 and distributed under the same licence,
-> **AGPL-3.0**. All credit for the original work goes to calesthio and the
-> OpenMontage contributors. What changed and who wrote it: [`NOTICE`](NOTICE)
-> and [`docs/fork/`](docs/fork/). The links to sponsors, discussions and issues
-> below belong to the original project.
-
-<p align="center"><strong>The first open-source, agentic video production system.</strong></p>
-
-<p align="center">
-  <a href="https://openmontage.video"><img src="https://img.shields.io/badge/Website-openmontage.video-d14a28?style=for-the-badge" alt="openmontage.video"></a>
-</p>
+<p align="center"><strong>An agentic video production system, seen from the other side: French first, checks that measure, and the human who approves.</strong></p>
 
 <p align="center">
   <a href="#start-from-a-video-you-already-love">Paste A Video</a> &nbsp;·&nbsp;
@@ -204,8 +192,8 @@ And when a run is done, hit **▶ REPLAY RUN** — the whole production replays 
 ### Install & Run
 
 ```bash
-git clone https://github.com/calesthio/OpenMontage.git
-cd OpenMontage
+git clone https://github.com/TheCause/Contrechamp.git
+cd Contrechamp
 make setup
 ```
 

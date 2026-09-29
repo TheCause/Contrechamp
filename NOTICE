@@ -1,6 +1,6 @@
-OpenMontage — independent derived project (TheCause/OpenMontage)
+Contrechamp — independent project derived from OpenMontage (TheCause/Contrechamp)
 
-This repository is a modified version of OpenMontage by calesthio,
+Contrechamp is a modified version of OpenMontage by calesthio,
 https://github.com/calesthio/OpenMontage, and it is distributed under the
 same licence: the GNU Affero General Public License, version 3 (see LICENSE).
 
@@ -10,7 +10,8 @@ Original work
   goes to them.
 
 Modifications
-  Modified by Régis Rigaud (TheCause) since 27 September 2026. The changes
+  Modified by Régis Rigaud (TheCause) since 27 September 2026, and named
+  Contrechamp since 29 September 2026. The changes
   are recorded in this repository's git history; the main ones are described
   in docs/fork/ (lot 1: a final review that measures; lot 2: French first).
 

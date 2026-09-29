@@ -7,9 +7,10 @@ Do not act on a production request until you have read AGENT_GUIDE.md.
 It contains routing rules that determine your first action based on what the user asked.
 Skipping it WILL cause you to take the wrong action.
 
-## Developing OpenMontage itself (this fork)
+## Developing Contrechamp itself
 
-When the session is about changing OpenMontage's code, tests or docs — not about making a video —
+This repository is Contrechamp, an independent project derived from OpenMontage (see `NOTICE`).
+When the session is about changing its code, tests or docs — not about making a video —
 do **not** run the production flow (pipeline selection, preflight menu, human gates). Instead:
 
 - Architecture and conventions: [`PROJECT_CONTEXT.md`](PROJECT_CONTEXT.md).
