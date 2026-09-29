@@ -19,5 +19,11 @@ Adopted contributions
   original authors in the git history, and the pull request is named in the
   commit message (cherry-pick -x) and in docs/fork/.
 
+Inspiration
+  The MCP server (openmontage_mcp/) follows the shape of the MCP server of
+  openmontage-zh-mcp by noah-1106 (AGPL-3.0),
+  https://github.com/noah-1106/openmontage-zh-mcp; it is rewritten, not
+  copied (docs/fork/mcp-server.md).
+
 As required by the AGPL, the complete corresponding source of this modified
 version is this repository.
