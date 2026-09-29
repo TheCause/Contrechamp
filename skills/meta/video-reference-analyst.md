@@ -241,7 +241,8 @@ Use this structure for each variant:
 - TTS provider: [selected from available providers via tts_selector preflight —
   Google Chirp3-HD (best value: near-free, expressive, 24kHz),
   ElevenLabs (voice cloning only), OpenAI gpt-4o-mini-tts (good with
-  instructions param), Piper (offline/free). Do NOT hardcode a provider —
+  instructions param), VoxCPM2 (offline/free, voice cloning, `make setup-voxcpm2`),
+  Piper (offline/free). Do NOT hardcode a provider —
   run preflight to check what's configured and recommend the best available.
   **Default recommendation: Google Chirp3-HD** unless voice cloning is needed.]
 - Music: [library track / generated / none]

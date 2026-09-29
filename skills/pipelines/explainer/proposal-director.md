@@ -337,6 +337,7 @@ For each meaningful choice, present the tradeoff:
 TRADEOFF: TTS Provider
 ├── Premium: ElevenLabs ($0.18-0.30) — natural voice, emotional delivery
 ├── Standard: OpenAI TTS ($0.05-0.15) — good quality, less expressive
+├── Free: VoxCPM2 local ($0.00) — cloned voice, French and 30 languages, needs `make setup-voxcpm2`
 └── Free: Piper local ($0.00) — robotic but works offline
 
 TRADEOFF: Visual Assets

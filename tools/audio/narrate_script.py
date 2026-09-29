@@ -8,11 +8,12 @@ module docstring for the rules.
 from __future__ import annotations
 
 import json
+import logging
 import time
 from pathlib import Path
 from typing import Any
 
-from lib import narration
+from lib import env_names, narration
 from tools.base_tool import (
     BaseTool,
     Determinism,
@@ -20,8 +21,11 @@ from tools.base_tool import (
     ResourceProfile,
     ToolResult,
     ToolStability,
+    ToolStatus,
     ToolTier,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class NarrateScript(BaseTool):
@@ -54,8 +58,17 @@ class NarrateScript(BaseTool):
                 "description": "Project folder holding checkpoint_script.json; the text must match the approved one.",
             },
             "require_approval": {"type": "boolean", "default": True},
-            "tts_tool": {"type": "string", "default": "voxcpm2_tts"},
-            "tts_inputs": {"type": "object", "description": "Extra inputs for the TTS tool (voice, seed...)."},
+            "tts_tool": {
+                "type": "string",
+                "default": "voxcpm2_tts",
+                "description": "Left out: voxcpm2_tts, or piper_tts when VoxCPM2 is not installed "
+                "(reported under data.fallback). Given: used as is, never swapped.",
+            },
+            "tts_inputs": {
+                "type": "object",
+                "description": "Extra inputs for the TTS tool (voice, seed...). With voxcpm2_tts and no "
+                "voice, CONTRECHAMP_NARRATION_VOICE names the machine's default voice.",
+            },
             "only": {"type": "array", "items": {"type": "string"}, "description": "Chunk ids to regenerate."},
             "replan": {"type": "boolean", "default": False},
             "verify": {"type": "boolean", "default": True},
@@ -77,10 +90,22 @@ class NarrateScript(BaseTool):
 
         start = time.time()
         registry.discover()
-        tts = registry.get(inputs.get("tts_tool", "voxcpm2_tts"))
-        if tts is None:
-            return ToolResult(success=False, error=f"TTS tool {inputs.get('tts_tool')!r} not found")
+        fallback = None
+        if inputs.get("tts_tool"):
+            tts = registry.get(inputs["tts_tool"])
+            if tts is None:
+                return ToolResult(success=False, error=f"TTS tool {inputs.get('tts_tool')!r} not found")
+        else:
+            tts, fallback = _default_engine(registry)
+            if tts is None:
+                return ToolResult(success=False, error=fallback)
         tts_inputs = dict(inputs.get("tts_inputs") or {})
+        voice = None
+        if tts.name == "voxcpm2_tts" and not tts_inputs.get("voice"):
+            default_voice = env_names.get("NARRATION_VOICE")
+            if default_voice:
+                tts_inputs["voice"] = default_voice.strip()
+                voice = {"name": tts_inputs["voice"], "source": "CONTRECHAMP_NARRATION_VOICE"}
 
         def synthesize(text: str, path: Path, attempt: int = 0) -> None:
             call = {**tts_inputs, "text": text, "output_path": str(path)}
@@ -130,9 +155,31 @@ class NarrateScript(BaseTool):
         ok = report["status"] != "refused"
         result = ToolResult(
             success=ok,
-            data={**report, "tts_tool": tts.name},
+            data={
+                **report,
+                "tts_tool": tts.name,
+                **({"fallback": fallback} if fallback else {}),
+                **({"voice": voice} if voice else {}),
+            },
             error=None if ok else f"Narration refused: {report['approval'].get('reason')}",
             artifacts=[report["narration"]] if ok else [],
         )
         result.duration_seconds = round(time.time() - start, 2)
         return result
+
+
+def _default_engine(registry) -> tuple[Any, Any]:
+    """VoxCPM2 when installed, else Piper with the swap reported; (None, error) if neither."""
+    wanted = registry.get("voxcpm2_tts")
+    if wanted is not None and wanted.get_status() == ToolStatus.AVAILABLE:
+        return wanted, None
+    piper = registry.get("piper_tts")
+    if piper is not None and piper.get_status() == ToolStatus.AVAILABLE:
+        reason = "voxcpm2_tts is not installed (make setup-voxcpm2); narrated with Piper instead"
+        logger.warning("narrate_script: %s", reason)
+        return piper, {"wanted": "voxcpm2_tts", "used": "piper_tts", "reason": reason}
+    return None, (
+        "No narration engine available: voxcpm2_tts is not installed (make setup-voxcpm2) "
+        "and piper_tts is not available either (pip install piper-tts)."
+    )
+

@@ -14,7 +14,7 @@ Cherry-picked with their authors, then fixed until a real render passed:
 | #598 | caption word spacing, `staticFile()` `public/` prefix (every Remotion caption render failed), page breaks | sentence-end and SRT page breaks, French punctuation, OCR read-back of burned captions, FFmpeg fallback that says so |
 | #577 | `audio_mixer` extract forced 16 kHz mono | real-ffmpeg test of the extracted file |
 | #601 | the spending cap had no caller | fails closed, governs every paid estimate whatever the runtime, cap mode names the ceiling, refused entries closed |
-| #608 (VoxCPM2 part) | local VoxCPM2 TTS on MLX | official engine via `VOXCPM2_PYTHON`, named local voices, `mode=ultimate` |
+| #608 (VoxCPM2 part) | local VoxCPM2 TTS on MLX | official engine (`make setup-voxcpm2`, or `VOXCPM2_PYTHON`), named local voices, `mode=ultimate` |
 
 ## Part 2 — tools from a channel's production method
 
@@ -51,6 +51,20 @@ edited after approval; chunks heard at fidelity 1.0; the final review passed
 the healthy render and flagged a copy with the voice cut under a noise bed
 (heard: a hallucinated "Sous-titres réalisés par l'Amara.org") and a copy with
 a 1.3 s fade.
+
+## VoxCPM2 as the default French voice
+
+- `make setup-voxcpm2` installs the official engine in `.venv-voxcpm` (Python
+  3.10-3.12, `voxcpm` 2.0.3); `voxcpm2_tts` finds it there without any
+  variable. `VOXCPM2_PYTHON` still wins, for an engine installed elsewhere.
+  Code and weights are Apache-2.0 (`openbmb/VoxCPM2`, French among 30 languages).
+- `narrate_script` uses VoxCPM2 when no engine is named. Without it, it
+  narrates with Piper and says so under `data.fallback`; with neither, it
+  refuses and names both. An engine named explicitly is never swapped.
+- `CONTRECHAMP_NARRATION_VOICE` (per machine, in `.env`) names the voice used
+  when none is given; the result reports it under `data.voice`.
+- The rest of #608, MOSS-TTS Nano (100M, Apache-2.0, MLX only), is not taken:
+  a second cloning engine for a need VoxCPM2 already covers.
 
 ## Known limits
 
