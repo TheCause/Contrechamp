@@ -75,9 +75,14 @@ else
     echo "==> Weights not downloaded: fetched on first use (~4.6 GB), or run with VOXCPM2_DOWNLOAD=1"
 fi
 
+if [ "$VENV" = ".venv-voxcpm" ]; then
+    found="voxcpm2_tts now finds $VENV without any variable."
+else
+    found="Custom location: set VOXCPM2_PYTHON=$(cd "$VENV" && pwd)/bin/python (e.g. in .env)."
+fi
 cat <<EOF
 
-Done. voxcpm2_tts now finds $VENV without any variable.
+Done. $found
   Licence: VoxCPM2 code and weights are Apache-2.0 (openbmb/VoxCPM2).
   Named voices: voices/<name>.wav (+ .txt transcript, + .json defaults), gitignored.
   Default narration voice for this machine: CONTRECHAMP_NARRATION_VOICE=<name> in .env
