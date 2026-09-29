@@ -1,6 +1,6 @@
 """Base tool class implementing the expanded ToolContract.
 
-Every tool in OpenMontage inherits from BaseTool. This enforces a uniform
+Every tool in Contrechamp inherits from BaseTool. This enforces a uniform
 interface for discovery, execution, cost estimation, and health reporting.
 """
 
@@ -294,7 +294,7 @@ def _instrument_execute(fn: Callable) -> Callable:
 
 
 class BaseTool(ABC):
-    """Abstract base class for all OpenMontage tools."""
+    """Abstract base class for all Contrechamp tools."""
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Auto-instrument every concrete execute() with Backlot events."""
@@ -322,7 +322,7 @@ class BaseTool(ABC):
 
     # --- Capabilities ---
     capability: str = "generic"
-    provider: str = "openmontage"
+    provider: str = "contrechamp"
     capabilities: list[str] = []
     input_schema: dict = {}
     output_schema: dict = {}

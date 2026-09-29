@@ -73,7 +73,7 @@
     "class_type": "SaveAudioMP3",
     "inputs": {
       "audio": ["9", 0],
-      "filename_prefix": "openmontage",
+      "filename_prefix": "contrechamp",
       "quality": "V0"
     }
   }

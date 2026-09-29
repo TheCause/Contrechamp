@@ -63,7 +63,7 @@ def _sha256(path: Path) -> str:
 
 
 def _download(url: str, destination: Path) -> None:
-    request = urllib.request.Request(url, headers={"User-Agent": "OpenMontage/threejs-asset-catalog"})
+    request = urllib.request.Request(url, headers={"User-Agent": "Contrechamp/threejs-asset-catalog"})
     with urllib.request.urlopen(request, timeout=120) as response, destination.open("wb") as output:
         shutil.copyfileobj(response, output)
 

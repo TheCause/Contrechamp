@@ -17,7 +17,7 @@ from typing import Any
 
 from PIL import Image
 
-from lib.config_model import OpenMontageConfig, ReviewConfig
+from lib.config_model import ContrechampConfig, ReviewConfig
 
 # Thresholds live in config.yaml (section `review`, see lib/config_model.py
 # ReviewConfig). Why the defaults: glued caption lines seen on a real broken
@@ -29,7 +29,7 @@ _CONFIG_PATH: Path | None = None  # None -> repo config.yaml
 
 @lru_cache(maxsize=1)
 def settings() -> ReviewConfig:
-    return OpenMontageConfig.load(_CONFIG_PATH).review
+    return ContrechampConfig.load(_CONFIG_PATH).review
 
 
 LEGACY_SAMPLE_POINTS = [0.10, 0.35, 0.65, 0.90]

@@ -1,4 +1,4 @@
-# OpenMontage - Core Dependencies
+# Contrechamp - Core Dependencies
 pyyaml>=6.0
 pydantic>=2.0
 jsonschema>=4.20
@@ -15,5 +15,5 @@ fastapi>=0.110
 uvicorn>=0.29
 watchfiles>=0.21
 
-# MCP server (openmontage_mcp/) - resolvers and the 2026-07-28 protocol need 2.2
+# MCP server (contrechamp_mcp/) - resolvers and the 2026-07-28 protocol need 2.2
 mcp>=2.2,<3

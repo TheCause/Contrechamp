@@ -1,4 +1,4 @@
-"""Run the opt-in paid Atlas Cloud media smoke suite through OpenMontage selectors."""
+"""Run the opt-in paid Atlas Cloud media smoke suite through Contrechamp selectors."""
 
 from __future__ import annotations
 
@@ -176,7 +176,7 @@ def run(project_dir: Path, *, images: bool, videos: bool, allow_paid: bool) -> i
     def checkpoint() -> None:
         manifest = {
             "provider": "atlascloud",
-            "endpoint_policy": "OpenMontage selectors -> Atlas Cloud tools -> Atlas Cloud HTTP API",
+            "endpoint_policy": "Contrechamp selectors -> Atlas Cloud tools -> Atlas Cloud HTTP API",
             "estimated_batch_cost_usd": 4.844,
             "records": records,
             "success": len({record["id"] for record in records if record["success"]}) == len(IMAGE_CASES) + len(VIDEO_CASES),

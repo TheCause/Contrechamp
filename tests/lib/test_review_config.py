@@ -8,7 +8,7 @@ import pytest
 
 from lib import ffmpeg_caps
 from lib import render_checks as rc
-from lib.config_model import OpenMontageConfig
+from lib.config_model import ContrechampConfig
 
 
 @pytest.fixture
@@ -43,7 +43,7 @@ def test_out_of_range_threshold_is_rejected(tmp_path):
     path = tmp_path / "config.yaml"
     path.write_text("review:\n  seam_min_ssim: 3\n")
     with pytest.raises(Exception):
-        OpenMontageConfig.load(path)
+        ContrechampConfig.load(path)
 
 
 @pytest.mark.skipif(not shutil.which("ffmpeg"), reason="ffmpeg not installed")

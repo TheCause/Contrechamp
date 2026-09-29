@@ -237,7 +237,7 @@ def download(url: str, output_path: str | Path, timeout: int = 300) -> Path:
 def aspect_ratio_from_size(width: int, height: int, allowed: list[str]) -> str:
     """Pick the closest ratio in `allowed` to width/height.
 
-    OpenMontage's canonical params are width/height, but many Atlas models only
+    Contrechamp's canonical params are width/height, but many Atlas models only
     accept a ratio enum. Snapping to the nearest supported ratio beats sending a
     value the model will reject.
     """

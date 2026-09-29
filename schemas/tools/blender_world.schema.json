@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "openmontage/tools/blender_world",
+  "$id": "contrechamp/tools/blender_world",
   "title": "Blender World Input",
   "type": "object",
   "required": ["operation"],

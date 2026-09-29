@@ -1,9 +1,9 @@
 """Entry point.
 
-    python -m openmontage_mcp                                  # serve over stdio
-    python /path/to/OpenMontage/openmontage_mcp/__main__.py    # same, from any directory
-    python -m openmontage_mcp approve-stage <project_id> <stage>
-    python -m openmontage_mcp approve-tool <project_id> <tool_name>
+    python -m contrechamp_mcp                                  # serve over stdio
+    python /path/to/Contrechamp/contrechamp_mcp/__main__.py    # same, from any directory
+    python -m contrechamp_mcp approve-stage <project_id> <stage>
+    python -m contrechamp_mcp approve-tool <project_id> <tool_name>
 """
 
 from __future__ import annotations
@@ -24,7 +24,7 @@ def main(argv: list[str] | None = None) -> int:
     if str(REPO_ROOT) not in sys.path:
         sys.path.insert(0, str(REPO_ROOT))
 
-    parser = argparse.ArgumentParser(prog="python -m openmontage_mcp")
+    parser = argparse.ArgumentParser(prog="python -m contrechamp_mcp")
     sub = parser.add_subparsers(dest="command")
     stage = sub.add_parser("approve-stage", help="approve a stage awaiting the human")
     stage.add_argument("project_id")
@@ -35,7 +35,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     if args.command in ("approve-stage", "approve-tool"):
-        from openmontage_mcp import approvals
+        from contrechamp_mcp import approvals
 
         try:
             if args.command == "approve-stage":
@@ -48,12 +48,12 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(result, indent=2))
         return 0
 
-    from openmontage_mcp.server import StartupRefused, build_server, enforce_budget_env
+    from contrechamp_mcp.server import StartupRefused, build_server, enforce_budget_env
 
     try:
         enforce_budget_env()
     except StartupRefused as exc:
-        print(f"openmontage_mcp: {exc}", file=sys.stderr)
+        print(f"contrechamp_mcp: {exc}", file=sys.stderr)
         return 2
     asyncio.run(build_server().run_stdio_async())
     return 0

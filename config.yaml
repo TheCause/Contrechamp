@@ -1,4 +1,4 @@
-# OpenMontage - Global Configuration
+# Contrechamp - Global Configuration
 
 llm:
   provider: anthropic            # anthropic | openai | gemini | openrouter | ollama | mistral | minimax

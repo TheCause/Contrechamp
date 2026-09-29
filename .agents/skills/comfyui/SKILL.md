@@ -5,7 +5,7 @@ description: Use when working with ComfyUI workflows in Contrechamp, including c
 
 # ComfyUI Workflows in Contrechamp
 
-Use this skill before calling `comfyui_image`, `comfyui_video`, or `comfyui_music`, and when converting a community ComfyUI workflow into an Contrechamp tool call.
+Use this skill before calling `comfyui_image`, `comfyui_video`, or `comfyui_music`, and when converting a community ComfyUI workflow into a Contrechamp tool call.
 
 ## Server Contract
 

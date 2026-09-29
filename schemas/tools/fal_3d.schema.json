@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "openmontage/tools/fal_3d",
+  "$id": "contrechamp/tools/fal_3d",
   "title": "fal.ai 3D Generation Input",
   "type": "object",
   "required": ["operation", "output_path"],

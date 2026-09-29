@@ -1,4 +1,4 @@
-"""Runtime configuration model for OpenMontage.
+"""Runtime configuration model for Contrechamp.
 
 Loads config.yaml, merges with env overrides, and provides typed access.
 """
@@ -105,7 +105,7 @@ class ReviewConfig(BaseModel):
     last_sentence_model: str = "small"
 
 
-class OpenMontageConfig(BaseModel):
+class ContrechampConfig(BaseModel):
     """Top-level runtime configuration."""
 
     llm: LLMConfig = Field(default_factory=LLMConfig)
@@ -116,7 +116,7 @@ class OpenMontageConfig(BaseModel):
     review: ReviewConfig = Field(default_factory=ReviewConfig)
 
     @classmethod
-    def load(cls, config_path: Optional[Path] = None) -> "OpenMontageConfig":
+    def load(cls, config_path: Optional[Path] = None) -> "ContrechampConfig":
         """Load config from YAML file. Falls back to defaults if file missing."""
         if config_path is None:
             config_path = Path(__file__).resolve().parent.parent / "config.yaml"

@@ -6,7 +6,7 @@ expands to that path, so every command-position use has to be quoted. Unquoted,
 sh word-splits it and ensure-venv fails while blaming the interpreter:
 
     /bin/sh: /Volumes/Some Drive/repo/.venv/bin/python: not found
-    ERROR: OpenMontage requires Python 3.10+.
+    ERROR: Contrechamp requires Python 3.10+.
     Current interpreter is unavailable: /Volumes/Some Drive/repo/.venv/bin/python
 
 The interpreter is fine. Every make target fails, and the reported cause is

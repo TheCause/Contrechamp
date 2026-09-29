@@ -1,6 +1,6 @@
 """Generate music with ElevenLabs Music through fal.ai.
 
-This provider uses OpenMontage's shared ``FAL_KEY`` credential and the fal.ai
+This provider uses Contrechamp's shared ``FAL_KEY`` credential and the fal.ai
 queue API, then downloads the generated MP3 to a project-local path.
 """
 

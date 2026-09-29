@@ -25,7 +25,7 @@ def _env(tmp_path, **extra):
 @pytest.mark.anyio
 async def test_stdio_server_creates_a_project(tmp_path):
     (tmp_path / "projects").mkdir()
-    params = StdioServerParameters(command=sys.executable, args=[str(REPO_ROOT / "openmontage_mcp" / "__main__.py")],
+    params = StdioServerParameters(command=sys.executable, args=[str(REPO_ROOT / "contrechamp_mcp" / "__main__.py")],
                                    cwd=str(tmp_path), env=_env(tmp_path))
     async with Client(params, read_timeout_seconds=60) as client:
         names = {t.name for t in (await client.list_tools()).tools}
@@ -37,7 +37,7 @@ async def test_stdio_server_creates_a_project(tmp_path):
 
 
 def test_stdio_server_refuses_to_start_with_the_gate_disabled(tmp_path):
-    proc = subprocess.run([sys.executable, "-m", "openmontage_mcp"], cwd=REPO_ROOT,
+    proc = subprocess.run([sys.executable, "-m", "contrechamp_mcp"], cwd=REPO_ROOT,
                           env=_env(tmp_path, OPENMONTAGE_BUDGET_DISABLED="1"),
                           stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=60)
     assert proc.returncode == 2

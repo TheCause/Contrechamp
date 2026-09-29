@@ -3,7 +3,7 @@
 The tool deliberately exposes mesh generation as its own capability. Atlas's
 HTTP endpoint happens to be named ``generateImage`` for historical reasons;
 that implementation detail must not make 3D assets look like image outputs to
-the OpenMontage registry or pipeline.
+the Contrechamp registry or pipeline.
 """
 
 from __future__ import annotations

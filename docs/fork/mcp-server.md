@@ -1,6 +1,6 @@
 # MCP server (fork)
 
-`openmontage_mcp/` lets an MCP client — Claude Code, or any agent that speaks
+`contrechamp_mcp/` lets an MCP client — Claude Code, or any agent that speaks
 the Model Context Protocol over stdio — drive Contrechamp's tools and
 pipelines. It is written for the MCP Python SDK 2.x (`mcp>=2.2`).
 
@@ -11,8 +11,8 @@ travel in the agent's arguments.
 ## Start it
 
 ```bash
-python -m openmontage_mcp                                  # from the repository
-python /path/to/Contrechamp/openmontage_mcp/__main__.py    # from anywhere
+python -m contrechamp_mcp                                  # from the repository
+python /path/to/Contrechamp/contrechamp_mcp/__main__.py    # from anywhere
 ```
 
 Claude Code (`.mcp.json` or `claude mcp add`):
@@ -20,9 +20,9 @@ Claude Code (`.mcp.json` or `claude mcp add`):
 ```json
 {
   "mcpServers": {
-    "openmontage": {
+    "contrechamp": {
       "command": "/path/to/Contrechamp/.venv/bin/python",
-      "args": ["/path/to/Contrechamp/openmontage_mcp/__main__.py"]
+      "args": ["/path/to/Contrechamp/contrechamp_mcp/__main__.py"]
     }
   }
 }
@@ -77,8 +77,8 @@ version was kept in `history/`.
 For clients that cannot relay a question to their user:
 
 ```bash
-python -m openmontage_mcp approve-stage <project_id> <stage>
-python -m openmontage_mcp approve-tool <project_id> <tool_name>
+python -m contrechamp_mcp approve-stage <project_id> <stage>
+python -m contrechamp_mcp approve-tool <project_id> <tool_name>
 ```
 
 ## Known limits

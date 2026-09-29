@@ -11,8 +11,8 @@ ways:
 - **this module's command line**, run by the human in a terminal, for
   clients that cannot relay a question:
 
-      python -m openmontage_mcp approve-stage <project_id> <stage>
-      python -m openmontage_mcp approve-tool <project_id> <tool_name>
+      python -m contrechamp_mcp approve-stage <project_id> <stage>
+      python -m contrechamp_mcp approve-tool <project_id> <tool_name>
 
 Known limit: an agent that also has a shell on this machine can run that
 command itself. The MCP boundary protects against an MCP client; it cannot
@@ -26,7 +26,7 @@ from typing import Any
 
 from lib.checkpoint import PROJECT_MARKER_FILENAME, read_checkpoint, write_checkpoint
 
-from openmontage_mcp.confine import project_dir, projects_root
+from contrechamp_mcp.confine import project_dir, projects_root
 
 
 def pipeline_type(project_id: str) -> str | None:

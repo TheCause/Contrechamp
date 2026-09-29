@@ -6,7 +6,7 @@ import os
 
 import pytest
 
-from openmontage_mcp.confine import ConfinementError, confine_inputs, confine_path, project_dir
+from contrechamp_mcp.confine import ConfinementError, confine_inputs, confine_path, project_dir
 
 
 @pytest.mark.parametrize("bad_id", ["../tools", "..", "/etc", "a/b", "Proj", "", "-x", "x" * 65])

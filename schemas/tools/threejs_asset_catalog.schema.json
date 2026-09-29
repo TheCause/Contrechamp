@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "openmontage/tools/threejs_asset_catalog",
+  "$id": "contrechamp/tools/threejs_asset_catalog",
   "title": "Three.js Asset Catalog Input",
   "type": "object",
   "required": ["operation"],

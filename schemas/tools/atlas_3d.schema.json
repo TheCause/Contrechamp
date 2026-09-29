@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "openmontage/tools/atlas_3d",
+  "$id": "contrechamp/tools/atlas_3d",
   "title": "Atlas Cloud Text-to-3D Input",
   "type": "object",
   "required": ["prompt", "output_path"],

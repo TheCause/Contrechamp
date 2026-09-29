@@ -76,7 +76,7 @@ class CorpusBuilder(BaseTool):
     version = "0.1.0"
     tier = ToolTier.SOURCE
     capability = "corpus_population"
-    provider = "openmontage"
+    provider = "contrechamp"
     stability = ToolStability.EXPERIMENTAL
     execution_mode = ExecutionMode.SYNC
     determinism = Determinism.DETERMINISTIC

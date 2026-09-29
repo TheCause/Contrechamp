@@ -117,7 +117,7 @@ async def test_a_project_without_its_pipeline_refuses_checkpoints(projects):
 
 def test_the_terminal_command_approves_an_awaiting_stage(projects):
     from lib.checkpoint import init_project, write_checkpoint
-    from openmontage_mcp.__main__ import main
+    from contrechamp_mcp.__main__ import main
 
     init_project("p", title="P", pipeline_type="framework-smoke", pipeline_dir=projects)
     write_checkpoint(projects, "p", "research", "awaiting_human",
@@ -275,7 +275,7 @@ async def test_the_ceiling_refuses_even_an_approved_tool(projects, monkeypatch):
 
 @pytest.mark.parametrize("var", ["OPENMONTAGE_BUDGET_DISABLED", "OPENMONTAGE_APPROVE_TOOLS"])
 def test_server_refuses_to_start_with_the_gate_bypassed(projects, monkeypatch, var):
-    from openmontage_mcp.server import StartupRefused, enforce_budget_env
+    from contrechamp_mcp.server import StartupRefused, enforce_budget_env
 
     monkeypatch.setenv(var, "1" if var.endswith("DISABLED") else "*")
     with pytest.raises(StartupRefused, match=var):

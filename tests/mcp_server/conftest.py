@@ -93,7 +93,7 @@ def projects(monkeypatch, tmp_path):
         registry.register(cls())
     FakePaidTool.calls.clear()
     FakeReaderTool.seen.clear()
-    from openmontage_mcp.server import enforce_budget_env
+    from contrechamp_mcp.server import enforce_budget_env
 
     enforce_budget_env()
     yield root
@@ -118,7 +118,7 @@ def human(answer: bool | None):
 
 @asynccontextmanager
 async def connect(elicitation=None, jobs=None):
-    from openmontage_mcp.server import build_server
+    from contrechamp_mcp.server import build_server
 
     async with Client(build_server(jobs), elicitation_callback=elicitation) as client:
         yield client

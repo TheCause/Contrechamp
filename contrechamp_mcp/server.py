@@ -1,6 +1,6 @@
-"""OpenMontage as an MCP server (stdio).
+"""Contrechamp as an MCP server (stdio).
 
-    python -m openmontage_mcp            # serve over stdio
+    python -m contrechamp_mcp            # serve over stdio
 
 What an MCP client can and cannot do here:
 
@@ -53,9 +53,9 @@ from lib.checkpoint import (
 from lib.pipeline_loader import list_pipelines
 from tools.cost_tracker import ApprovalRequiredError, BudgetExceededError
 
-from openmontage_mcp import approvals
-from openmontage_mcp.confine import ConfinementError, confine_inputs, confine_path, project_dir, projects_root
-from openmontage_mcp.jobs import JobLimitError, JobTracker
+from contrechamp_mcp import approvals
+from contrechamp_mcp.confine import ConfinementError, confine_inputs, confine_path, project_dir, projects_root
+from contrechamp_mcp.jobs import JobLimitError, JobTracker
 
 # Tools estimated above this many seconds run as background jobs.
 INLINE_MAX_SECONDS = 5.0
@@ -85,7 +85,7 @@ def enforce_budget_env() -> None:
         raise StartupRefused(
             f"{', '.join(set_vars)} set: the MCP server refuses to start with the "
             "budget gate disabled or tools pre-approved. Unset them; approvals go "
-            "through the human (see openmontage_mcp/approvals.py)."
+            "through the human (see contrechamp_mcp/approvals.py)."
         )
     os.environ["OPENMONTAGE_BUDGET_MODE"] = "cap"
 
@@ -206,7 +206,7 @@ def _stage_question(project_id: str, stage: str, status: str, artifacts: dict[st
     if not _client_can_ask(ctx):
         return _Unreachable()
     return Elicit(
-        f"OpenMontage — project {project_id!r}: approve stage {stage!r}? "
+        f"Contrechamp — project {project_id!r}: approve stage {stage!r}? "
         f"Its content is in projects/{project_id}/checkpoint_{stage}.json "
         f"(fingerprint {artifacts_digest(artifacts)}). Read it before answering.",
         _Approval,
@@ -220,7 +220,7 @@ def _tool_question(project_id: str, tool_name: str, ctx: Context) -> Any:
     if not _client_can_ask(ctx):
         return _Unreachable()
     return Elicit(
-        f"OpenMontage — project {project_id!r}: allow the paid tool {tool_name!r} "
+        f"Contrechamp — project {project_id!r}: allow the paid tool {tool_name!r} "
         "to spend from this project's budget?",
         _Approval,
     )
@@ -243,9 +243,9 @@ def build_server(jobs: JobTracker | None = None) -> MCPServer:
     tracker = jobs if jobs is not None else JobTracker()
     inline_slots = anyio.Semaphore(INLINE_MAX_CONCURRENT)
     server = MCPServer(
-        "openmontage",
+        "contrechamp",
         instructions=(
-            "OpenMontage video production tools. Work inside one project: call "
+            "Contrechamp video production tools. Work inside one project: call "
             "create_project, then pass its project_id everywhere; paths are relative "
             "to that project. Long calls return a job_id to poll. Approvals of gated "
             "stages and of paid tools go to the human, never through your arguments."
@@ -443,7 +443,7 @@ def build_server(jobs: JobTracker | None = None) -> MCPServer:
             # Without the pipeline the gate cannot be read: refuse, do not guess.
             raise _fail("E_CHECKPOINT_REFUSED", f"project {project_id!r} has no readable pipeline_type")
         gated = bool(_stage_requires_approval(pipeline, stage))
-        approved = gated and _approved(approval, f"python -m openmontage_mcp approve-stage {project_id} {stage}")
+        approved = gated and _approved(approval, f"python -m contrechamp_mcp approve-stage {project_id} {stage}")
         result: dict[str, Any] = {}
         if status == "completed" and gated and not approved:
             status = "awaiting_human"
@@ -472,7 +472,7 @@ def build_server(jobs: JobTracker | None = None) -> MCPServer:
         _existing_project(project_id)
         if _exposed(tool_name) is None:
             raise _fail("E_TOOL_NOT_FOUND", f"no exposed tool named {tool_name!r}")
-        if not _approved(approval, f"python -m openmontage_mcp approve-tool {project_id} {tool_name}"):
+        if not _approved(approval, f"python -m contrechamp_mcp approve-tool {project_id} {tool_name}"):
             return {"project_id": project_id, "tool_name": tool_name, "approved": False}
         return approvals.approve_paid_tool(project_id, tool_name)
 
