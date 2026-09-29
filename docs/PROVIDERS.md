@@ -1,6 +1,6 @@
-# OpenMontage Provider Guide
+# Contrechamp Provider Guide
 
-Everything you need to know about every provider in OpenMontage — setup instructions, pricing, free tiers, and what each unlocks.
+Everything you need to know about every provider in Contrechamp — setup instructions, pricing, free tiers, and what each unlocks.
 
 ---
 
@@ -137,7 +137,7 @@ Current xAI docs pricing for the Grok media models:
 | `grok-imagine-video` at 720p | $0.07/sec |
 | `grok-imagine-video` input images | $0.002 per input image |
 
-OpenMontage now uses those published rates in the Grok tool estimators.
+Contrechamp now uses those published rates in the Grok tool estimators.
 
 ---
 
@@ -234,7 +234,7 @@ The adapter supports:
 Seedance 2.5 accepts up to 30 image, 10 video, and 10 audio references.
 Select it with `model: "2.5"` (or its exact model ID). Because the public
 documentation does not establish a stable default token price for this model,
-OpenMontage requires `custom_price_cny_per_million_tokens` before presenting a
+Contrechamp requires `custom_price_cny_per_million_tokens` before presenting a
 cost estimate; unknown pricing is never reported as free.
 
 Local reference videos are intentionally rejected because the public API does not document video Data URI support. Use a provider-accessible HTTPS URL or an Ark asset reference instead.
@@ -247,7 +247,7 @@ The asynchronous API flow is:
 
 Queued tasks can be cancelled with `DELETE /contents/generations/tasks/{id}`. Task records are retained for a limited period, and successful result URLs are short-lived, so the tool downloads outputs promptly.
 
-Ark bills Seedance by completion tokens. Rates vary by model, resolution, and whether the request includes reference video. OpenMontage estimates cost before submission and reconciles against provider-returned usage when available. Check the Ark console for current rates before a paid run; custom endpoint IDs and Seedance 2.5 require an explicit custom price so unknown pricing is never treated as free.
+Ark bills Seedance by completion tokens. Rates vary by model, resolution, and whether the request includes reference video. Contrechamp estimates cost before submission and reconciles against provider-returned usage when available. Check the Ark console for current rates before a paid run; custom endpoint IDs and Seedance 2.5 require an explicit custom price so unknown pricing is never treated as free.
 
 Official references: [Seedance model list](https://www.volcengine.com/docs/82379/1366799), [create task](https://www.volcengine.com/docs/82379/1520757?lang=zh), [query task](https://www.volcengine.com/docs/82379/1521309?lang=zh).
 
@@ -396,7 +396,7 @@ reference.
 | `image-01`, `image-01-live` | $0.0035 per generated image |
 
 MiniMax also offers subscription token plans with included daily image quota.
-OpenMontage conservatively reports the standard pay-as-you-go amount in cost
+Contrechamp conservatively reports the standard pay-as-you-go amount in cost
 estimates and generation results.
 
 The tools are automatically discoverable through the image and video selectors;
@@ -411,7 +411,7 @@ choose them with `preferred_provider: "minimax"`.
 **Skill:** `.agents/skills/atlas-cloud/SKILL.md`
 
 Atlas Cloud provides one endpoint and key for the following explicitly cataloged
-routes. OpenMontage validates each model's real schema instead of treating task
+routes. Contrechamp validates each model's real schema instead of treating task
 suffixes or parameter names as interchangeable.
 
 | Family | Supported routes | Current Atlas rate |
@@ -461,14 +461,14 @@ machine-readable Atlas page and should be reconfirmed before a paid batch.
 #### Notes
 
 - `provider="kling_official"` is intentionally different from fal.ai's `provider="kling"`.
-- Official Kling is a paid remote API. OpenMontage uses conservative cost estimates and includes high-cost factors such as Omni references, series output, 4k mode, and native sound.
+- Official Kling is a paid remote API. Contrechamp uses conservative cost estimates and includes high-cost factors such as Omni references, series output, 4k mode, and native sound.
 - Local image paths are sent as raw base64 for supported Classic/image-generation fields. Turbo image-to-video requires a URL and will not silently upload through fal.ai.
-- Video Omni and Image Omni can pass official `element_id` references through `element_list`; Elements remain an internal Kling Official helper, not a standalone OpenMontage capability.
+- Video Omni and Image Omni can pass official `element_id` references through `element_list`; Elements remain an internal Kling Official helper, not a standalone Contrechamp capability.
 - Account Usage is available as a low-frequency diagnostic helper under `tools/_kling/account.py`; it is not a selector or pipeline tool.
-- `callback_url` is passed through and recorded when supplied, but OpenMontage still polls tasks by default.
-- `kling_tts` requires an explicit `voice_id`; OpenMontage does not guess a default official voice.
+- `callback_url` is passed through and recorded when supplied, but Contrechamp still polls tasks by default.
+- `kling_tts` requires an explicit `voice_id`; Contrechamp does not guess a default official voice.
 - `kling_avatar` and `kling_lip_sync` register under the existing `avatar` capability and coexist with local SadTalker/Wav2Lip tools. Current avatar pipelines must opt into them explicitly; registry discovery alone does not replace local tools.
-- Official Kling audio effects and video effects are documented but intentionally not registered as OpenMontage tools yet, because current pipelines do not have a stable sound-effects or video-effects capability slot for them.
+- Official Kling audio effects and video effects are documented but intentionally not registered as Contrechamp tools yet, because current pipelines do not have a stable sound-effects or video-effects capability slot for them.
 
 ---
 
@@ -555,7 +555,7 @@ Billing is **per UTF-8 byte of input text** (not per character) — CJK text and
 
 #### API Notes
 
-OpenMontage uses the new-console API key flow:
+Contrechamp uses the new-console API key flow:
 
 ```text
 X-Api-Key: ${DOUBAO_SPEECH_API_KEY}
@@ -577,7 +577,7 @@ Start with `speech_rate: 0` for natural Mandarin delivery. If the approved forma
 
 #### Pricing
 
-Doubao Speech 2.0 is billed by character package or usage in Volcengine. OpenMontage estimates cost from text length and prefers provider-returned usage metadata when available.
+Doubao Speech 2.0 is billed by character package or usage in Volcengine. Contrechamp estimates cost from text length and prefers provider-returned usage metadata when available.
 
 ---
 
@@ -675,7 +675,7 @@ Tencent TokenHub uses a credit-based pricing system (1 credit = 1.2 RMB ≈ $0.1
 
 #### API Notes
 
-OpenMontage uses the **Fast Transcription** REST endpoint, which accepts a local
+Contrechamp uses the **Fast Transcription** REST endpoint, which accepts a local
 audio file directly (multipart upload) and returns a synchronous result — no
 Azure Blob storage, SAS URLs, or async job polling:
 
@@ -684,7 +684,7 @@ POST https://{region}.api.cognitive.microsoft.com/speechtotext/transcriptions:tr
 Ocp-Apim-Subscription-Key: ${AZURE_SPEECH_KEY}
 ```
 
-For files longer than ~2 hours or bulk jobs, use Azure Batch Transcription instead (not wired into OpenMontage).
+For files longer than ~2 hours or bulk jobs, use Azure Batch Transcription instead (not wired into Contrechamp).
 
 #### What It Is Best For
 
@@ -697,7 +697,7 @@ For files longer than ~2 hours or bulk jobs, use Azure Batch Transcription inste
 
 Azure AI Speech Standard (S0) bills speech-to-text by audio-hour (roughly
 $1.00/audio-hour at time of writing; a free F0 tier includes a limited monthly
-allowance). OpenMontage estimates cost from the transcribed audio duration. See
+allowance). Contrechamp estimates cost from the transcribed audio duration. See
 [Azure AI Speech pricing](https://azure.microsoft.com/pricing/details/cognitive-services/speech-services/) for current rates.
 
 ---
@@ -726,7 +726,7 @@ endpoint, so the optional override var is `AZURE_TTS_ENDPOINT`, not
 
 #### API Notes
 
-OpenMontage uses the synchronous REST v1 endpoint with an SSML body — no token
+Contrechamp uses the synchronous REST v1 endpoint with an SSML body — no token
 exchange, Blob storage, or job polling:
 
 ```text
@@ -755,7 +755,7 @@ Not for: fully offline production (use `piper_tts`) or voice cloning (use
 
 Azure neural TTS Standard (S0) bills roughly **$16 per 1M characters** (a free
 F0 tier includes a limited monthly allowance). A 150-word narration segment
-costs about $0.015. OpenMontage estimates cost from character count. See
+costs about $0.015. Contrechamp estimates cost from character count. See
 [Azure AI Speech pricing](https://azure.microsoft.com/pricing/details/cognitive-services/speech-services/) for current rates.
 
 ---
@@ -891,7 +891,7 @@ Google TTS offers 700+ voices across 50+ languages. Voice names follow the patte
 
 ### Runway — Native and Third-Party Video Models
 
-> **Multi-model production API.** OpenMontage supports current Runway-native
+> **Multi-model production API.** Contrechamp supports current Runway-native
 > models plus documented third-party Seedance 2.5, Gemini Omni Flash, and
 > MiniMax H3/Hailuo 3.0 routes.
 
@@ -1160,7 +1160,7 @@ ffmpeg -version
 npx --yes hyperframes doctor
 ```
 
-The CLI is consumed as `npx hyperframes`. Do not use `npx @hyperframes/cli`; that package name is not the OpenMontage runtime path.
+The CLI is consumed as `npx hyperframes`. Do not use `npx @hyperframes/cli`; that package name is not the Contrechamp runtime path.
 
 #### What HyperFrames Renders
 
@@ -1171,7 +1171,7 @@ The CLI is consumed as `npx hyperframes`. Do not use `npx @hyperframes/cli`; tha
 | **Website-to-video** | Browser-captured site compositions with HyperFrames validation |
 | **Character animation** | SVG character rigs, pose/action timelines, and GSAP acting beats rendered to `renders/final.mp4` |
 
-HyperFrames workspaces live under `projects/<project-name>/hyperframes/`. Final videos still follow the normal OpenMontage convention: `projects/<project-name>/renders/final.mp4`.
+HyperFrames workspaces live under `projects/<project-name>/hyperframes/`. Final videos still follow the normal Contrechamp convention: `projects/<project-name>/renders/final.mp4`.
 
 **Cost:** Free. Always local.
 
@@ -1218,7 +1218,7 @@ workflow; pass the official workflow exported in API format using
 `workflow_json` or `workflow_path`, plus its `output_node`.
 
 The MiniMax H3 local stack includes the pruned INT8 diffusion model, Qwen3-VL
-text encoder, video VAE, and audio VAE. OpenMontage exposes the official
+text encoder, video VAE, and audio VAE. Contrechamp exposes the official
 download URLs and destination folders in tool metadata rather than silently
 downloading large weights.
 

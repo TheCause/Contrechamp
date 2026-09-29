@@ -1,11 +1,11 @@
 ---
 name: comfyui
-description: Use when working with ComfyUI workflows in OpenMontage, including comfyui_image/comfyui_video/comfyui_music, custom workflow_json/workflow_path inputs, output_node selection, missing model setup, LoRAs, low-VRAM workflow choices, and community workflow imports.
+description: Use when working with ComfyUI workflows in Contrechamp, including comfyui_image/comfyui_video/comfyui_music, custom workflow_json/workflow_path inputs, output_node selection, missing model setup, LoRAs, low-VRAM workflow choices, and community workflow imports.
 ---
 
-# ComfyUI Workflows in OpenMontage
+# ComfyUI Workflows in Contrechamp
 
-Use this skill before calling `comfyui_image`, `comfyui_video`, or `comfyui_music`, and when converting a community ComfyUI workflow into an OpenMontage tool call.
+Use this skill before calling `comfyui_image`, `comfyui_video`, or `comfyui_music`, and when converting a community ComfyUI workflow into an Contrechamp tool call.
 
 ## Server Contract
 
@@ -63,7 +63,7 @@ Use this skill before calling `comfyui_image`, `comfyui_video`, or `comfyui_musi
 ## Failure Handling
 
 - If the server is unavailable, surface the structured setup offer. Starting ComfyUI or setting `COMFYUI_SERVER_URL` is the first fix.
-- If models are missing, read `data.missing_models[]`; each item should include the file name, role, destination hint, and download URL when OpenMontage knows it.
+- If models are missing, read `data.missing_models[]`; each item should include the file name, role, destination hint, and download URL when Contrechamp knows it.
 - If custom nodes are missing, ask the user to install them through ComfyUI Manager or the workflow author's documented install path, then restart ComfyUI.
 - If a long render times out locally, check ComfyUI history before retrying from scratch; the server may still have completed the prompt -- or just call again with `resume_prompt_id` set to the `prompt_id` from the timeout error.
 

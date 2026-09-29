@@ -8,7 +8,7 @@ description: |
 
 Seedance 2.5 extends the Seedance 2 family to 4–30 second 480p/720p clips and
 larger multimodal reference sets. It is hosted; there are no local model
-weights in OpenMontage.
+weights in Contrechamp.
 
 ## Choose a supported route
 
@@ -24,7 +24,7 @@ public API schema does not list Seedance 2.5.
 
 > **Resolution note.** The supported routes above expose 480p and 720p. The model
 > generates 1080p natively on the vendor's own web platform, which is not an
-> OpenMontage route. If a vendor blog cites 1080p or 4K, check which surface it means
+> Contrechamp route. If a vendor blog cites 1080p or 4K, check which surface it means
 > before promising it in a pipeline.
 
 ## Reference limits
@@ -39,7 +39,7 @@ public API schema does not list Seedance 2.5.
 Reference inputs are provider-specific. fal.ai uses `image_urls`, `video_urls`,
 and `audio_urls` internally. Runway uses `references`, `referenceVideos`, and
 `referenceAudio`. Ark uses typed content entries with roles. Always call the
-OpenMontage tool instead of constructing a provider payload manually.
+Contrechamp tool instead of constructing a provider payload manually.
 
 **50 assets is a ceiling to use deliberately, not to max out.** A cluttered reference
 set with competing faces, props, and locations produces a *less* coherent result than a
@@ -109,7 +109,7 @@ reference does that work; keep GLOBAL STYLE, the shot breakdown, and AUDIO regar
 
 On vendor web platforms these are UI selectors, and changing genre alone shifts pacing,
 contrast, and camera behavior with the scene description held identical. **The API routes
-above expose no such selectors**, so on OpenMontage tool calls that intent has to be
+above expose no such selectors**, so on Contrechamp tool calls that intent has to be
 written into `GLOBAL STYLE` and `LIGHTING` explicitly — genre, decade, grain and color
 response, light source and its angle, and the emotional register. Leaving them implicit is
 the difference between a shot that reads as noir and one that is merely dark.
@@ -257,5 +257,5 @@ technique is restated with original templates. Credit for the underlying work is
 - <https://higgsfield.ai/blog/seedance-2-5-prompting-guide>
 - <https://higgsfield.ai/original-series/cully-hill-boys/full-film>
 
-The route table, provider field names, and cost guidance in this file are OpenMontage's own
+The route table, provider field names, and cost guidance in this file are Contrechamp's own
 and take precedence over anything a vendor blog implies about API availability.

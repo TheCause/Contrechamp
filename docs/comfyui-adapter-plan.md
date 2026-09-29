@@ -1,4 +1,4 @@
-# ComfyUI Provider Adapter for OpenMontage
+# ComfyUI Provider Adapter for Contrechamp
 
 **RFC: Native ComfyUI backend for image and video generation**
 
@@ -6,7 +6,7 @@
 
 ## Motivation
 
-OpenMontage's local GPU tools (`wan_video`, `hunyuan_video`, `cogvideo_video`,
+Contrechamp's local GPU tools (`wan_video`, `hunyuan_video`, `cogvideo_video`,
 `local_diffusion`) use HuggingFace `diffusers` directly. This works on x86 +
 consumer GPUs but breaks on newer hardware where the PyTorch ecosystem hasn't
 caught up:
@@ -23,7 +23,7 @@ for DGX Spark. The community has optimized workflows for Blackwell (SageAttentio
 NVFP4 quantization, LightX2V 4-step LoRAs). Models like WAN 2.2, FLUX 2,
 and ACE-Step run reliably through ComfyUI on hardware where diffusers cannot.
 
-A ComfyUI adapter gives OpenMontage access to any model ComfyUI supports,
+A ComfyUI adapter gives Contrechamp access to any model ComfyUI supports,
 on any hardware ComfyUI runs on, without shipping or maintaining PyTorch builds.
 
 ---
@@ -33,7 +33,7 @@ on any hardware ComfyUI runs on, without shipping or maintaining PyTorch builds.
 ### Architecture
 
 ```
-OpenMontage Agent
+Contrechamp Agent
     |
     v
 video_selector / image_selector
@@ -324,7 +324,7 @@ Newer/different setups aren't locked out: `workflow_json`/`workflow_path` +
 `output_node` still works exactly like the image/video tools' override path --
 for ACE-Step 1.5, a different node pack, or a non-ACE-Step audio model entirely.
 
-**Selector integration:** no dedicated `music_selector` exists in OpenMontage
+**Selector integration:** no dedicated `music_selector` exists in Contrechamp
 (unlike `tts_selector`/`image_selector`/`video_selector`) -- music tools are
 already routed directly via `registry.get_by_capability("music_generation")`,
 and `comfyui_music` participates in that the same way `suno_music`/`music_gen`
@@ -389,7 +389,7 @@ health_check: GET /system_stats
 
 When bundled models are missing, the tool returns a machine-readable
 `data.missing_models[]` list with filename, role, destination hint, and download
-URL when OpenMontage knows the canonical source. Agents should surface that
+URL when Contrechamp knows the canonical source. Agents should surface that
 payload rather than parsing prose error text.
 
 ---
@@ -432,7 +432,7 @@ COMFYUI_SERVER_URL=http://comfyui:8188      # if on same docker network
 ## Provider Selection Behavior
 
 When the adapter is available, selectors will rank it alongside other providers
-using OpenMontage's 7-dimension scoring:
+using Contrechamp's 7-dimension scoring:
 
 | Dimension | ComfyUI score | Rationale |
 |-----------|---------------|-----------|
@@ -468,11 +468,11 @@ appropriate `workflow_json` or `workflow_path`. Good candidates include:
 - LTX-Video/LTXV FP8 or quantized workflows for fast short clips.
 - Wan 2.2 GGUF/quantized community workflows at lower resolution and frame count.
 
-OpenMontage should treat those as custom workflow profiles until a blessed
+Contrechamp should treat those as custom workflow profiles until a blessed
 low-VRAM workflow is bundled. For custom workflows, resource requirements are
 workflow-supplied rather than inferred from the bundled WAN 2.2 14B profile.
 
-### Future (add models to ComfyUI, no code changes to OpenMontage)
+### Future (add models to ComfyUI, no code changes to Contrechamp)
 
 - Newer checkpoints (WAN 3.x, FLUX 3, etc.) -- just update workflow JSON
 - ControlNet, IP-Adapter, AnimateDiff -- supported via ComfyUI custom nodes

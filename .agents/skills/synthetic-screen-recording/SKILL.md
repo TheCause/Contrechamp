@@ -12,7 +12,7 @@ license: MIT
 
 ## Why this exists
 
-v3 of the OpenMontage showcase tried to use Windows-MCP + `screen_recorder` to drive a Git-Bash window for the install walkthrough. It stalled on window positioning, focus races, and taskbar privacy concerns. We pivoted to **pure Remotion rendering** — a React component named `TerminalScene` that draws a fake terminal and types commands character-by-character. The output is visually indistinguishable from a real screen recording (same traffic-light window chrome, blinking cursor, scrolling output) but deterministic, privacy-safe, pixel-perfect at 1080p, and pace-controllable to the frame.
+v3 of the Contrechamp showcase tried to use Windows-MCP + `screen_recorder` to drive a Git-Bash window for the install walkthrough. It stalled on window positioning, focus races, and taskbar privacy concerns. We pivoted to **pure Remotion rendering** — a React component named `TerminalScene` that draws a fake terminal and types commands character-by-character. The output is visually indistinguishable from a real screen recording (same traffic-light window chrome, blinking cursor, scrolling output) but deterministic, privacy-safe, pixel-perfect at 1080p, and pace-controllable to the frame.
 
 That component + pattern is the capability this skill makes discoverable.
 
@@ -74,7 +74,7 @@ install_steps = [
     {"kind": "pause", "seconds": 7.0},                 # wait for intro narration
     {"kind": "cmd", "text": "git clone https://github.com/calesthio/OpenMontage.git",
      "typeSpeed": 0.045, "holdSeconds": 0.3},
-    {"kind": "out", "text": "Cloning into 'OpenMontage'..."},
+    {"kind": "out", "text": "Cloning into 'Contrechamp'..."},
     {"kind": "out", "text": "remote: Enumerating objects: 2847, done."},
     {"kind": "pill", "text": "repo cloned", "color": "#34D399", "durationSeconds": 2.6},
     {"kind": "pause", "seconds": 3.8},                 # bridge to next narration cue
@@ -84,7 +84,7 @@ install_steps = [
 cuts.append({
     "id": "install-terminal",
     "type": "terminal_scene",
-    "terminalTitle": "bash — OpenMontage setup",
+    "terminalTitle": "bash — Contrechamp setup",
     "prompt": "$",
     "accentColor": "#22D3EE",
     "steps": install_steps,

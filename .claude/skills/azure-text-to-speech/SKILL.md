@@ -1,6 +1,6 @@
 ---
 name: azure-text-to-speech
-description: Generate neural narration audio using Azure AI Speech (REST text-to-speech). Use when synthesizing voiceovers or narration in OpenMontage. Optional cloud TTS provider — preferred when AZURE_SPEECH_KEY is configured; the local piper_tts remains the default offline path. Shares one Speech resource with azure_stt.
+description: Generate neural narration audio using Azure AI Speech (REST text-to-speech). Use when synthesizing voiceovers or narration in Contrechamp. Optional cloud TTS provider — preferred when AZURE_SPEECH_KEY is configured; the local piper_tts remains the default offline path. Shares one Speech resource with azure_stt.
 license: MIT
 compatibility: Requires internet access and an Azure AI Speech resource (AZURE_SPEECH_KEY + AZURE_SPEECH_REGION).
 metadata: {"openclaw": {"requires": {"env": ["AZURE_SPEECH_KEY", "AZURE_SPEECH_REGION"]}, "primaryEnv": "AZURE_SPEECH_KEY"}}
@@ -11,7 +11,7 @@ metadata: {"openclaw": {"requires": {"env": ["AZURE_SPEECH_KEY", "AZURE_SPEECH_R
 Generate narration with **Azure neural TTS** — high-quality multilingual voices,
 SSML prosody control, and express-as styles, served synchronously by the REST
 `/cognitiveservices/v1` endpoint (no token exchange, Blob storage, or job
-polling). In OpenMontage this is exposed through the `azure_tts` tool
+polling). In Contrechamp this is exposed through the `azure_tts` tool
 (`capability=tts`, `provider=azure`). It is an **optional cloud TTS provider** —
 when `AZURE_SPEECH_KEY` is configured, prefer it for high-quality cloud
 narration. The local `piper_tts` remains the **default offline path** and the
@@ -102,7 +102,7 @@ per-call `cost_usd` for the cost tracker. See
   asset stage convention) rather than one giant paragraph — smaller segments
   align cleanly to scene timings and are cheap to regenerate.
 - The synchronous endpoint caps a request at 10 minutes of audio — far above
-  any segment OpenMontage generates.
+  any segment Contrechamp generates.
 - Text is XML-escaped automatically; do not pre-escape or wrap in SSML — pass
   plain text plus the `rate`/`pitch`/`style` params.
 - Verify quality: listen to the first generated segment before batch-running a

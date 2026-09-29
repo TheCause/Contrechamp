@@ -1,8 +1,8 @@
-# WorldClaw principles adapted for OpenMontage
+# WorldClaw principles adapted for Contrechamp
 
 Source: [WorldClaw: Agentic 3D Open-World Generation at Scale](https://arxiv.org/html/2608.05248v1), Guo et al., arXiv:2608.05248v1 (2026).
 
-WorldClaw's public repository currently contains the paper and assets, not the executable generation stack. OpenMontage therefore adopts the architectural ideas, not private code or model weights.
+WorldClaw's public repository currently contains the paper and assets, not the executable generation stack. Contrechamp therefore adopts the architectural ideas, not private code or model weights.
 
 ## Transferable architecture
 
@@ -19,7 +19,7 @@ WorldClaw's public repository currently contains the paper and assets, not the e
 
 ## Local mapping
 
-| WorldClaw concept | OpenMontage implementation |
+| WorldClaw concept | Contrechamp implementation |
 |---|---|
 | Structured scene specification | `world_spec` JSON and tool schema |
 | Semantic layout map | Continuous normalized region-weight field |
@@ -36,4 +36,4 @@ WorldClaw's public repository currently contains the paper and assets, not the e
 - No single-view object reconstruction, segmentation, or generated PBR texture maps.
 - No Blender or Unreal dependency in the current runnable path; this limits reconstruction and offline-render fidelity.
 - No claim of photoreal asset diversity comparable to large generative 3D models.
-- Stronger portability and determinism for browser-rendered OpenMontage video work.
+- Stronger portability and determinism for browser-rendered Contrechamp video work.

@@ -5,9 +5,9 @@ description: Generate AI voiceovers, sound effects, and music using ElevenLabs A
 
 # ElevenLabs Audio Generation
 
-## OpenMontage provider routing
+## Contrechamp provider routing
 
-Inspect the OpenMontage registry before choosing an authentication path.
+Inspect the Contrechamp registry before choosing an authentication path.
 
 - Prefer `fal_elevenlabs_tts` when it is available. It provides Eleven v3,
   Multilingual v2, and Turbo v2.5 through the centrally managed fal.ai

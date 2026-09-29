@@ -19,7 +19,7 @@ Content-Type: application/json
 model: <backend model>     # HTTP header selects the backend, e.g. s1
 ```
 
-The backend model is chosen with the `model` **HTTP header**, not a body field. In OpenMontage this maps to the tool's `model` input.
+The backend model is chosen with the `model` **HTTP header**, not a body field. In Contrechamp this maps to the tool's `model` input.
 
 ## Backend models
 
@@ -48,7 +48,7 @@ Billing is **per UTF-8 byte of input text** (not per character). CJK text and em
 
 Inline on-the-fly cloning (uploading reference audio + text per request) is **not** supported by this tool — create a voice model in the playground first.
 
-## OpenMontage Usage
+## Contrechamp Usage
 
 Generate with the TTS selector:
 

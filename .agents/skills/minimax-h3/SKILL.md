@@ -21,7 +21,7 @@ MiniMax H3 is the Hailuo 3.0 family. The first-party API identifier is
 | ComfyUI open weights | `comfyui_video`, `model_family: "minimax_h3_local"` | Local GPU with official workflow and model stack |
 
 For local ComfyUI, export the official workflow in API format and pass
-`workflow_json` or `workflow_path` plus `output_node`. OpenMontage reports the
+`workflow_json` or `workflow_path` plus `output_node`. Contrechamp reports the
 required diffusion model, Qwen3-VL text encoder, video VAE, and audio VAE; it
 does not silently download large weights.
 

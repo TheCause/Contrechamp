@@ -31,7 +31,7 @@ are accepted for compatibility.
 | Gemini Omni Flash | text, image, reference, video edit | Standard routes use `google/gemini-omni-flash/...`; developer routes exist for text/image/reference only. Standard image mode uses one `image`; standard reference uses `images`; developer reference requires one `video_clips` object. |
 | MiniMax H3 | text, image, reference | `minimax/h3/{text,image,reference}-to-video`; image mode supports optional `end_image`; reference mode requires `refers` objects; 4–15s; 768P/2K; $0.10/s |
 
-Use canonical OpenMontage fields:
+Use canonical Contrechamp fields:
 
 ```python
 tool.execute({

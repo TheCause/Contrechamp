@@ -1,6 +1,6 @@
 ---
 name: 3d-asset-generation
-description: Generate, reconstruct, inspect, and route production 3D assets for OpenMontage worlds using Atlas Cloud, fal.ai, licensed catalogs, and Blender.
+description: Generate, reconstruct, inspect, and route production 3D assets for Contrechamp worlds using Atlas Cloud, fal.ai, licensed catalogs, and Blender.
 ---
 
 # 3D Asset Generation

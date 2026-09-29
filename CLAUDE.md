@@ -1,4 +1,4 @@
-# OpenMontage
+# Contrechamp
 
 **Producing a video? MANDATORY: Read [`AGENT_GUIDE.md`](AGENT_GUIDE.md) before responding to ANY
 production request.**

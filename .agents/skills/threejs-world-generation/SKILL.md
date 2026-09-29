@@ -1,6 +1,6 @@
 ---
 name: threejs-world-generation
-description: Build deterministic, editable, free-viewpoint Three.js worlds from text or structured briefs. Use for cinematic 3D terrain, semantic regions, procedural biomes, explicit landmarks, environmental scattering, camera fly-throughs, world diagnostics, or requests for a real 3D environment rather than generated 2D footage. Integrates OpenMontage's threejs_world tool with HyperFrames; do not use for a single isolated 3D object or a flat parallax scene.
+description: Build deterministic, editable, free-viewpoint Three.js worlds from text or structured briefs. Use for cinematic 3D terrain, semantic regions, procedural biomes, explicit landmarks, environmental scattering, camera fly-throughs, world diagnostics, or requests for a real 3D environment rather than generated 2D footage. Integrates Contrechamp's threejs_world tool with HyperFrames; do not use for a single isolated 3D object or a flat parallax scene.
 ---
 
 # Three.js World Generation
