@@ -23,6 +23,10 @@ import webbrowser
 
 from backlot import DEFAULT_PORT
 
+# A board tab keeps its live stream (SSE) open forever; without a bound,
+# uvicorn waits for it on SIGTERM and the process never exits.
+SHUTDOWN_GRACE_SECONDS = 3
+
 
 def _port() -> int:
     try:
@@ -96,7 +100,10 @@ def cmd_serve(port: int, host: str = "127.0.0.1") -> int:
             "every machine on this network can see the productions (read-only).",
             file=sys.stderr,
         )
-    uvicorn.run("backlot.server:app", host=host, port=port, log_level="warning")
+    uvicorn.run(
+        "backlot.server:app", host=host, port=port, log_level="warning",
+        timeout_graceful_shutdown=SHUTDOWN_GRACE_SECONDS,
+    )
     return 0
 
 
