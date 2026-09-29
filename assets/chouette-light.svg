@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="Chouette, the Contrechamp mascot: an owl with camera-lens eyes who looks the other way">
+  <defs>
+    <clipPath id="skull"><ellipse cx="100" cy="72" rx="48" ry="38"/></clipPath>
+  </defs>
+  <!-- ground shadow -->
+  <ellipse cx="100" cy="188" rx="46" ry="6" fill="#241d15" opacity="0.18"/>
+
+  <!-- idle float -->
+  <g>
+    <animateTransform attributeName="transform" type="translate"
+      values="0 0; 0 -6; 0 0" keyTimes="0;0.5;1"
+      calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
+      dur="4.5s" repeatCount="indefinite"/>
+
+    <!-- feet -->
+    <path d="M78 172 l-6 10 M84 173 l0 11 M90 172 l6 10" stroke="#e0704f" stroke-width="5" stroke-linecap="round"/>
+    <path d="M110 172 l-6 10 M116 173 l0 11 M122 172 l6 10" stroke="#e0704f" stroke-width="5" stroke-linecap="round"/>
+
+    <!-- body -->
+    <path d="M100 58 C146 58 160 104 156 136 C152 164 130 178 100 178 C70 178 48 164 44 136 C40 104 54 58 100 58 Z"
+      fill="#b9773a" stroke="#241d15" stroke-width="3.5"/>
+    <!-- belly with chevron feathers -->
+    <path d="M100 104 C124 104 134 128 132 146 C130 164 116 172 100 172 C84 172 70 164 68 146 C66 128 76 104 100 104 Z" fill="#f4ecdc"/>
+    <path d="M88 126 l6 5 l6 -5 M100 126 l6 5 l6 -5 M82 142 l6 5 l6 -5 M94 142 l6 5 l6 -5 M106 142 l6 5 l6 -5 M90 158 l6 5 l6 -5 M102 158 l6 5 l6 -5"
+      fill="none" stroke="#b9773a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- wings -->
+    <path d="M50 108 C38 126 40 152 58 166 C60 144 60 124 50 108 Z" fill="#8a5528" stroke="#241d15" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M150 108 C162 126 160 152 142 166 C140 144 140 124 150 108 Z" fill="#8a5528" stroke="#241d15" stroke-width="3" stroke-linejoin="round"/>
+
+    <!-- head: turns to look the other way (the reverse shot), then comes back -->
+    <g>
+      <animateTransform attributeName="transform" type="rotate"
+        values="0 100 110; 0 100 110; 7 100 110; 7 100 110; -7 100 110; -7 100 110; 0 100 110; 0 100 110"
+        keyTimes="0;0.30;0.38;0.50;0.60;0.72;0.80;1"
+        dur="8s" repeatCount="indefinite"/>
+      <!-- ear tufts -->
+      <path d="M62 50 L56 22 L80 42 Z" fill="#8a5528" stroke="#241d15" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M138 50 L144 22 L120 42 Z" fill="#8a5528" stroke="#241d15" stroke-width="3" stroke-linejoin="round"/>
+      <!-- head -->
+      <ellipse cx="100" cy="72" rx="50" ry="40" fill="#b9773a" stroke="#241d15" stroke-width="3.5"/>
+      <!-- the face slides further than the skull: a three-quarter turn -->
+      <g clip-path="url(#skull)"><g>
+      <animateTransform attributeName="transform" type="translate"
+        values="0 0; 0 0; 12 0; 12 0; -12 0; -12 0; 0 0; 0 0"
+        keyTimes="0;0.30;0.38;0.50;0.60;0.72;0.80;1"
+        dur="8s" repeatCount="indefinite"/>
+      <!-- facial disk -->
+      <ellipse cx="80" cy="74" rx="24" ry="25" fill="#f4ecdc"/>
+      <ellipse cx="120" cy="74" rx="24" ry="25" fill="#f4ecdc"/>
+
+      <!-- lens eyes -->
+      <g>
+        <circle cx="80" cy="74" r="17" fill="#2b3450" stroke="#241d15" stroke-width="2.5"/>
+        <circle cx="80" cy="74" r="12.5" fill="none" stroke="#56627f" stroke-width="1.5"/>
+        <circle cx="120" cy="74" r="17" fill="#2b3450" stroke="#241d15" stroke-width="2.5"/>
+        <circle cx="120" cy="74" r="12.5" fill="none" stroke="#56627f" stroke-width="1.5"/>
+        <!-- irises glance in the direction of the turn -->
+        <g>
+          <animateTransform attributeName="transform" type="translate"
+            values="0 0; 0 0; 5 0; 5 0; -5 0; -5 0; 0 0; 0 0"
+            keyTimes="0;0.30;0.38;0.50;0.60;0.72;0.80;1"
+            dur="8s" repeatCount="indefinite"/>
+          <circle cx="80" cy="74" r="9" fill="#2f8f8a"/>
+          <circle cx="80" cy="74" r="4.5" fill="#0f1422"/>
+          <circle cx="76.5" cy="70.5" r="2.2" fill="#ffffff"/>
+          <circle cx="120" cy="74" r="9" fill="#2f8f8a"/>
+          <circle cx="120" cy="74" r="4.5" fill="#0f1422"/>
+          <circle cx="116.5" cy="70.5" r="2.2" fill="#ffffff"/>
+        </g>
+        <!-- eyelids: a blink -->
+        <g fill="#b9773a">
+          <ellipse cx="80" cy="74" rx="18" ry="0">
+            <animate attributeName="ry" values="0;0;18;0;0" keyTimes="0;0.90;0.93;0.96;1" dur="5.3s" repeatCount="indefinite"/>
+          </ellipse>
+          <ellipse cx="120" cy="74" rx="18" ry="0">
+            <animate attributeName="ry" values="0;0;18;0;0" keyTimes="0;0.90;0.93;0.96;1" dur="5.3s" repeatCount="indefinite"/>
+          </ellipse>
+        </g>
+      </g>
+
+      <!-- beak -->
+      <path d="M94 92 L106 92 L100 104 Z" fill="#e0704f" stroke="#241d15" stroke-width="2" stroke-linejoin="round"/>
+      </g></g>
+    </g>
+  </g>
+</svg>

@@ -1,3 +1,12 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/chouette-dark.svg">
+    <img src="assets/chouette-light.svg" alt="Chouette, the Contrechamp mascot: an owl with camera-lens eyes who looks the other way" width="200">
+  </picture>
+</p>
+
+<p align="center"><sub><em>Chouette — she turns her head to see the other side of the scene: the reverse shot.</em></sub></p>
+
 <h1 align="center">Contrechamp</h1>
 
 > **Independent project derived from OpenMontage.** Contrechamp is a modified
