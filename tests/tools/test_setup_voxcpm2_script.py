@@ -40,3 +40,18 @@ def test_no_supported_python_is_a_clear_refusal(tmp_path):
 
 def test_make_target_runs_the_script():
     assert "setup-voxcpm2:\n\t@bash scripts/setup_voxcpm2.sh" in (ROOT / "Makefile").read_text()
+
+
+def test_the_engine_venv_is_ignored_even_as_a_symlink(tmp_path):
+    # a symlink to an engine installed elsewhere is not a directory for git
+    link = ROOT / ".venv-voxcpm"
+    created = False
+    if not link.exists() and not link.is_symlink():
+        link.symlink_to(tmp_path)
+        created = True
+    try:
+        proc = subprocess.run(["git", "check-ignore", "-q", ".venv-voxcpm"], cwd=ROOT)
+        assert proc.returncode == 0
+    finally:
+        if created:
+            link.unlink()
