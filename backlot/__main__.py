@@ -1,7 +1,11 @@
 """Backlot CLI.
 
     python -m backlot open [project-id]   # start server if needed, open browser
-    python -m backlot serve [--port N]    # run the server in the foreground
+    python -m backlot serve [--port N] [--host H]   # run the server in the foreground
+
+The server listens on 127.0.0.1 only. ``--host 0.0.0.0`` (or BACKLOT_HOST)
+opens it to the local network: it has no authentication, so every machine
+there can see the productions (read-only).
 
 ``open`` is idempotent and non-fatal by design: agents call it at pipeline
 initialization and must continue the production even if it fails.
@@ -25,6 +29,10 @@ def _port() -> int:
         return int(os.environ.get("BACKLOT_PORT", DEFAULT_PORT))
     except ValueError:
         return DEFAULT_PORT
+
+
+def _host() -> str:
+    return os.environ.get("BACKLOT_HOST", "").strip() or "127.0.0.1"
 
 
 def _server_alive(port: int) -> bool:
@@ -79,10 +87,16 @@ def cmd_open(project_id: str | None) -> int:
     return 0
 
 
-def cmd_serve(port: int) -> int:
+def cmd_serve(port: int, host: str = "127.0.0.1") -> int:
     import uvicorn
 
-    uvicorn.run("backlot.server:app", host="127.0.0.1", port=port, log_level="warning")
+    if host not in ("127.0.0.1", "localhost", "::1"):
+        print(
+            f"backlot: listening on {host}:{port} with no authentication: "
+            "every machine on this network can see the productions (read-only).",
+            file=sys.stderr,
+        )
+    uvicorn.run("backlot.server:app", host=host, port=port, log_level="warning")
     return 0
 
 
@@ -95,12 +109,16 @@ def main(argv: list[str] | None = None) -> int:
 
     p_serve = sub.add_parser("serve", help="run the Backlot server in the foreground")
     p_serve.add_argument("--port", type=int, default=_port())
+    p_serve.add_argument(
+        "--host", default=_host(),
+        help="address to listen on (default 127.0.0.1, or BACKLOT_HOST); 0.0.0.0 = local network, no authentication",
+    )
 
     args = parser.parse_args(argv)
     if args.command == "open":
         return cmd_open(args.project_id)
     if args.command == "serve":
-        return cmd_serve(args.port)
+        return cmd_serve(args.port, args.host)
     parser.print_help()
     return 2
 
