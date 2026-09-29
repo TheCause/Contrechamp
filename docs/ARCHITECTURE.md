@@ -299,7 +299,7 @@ a call is never charged twice. Spend is accounted in the owning project's
 `cost_log.json`; in `cap` mode a paid call that belongs to no project is
 refused. The gate fails closed: an unreadable or unwritable log refuses paid
 calls, and a budget config that cannot be read falls back to `cap`. Paid calls
-made under an `OPENMONTAGE_*` budget override leave a `budget_override` event
+made under a `CONTRECHAMP_*` (or legacy `OPENMONTAGE_*`) budget override leave a `budget_override` event
 in `events.jsonl`.
 
 ### Lifecycle

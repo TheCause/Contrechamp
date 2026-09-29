@@ -71,6 +71,6 @@ class TestLiveApiMarkerIsSkipped:
     @pytest.mark.live_api
     def test_this_should_never_run_by_default(self):
         raise AssertionError(
-            "A @live_api test executed without OPENMONTAGE_ALLOW_NETWORK=1 — "
+            "A @live_api test executed without CONTRECHAMP_ALLOW_NETWORK=1 — "
             "the opt-in gate is broken and real spending is possible."
         )

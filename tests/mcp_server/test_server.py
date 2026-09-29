@@ -263,7 +263,7 @@ async def test_a_refused_paid_tool_stays_refused(projects):
 
 
 async def test_the_ceiling_refuses_even_an_approved_tool(projects, monkeypatch):
-    monkeypatch.setenv("OPENMONTAGE_BUDGET_TOTAL_USD", "0.05")
+    monkeypatch.setenv("CONTRECHAMP_BUDGET_TOTAL_USD", "0.05")
     async with connect(human(True)) as client:
         pid = await new_project(client)
         await call(client, "request_paid_tool_approval", project_id=pid, tool_name="mcp_fake_paid")
@@ -273,7 +273,8 @@ async def test_the_ceiling_refuses_even_an_approved_tool(projects, monkeypatch):
     assert FakePaidTool.calls == []
 
 
-@pytest.mark.parametrize("var", ["OPENMONTAGE_BUDGET_DISABLED", "OPENMONTAGE_APPROVE_TOOLS"])
+@pytest.mark.parametrize("var", ["CONTRECHAMP_BUDGET_DISABLED", "CONTRECHAMP_APPROVE_TOOLS",
+                                 "OPENMONTAGE_BUDGET_DISABLED", "OPENMONTAGE_APPROVE_TOOLS"])
 def test_server_refuses_to_start_with_the_gate_bypassed(projects, monkeypatch, var):
     from contrechamp_mcp.server import StartupRefused, enforce_budget_env
 
@@ -283,9 +284,21 @@ def test_server_refuses_to_start_with_the_gate_bypassed(projects, monkeypatch, v
 
 
 def test_server_forces_cap_mode(projects):
-    import os
+    from lib import budget
+    from lib.config_model import BudgetMode
 
-    assert os.environ["OPENMONTAGE_BUDGET_MODE"] == "cap"
+    assert budget._budget_config()["mode"] is BudgetMode.CAP
+
+
+@pytest.mark.parametrize("var", ["CONTRECHAMP_BUDGET_MODE", "OPENMONTAGE_BUDGET_MODE"])
+def test_no_mode_name_can_undo_the_forced_cap(projects, monkeypatch, var):
+    from contrechamp_mcp.server import enforce_budget_env
+    from lib import budget
+    from lib.config_model import BudgetMode
+
+    monkeypatch.setenv(var, "observe")
+    enforce_budget_env()
+    assert budget._budget_config()["mode"] is BudgetMode.CAP
 
 
 # --- surface ----------------------------------------------------------------

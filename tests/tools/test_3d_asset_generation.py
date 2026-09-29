@@ -69,11 +69,11 @@ def test_blender_doctor_reports_detected_runtime(monkeypatch, tmp_path):
     executable.write_bytes(b"")
     monkeypatch.setattr(blender_world, "find_blender", lambda: executable)
     monkeypatch.setattr(blender_world.subprocess, "run", lambda *args, **kwargs: subprocess.CompletedProcess(
-        args=args[0], returncode=0, stdout="OPENMONTAGE_BLENDER=4.5.10 LTS\n", stderr="",
+        args=args[0], returncode=0, stdout="CONTRECHAMP_BLENDER=4.5.10 LTS\n", stderr="",
     ))
     result = BlenderWorld().execute({"operation": "doctor"})
     assert result.success, result.error
-    assert result.data["version_line"].startswith("OPENMONTAGE_BLENDER=4.5.10")
+    assert result.data["version_line"].startswith("CONTRECHAMP_BLENDER=4.5.10")
 
 
 def test_blender_doctor_explains_missing_optional_runtime(monkeypatch):

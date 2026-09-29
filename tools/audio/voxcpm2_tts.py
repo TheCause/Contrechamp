@@ -20,6 +20,7 @@ import time
 from pathlib import Path
 from typing import Any
 
+from lib import env_names
 from tools.base_tool import (
     BaseTool,
     Determinism,
@@ -130,7 +131,7 @@ _VOICE_KEYS = ("cfg_value", "inference_timesteps", "seed", "mode", "backend")
 def _voices_dir(inputs: dict[str, Any]) -> Path:
     return Path(
         inputs.get("voices_dir")
-        or os.environ.get("OPENMONTAGE_VOICES_DIR")
+        or env_names.get("VOICES_DIR")
         or _PROJECT_ROOT / "voices"
     )
 
@@ -205,7 +206,7 @@ class VoxCPM2TTS(BaseTool):
                 "description": (
                     "Named local voice: <voices_dir>/<voice>.wav (reference), .txt (its "
                     "transcript) and optional .json (cfg_value, inference_timesteps, seed, "
-                    "mode, backend). voices_dir = OPENMONTAGE_VOICES_DIR or ./voices "
+                    "mode, backend). voices_dir = CONTRECHAMP_VOICES_DIR or ./voices "
                     "(gitignored: voice references never enter the repository)."
                 ),
             },

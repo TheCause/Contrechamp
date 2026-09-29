@@ -28,6 +28,10 @@ Claude Code (`.mcp.json` or `claude mcp add`):
 }
 ```
 
+Until 29 September 2026 the package was `openmontage_mcp`; update older client
+configurations to `contrechamp_mcp`. Environment variables are now
+`CONTRECHAMP_*`; the `OPENMONTAGE_*` names are still read (lib/env_names.py).
+
 ## Tools
 
 | Tool | What it does |
@@ -52,7 +56,7 @@ Claude Code (`.mcp.json` or `claude mcp add`):
 | The agent cannot approve | approvals are resolved parameters (`Resolve(...)` in the SDK): filled by a question to the client's user, absent from the tool's input schema | `test_the_approval_is_not_an_argument_the_model_can_fill`, `test_gated_stage_is_not_completed_when_the_human_refuses` |
 | The human approves what they can read | the question names the stored `checkpoint_<stage>.json` and its fingerprint; other artifacts in the approving call are stored for review again, never approved; a project whose pipeline cannot be read refuses checkpoints | `test_gated_stage_completes_when_the_human_approves_what_is_stored`, `test_an_approval_cannot_be_obtained_for_a_swapped_payload`, `test_a_project_without_its_pipeline_refuses_checkpoints` |
 | A client that cannot ask is not a yes | no elicitation capability → the call is refused and names the terminal command | `test_client_without_a_human_channel_cannot_complete_a_gate` |
-| Every paid call meets the budget gate | the server forces `cap` mode, refuses to start with `OPENMONTAGE_BUDGET_DISABLED` or `OPENMONTAGE_APPROVE_TOOLS`, and attributes each call to its project (`project_dir`) so the ceiling applies | `test_first_paid_use_waits_for_the_human_then_is_charged_to_the_project`, `test_the_ceiling_refuses_even_an_approved_tool`, `test_server_refuses_to_start_with_the_gate_bypassed`, `test_stdio_server_refuses_to_start_with_the_gate_disabled` |
+| Every paid call meets the budget gate | the server forces `cap` mode, refuses to start with `CONTRECHAMP_BUDGET_DISABLED` or `CONTRECHAMP_APPROVE_TOOLS` (legacy `OPENMONTAGE_*` spellings included), and attributes each call to its project (`project_dir`) so the ceiling applies | `test_first_paid_use_waits_for_the_human_then_is_charged_to_the_project`, `test_the_ceiling_refuses_even_an_approved_tool`, `test_server_refuses_to_start_with_the_gate_bypassed`, `test_no_mode_name_can_undo_the_forced_cap`, `test_stdio_server_refuses_to_start_with_the_gate_disabled` |
 | No publishing, no screen capture | tools with the `publish` or `screen_capture` capability are not exposed | `test_publishing_tools_are_not_exposed` |
 | Cancellation does not lie | a running tool cannot be interrupted; `cancel_job` records the request and says the work, its files and its spend go on | `test_long_call_runs_in_the_background_and_cancel_is_honest` |
 
@@ -101,7 +105,7 @@ python -m contrechamp_mcp approve-tool <project_id> <tool_name>
   call that costs money is not charged (a known case: ComfyUI partner nodes;
   custom ComfyUI graphs are refused through MCP).
 - **A job that hangs keeps its slot** (two by default,
-  `OPENMONTAGE_MCP_MAX_JOBS`) until the server restarts.
+  `CONTRECHAMP_MCP_MAX_JOBS`) until the server restarts.
 - The single-action ceiling (`single_action_approval_usd`) cannot be approved
   per call: an action above it is refused until the human raises the ceiling
   in `config.yaml`.

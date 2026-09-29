@@ -49,15 +49,18 @@ because refusing to spend is the entire point.
 
 Escape hatches
 --------------
-- `OPENMONTAGE_BUDGET_MODE=observe|warn|cap` overrides config.yaml.
-- `OPENMONTAGE_BUDGET_TOTAL_USD=<float>` overrides the ceiling.
-- `OPENMONTAGE_SINGLE_ACTION_USD=<float>` overrides the per-call approval
+Each variable is read as `CONTRECHAMP_<NAME>`, then as the legacy
+`OPENMONTAGE_<NAME>` (see lib/env_names.py); the new name wins.
+
+- `CONTRECHAMP_BUDGET_MODE=observe|warn|cap` overrides config.yaml.
+- `CONTRECHAMP_BUDGET_TOTAL_USD=<float>` overrides the ceiling.
+- `CONTRECHAMP_SINGLE_ACTION_USD=<float>` overrides the per-call approval
   threshold.
-- `OPENMONTAGE_APPROVE_TOOLS=name,name` (or `*`) pre-approves paid tools for
+- `CONTRECHAMP_APPROVE_TOOLS=name,name` (or `*`) pre-approves paid tools for
   unattended runs, standing in for the human who would otherwise be asked.
   These approvals last for the process only; they are not written to
   `cost_log.json`.
-- `OPENMONTAGE_BUDGET_DISABLED=1` switches the gate off.
+- `CONTRECHAMP_BUDGET_DISABLED=1` switches the gate off.
 
 None of these is silent: every paid call made while one is set appends a
 `budget_override` event (naming the variables) to the project's events.jsonl
@@ -67,11 +70,11 @@ and logs a warning.
 from __future__ import annotations
 
 import logging
-import os
 import threading
 from pathlib import Path
 from typing import Any, Optional
 
+from lib import env_names
 from lib.config_model import BudgetMode
 from tools.cost_tracker import (
     ApprovalRequiredError,
@@ -95,11 +98,12 @@ __all__ = [
 _LOCK = threading.RLock()
 _TRACKERS: dict[str, CostTracker] = {}
 
-_DISABLE_FLAG = "OPENMONTAGE_BUDGET_DISABLED"
-_MODE_ENV = "OPENMONTAGE_BUDGET_MODE"
-_TOTAL_ENV = "OPENMONTAGE_BUDGET_TOTAL_USD"
-_SINGLE_ENV = "OPENMONTAGE_SINGLE_ACTION_USD"
-_APPROVE_ENV = "OPENMONTAGE_APPROVE_TOOLS"
+# Setting names, read through lib.env_names (CONTRECHAMP_*, then OPENMONTAGE_*).
+_DISABLE_FLAG = "BUDGET_DISABLED"
+_MODE_ENV = "BUDGET_MODE"
+_TOTAL_ENV = "BUDGET_TOTAL_USD"
+_SINGLE_ENV = "SINGLE_ACTION_USD"
+_APPROVE_ENV = "APPROVE_TOOLS"
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 
@@ -114,12 +118,12 @@ class GovernanceUnavailableError(ApprovalRequiredError):
 
 def active_overrides() -> list[str]:
     """Names of the budget environment overrides currently set."""
-    return [var for var in _OVERRIDE_VARS if os.environ.get(var, "").strip()]
+    return [var for name in _OVERRIDE_VARS for var in env_names.set_names(name)]
 
 
 def budget_enabled() -> bool:
     """False disables the gate entirely (kill switch for debugging)."""
-    return os.environ.get(_DISABLE_FLAG, "").strip().lower() not in {"1", "true", "yes"}
+    return (env_names.get(_DISABLE_FLAG) or "").strip().lower() not in {"1", "true", "yes"}
 
 
 def _budget_config() -> dict[str, Any]:
@@ -139,21 +143,21 @@ def _budget_config() -> dict[str, Any]:
             logger.warning("budget: config.yaml unreadable (%s); falling back to cap mode", exc)
             cfg = {"mode": BudgetMode.CAP.value}
 
-    mode_raw = os.environ.get(_MODE_ENV, "").strip().lower() or cfg.get("mode", "warn")
+    mode_raw = (env_names.get(_MODE_ENV) or "").strip().lower() or cfg.get("mode", "warn")
     try:
         mode = BudgetMode(str(mode_raw).strip().lower())
     except ValueError:
         logger.warning("budget: unknown mode %r; falling back to cap mode", mode_raw)
         mode = BudgetMode.CAP
 
-    total_raw = os.environ.get(_TOTAL_ENV, "").strip() or cfg.get("total_usd", 10.0)
+    total_raw = (env_names.get(_TOTAL_ENV) or "").strip() or cfg.get("total_usd", 10.0)
     try:
         total = float(total_raw)
     except (TypeError, ValueError):
         total = 10.0
 
     single_raw = (
-        os.environ.get(_SINGLE_ENV, "").strip()
+        (env_names.get(_SINGLE_ENV) or "").strip()
         or cfg.get("single_action_approval_usd", 0.50)
     )
     try:
@@ -173,7 +177,7 @@ def _budget_config() -> dict[str, Any]:
 
 
 def _preapproved() -> set[str]:
-    raw = os.environ.get(_APPROVE_ENV, "").strip()
+    raw = (env_names.get(_APPROVE_ENV) or "").strip()
     if not raw:
         return set()
     return {part.strip() for part in raw.split(",") if part.strip()}

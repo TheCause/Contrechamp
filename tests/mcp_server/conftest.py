@@ -9,7 +9,7 @@ import mcp_types as types
 import pytest
 from mcp import Client
 
-from lib import budget
+from lib import budget, env_names
 from tools.base_tool import BaseTool, ToolResult, ToolRuntime, ToolTier
 from tools.tool_registry import registry
 
@@ -83,10 +83,12 @@ def projects(monkeypatch, tmp_path):
     root.mkdir()
     for module in (lib.paths, lib.events, lib.checkpoint):
         monkeypatch.setattr(module, "PROJECTS_DIR", root)
-    for var in ("OPENMONTAGE_BUDGET_DISABLED", "OPENMONTAGE_APPROVE_TOOLS",
-                "OPENMONTAGE_BUDGET_TOTAL_USD", "OPENMONTAGE_SINGLE_ACTION_USD"):
-        monkeypatch.delenv(var, raising=False)
-    monkeypatch.setenv("OPENMONTAGE_BUDGET_MODE", "warn")  # enforce_budget_env must override it
+    for name in ("BUDGET_DISABLED", "APPROVE_TOOLS", "BUDGET_TOTAL_USD", "SINGLE_ACTION_USD"):
+        for var in env_names.names(name):
+            monkeypatch.delenv(var, raising=False)
+    # enforce_budget_env must override these; setenv also restores them afterwards
+    for var in env_names.names("BUDGET_MODE"):
+        monkeypatch.setenv(var, "warn")
     budget.reset_trackers()
     registry.ensure_discovered()
     for cls in FAKES:

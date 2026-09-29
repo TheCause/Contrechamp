@@ -487,7 +487,7 @@ class CorpusBuilder(BaseTool):
         Raises on unexpected errors (the caller logs them).
 
         Before downloading, consults the shared clip bytes cache at
-        ``~/.openmontage/clips_cache/``: if the file is already on
+        ``~/.contrechamp/clips_cache/``: if the file is already on
         disk from a previous run (the same clip surfaced for a
         different project), the cache hard-links it straight into
         ``local_abs`` and we skip the network fetch entirely. On a

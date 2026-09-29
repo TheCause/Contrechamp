@@ -27,7 +27,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
 import re
 from typing import Annotated, Any
 
@@ -50,6 +49,7 @@ from lib.checkpoint import (
     read_checkpoint,
     write_checkpoint as _write_checkpoint,
 )
+from lib import env_names
 from lib.pipeline_loader import list_pipelines
 from tools.cost_tracker import ApprovalRequiredError, BudgetExceededError
 
@@ -65,7 +65,7 @@ HIDDEN_CAPABILITIES = frozenset({"publish", "screen_capture"})
 # Short calls run inline, off the event loop; this bounds how many at once.
 INLINE_MAX_CONCURRENT = 4
 _OUTPUT_KEYS = frozenset({"output_path", "output_dir", "output_file"})
-_REFUSED_BUDGET_ENV = ("OPENMONTAGE_BUDGET_DISABLED", "OPENMONTAGE_APPROVE_TOOLS")
+_REFUSED_BUDGET_ENV = ("BUDGET_DISABLED", "APPROVE_TOOLS")  # under both spellings, see lib/env_names.py
 
 
 class StartupRefused(RuntimeError):
@@ -75,19 +75,20 @@ class StartupRefused(RuntimeError):
 def enforce_budget_env() -> None:
     """Fail closed on switches that disable the gate; force `cap` mode.
 
-    `OPENMONTAGE_BUDGET_DISABLED` and `OPENMONTAGE_APPROVE_TOOLS` stand in for
-    the human who approves spend. Under MCP the caller is an agent, so the
+    `CONTRECHAMP_BUDGET_DISABLED` and `CONTRECHAMP_APPROVE_TOOLS`, under either
+    spelling (legacy `OPENMONTAGE_*` too), stand in for the human who approves
+    spend. Under MCP the caller is an agent, so the
     server refuses to start with either set rather than silently dropping it.
     `cap` makes the gate refuse spend beyond the ceiling instead of warning.
     """
-    set_vars = [var for var in _REFUSED_BUDGET_ENV if os.environ.get(var, "").strip()]
+    set_vars = [var for name in _REFUSED_BUDGET_ENV for var in env_names.set_names(name)]
     if set_vars:
         raise StartupRefused(
             f"{', '.join(set_vars)} set: the MCP server refuses to start with the "
             "budget gate disabled or tools pre-approved. Unset them; approvals go "
             "through the human (see contrechamp_mcp/approvals.py)."
         )
-    os.environ["OPENMONTAGE_BUDGET_MODE"] = "cap"
+    env_names.force("BUDGET_MODE", "cap")
 
 
 def _fail(code: str, message: str, **extra: Any) -> ToolError:

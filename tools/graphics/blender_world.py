@@ -135,13 +135,13 @@ class BlenderWorld(BaseTool):
         operation = str(inputs.get("operation") or "")
         if operation == "doctor":
             process = subprocess.run(
-                [str(blender), "--background", "--python-expr", "import bpy; print('OPENMONTAGE_BLENDER=' + bpy.app.version_string)"],
+                [str(blender), "--background", "--python-expr", "import bpy; print('CONTRECHAMP_BLENDER=' + bpy.app.version_string)"],
                 capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=60,
             )
-            ok = process.returncode == 0 and "OPENMONTAGE_BLENDER=" in process.stdout
+            ok = process.returncode == 0 and "CONTRECHAMP_BLENDER=" in process.stdout
             return ToolResult(
                 success=ok,
-                data={"blender_path": str(blender), "version_line": next((line for line in process.stdout.splitlines() if line.startswith("OPENMONTAGE_BLENDER=")), "")},
+                data={"blender_path": str(blender), "version_line": next((line for line in process.stdout.splitlines() if line.startswith("CONTRECHAMP_BLENDER=")), "")},
                 error=None if ok else (process.stderr or process.stdout)[-1000:],
                 model="blender-4.5-lts",
             )

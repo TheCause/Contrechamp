@@ -138,7 +138,7 @@ def staged_backlot_server():
     _build_approval_projects()
     port = 4897
     env = dict(os.environ)
-    env["OPENMONTAGE_PROJECTS_DIR"] = str(backlot_screenshot_stage.STAGE_DIR)
+    env["CONTRECHAMP_PROJECTS_DIR"] = str(backlot_screenshot_stage.STAGE_DIR)
     server = subprocess.Popen(
         [sys.executable, "-m", "backlot", "serve", "--port", str(port)],
         cwd=backlot_screenshot_stage.REPO_ROOT,

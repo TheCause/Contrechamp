@@ -21,7 +21,7 @@ class DummyTool(BaseTool):
 class BinaryDependencyTests(unittest.TestCase):
     def test_binary_dependency_prefix_is_checked_like_cmd(self) -> None:
         tool = DummyTool()
-        tool.dependencies = ["binary:definitely-not-installed-openmontage-test"]
+        tool.dependencies = ["binary:definitely-not-installed-contrechamp-test"]
         tool.install_instructions = "install it"
 
         with patch("tools.base_tool.shutil.which", return_value=None):
@@ -55,7 +55,7 @@ class EnvCommentHardeningTests(unittest.TestCase):
     def setUp(self) -> None:
         self._saved = {
             k: os.environ.pop(k, None)
-            for k in ("OPENMONTAGE_TEST_KEY", "OPENMONTAGE_TEST_KEY2")
+            for k in ("CONTRECHAMP_TEST_KEY", "CONTRECHAMP_TEST_KEY2")
         }
 
     def tearDown(self) -> None:
@@ -67,39 +67,39 @@ class EnvCommentHardeningTests(unittest.TestCase):
 
     def test_env_var_with_comment_value_is_treated_as_unset(self) -> None:
         """An env var whose value starts with # should fail dependency check."""
-        os.environ["OPENMONTAGE_TEST_KEY"] = "# some comment text"
+        os.environ["CONTRECHAMP_TEST_KEY"] = "# some comment text"
         tool = DummyTool()
-        tool.dependencies = ["env:OPENMONTAGE_TEST_KEY"]
-        tool.install_instructions = "set OPENMONTAGE_TEST_KEY in .env"
+        tool.dependencies = ["env:CONTRECHAMP_TEST_KEY"]
+        tool.install_instructions = "set CONTRECHAMP_TEST_KEY in .env"
 
         with self.assertRaises(DependencyError):
             tool.check_dependencies()
 
     def test_env_var_with_comment_and_leading_space_is_treated_as_unset(self) -> None:
         """An env var whose value is whitespace then # should fail dependency check."""
-        os.environ["OPENMONTAGE_TEST_KEY"] = "   # some comment text"
+        os.environ["CONTRECHAMP_TEST_KEY"] = "   # some comment text"
         tool = DummyTool()
-        tool.dependencies = ["env:OPENMONTAGE_TEST_KEY"]
-        tool.install_instructions = "set OPENMONTAGE_TEST_KEY in .env"
+        tool.dependencies = ["env:CONTRECHAMP_TEST_KEY"]
+        tool.install_instructions = "set CONTRECHAMP_TEST_KEY in .env"
 
         with self.assertRaises(DependencyError):
             tool.check_dependencies()
 
     def test_env_var_with_legitimate_value_is_not_rejected(self) -> None:
         """An env var with a real value (not starting with #) should pass."""
-        os.environ["OPENMONTAGE_TEST_KEY"] = "sk-real-api-key-value"
+        os.environ["CONTRECHAMP_TEST_KEY"] = "sk-real-api-key-value"
         tool = DummyTool()
-        tool.dependencies = ["env:OPENMONTAGE_TEST_KEY"]
-        tool.install_instructions = "set OPENMONTAGE_TEST_KEY in .env"
+        tool.dependencies = ["env:CONTRECHAMP_TEST_KEY"]
+        tool.install_instructions = "set CONTRECHAMP_TEST_KEY in .env"
 
         tool.check_dependencies()
 
     def test_env_var_with_empty_value_is_treated_as_unset(self) -> None:
         """An env var with empty value should fail dependency check."""
-        os.environ["OPENMONTAGE_TEST_KEY"] = ""
+        os.environ["CONTRECHAMP_TEST_KEY"] = ""
         tool = DummyTool()
-        tool.dependencies = ["env:OPENMONTAGE_TEST_KEY"]
-        tool.install_instructions = "set OPENMONTAGE_TEST_KEY in .env"
+        tool.dependencies = ["env:CONTRECHAMP_TEST_KEY"]
+        tool.install_instructions = "set CONTRECHAMP_TEST_KEY in .env"
 
         with self.assertRaises(DependencyError):
             tool.check_dependencies()

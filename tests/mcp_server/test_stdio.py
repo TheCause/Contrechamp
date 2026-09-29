@@ -16,8 +16,9 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 def _env(tmp_path, **extra):
     env = {k: v for k, v in os.environ.items()
-           if k not in ("OPENMONTAGE_BUDGET_DISABLED", "OPENMONTAGE_APPROVE_TOOLS")}
-    env["OPENMONTAGE_PROJECTS_DIR"] = str(tmp_path / "projects")
+           if k.removeprefix("CONTRECHAMP_").removeprefix("OPENMONTAGE_")
+           not in ("BUDGET_DISABLED", "APPROVE_TOOLS", "PROJECTS_DIR")}
+    env["CONTRECHAMP_PROJECTS_DIR"] = str(tmp_path / "projects")
     env.update(extra)
     return env
 
@@ -38,7 +39,7 @@ async def test_stdio_server_creates_a_project(tmp_path):
 
 def test_stdio_server_refuses_to_start_with_the_gate_disabled(tmp_path):
     proc = subprocess.run([sys.executable, "-m", "contrechamp_mcp"], cwd=REPO_ROOT,
-                          env=_env(tmp_path, OPENMONTAGE_BUDGET_DISABLED="1"),
+                          env=_env(tmp_path, CONTRECHAMP_BUDGET_DISABLED="1"),
                           stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=60)
     assert proc.returncode == 2
-    assert "OPENMONTAGE_BUDGET_DISABLED" in proc.stderr
+    assert "CONTRECHAMP_BUDGET_DISABLED" in proc.stderr

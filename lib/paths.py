@@ -7,11 +7,12 @@ board watches it. Define it once.
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
+
+from lib import env_names
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
 # Overridable for staging/screenshots/tests. Everything — checkpoint writes,
 # event attribution, the Backlot board — follows the same root.
-PROJECTS_DIR = Path(os.environ.get("OPENMONTAGE_PROJECTS_DIR") or (REPO_ROOT / "projects"))
+PROJECTS_DIR = Path(env_names.get("PROJECTS_DIR") or (REPO_ROOT / "projects"))

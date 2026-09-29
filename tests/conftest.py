@@ -19,7 +19,7 @@ To write a test that genuinely hits a live API:
 
 Marked tests are **skipped by default** and only run with the env flag set:
 
-    OPENMONTAGE_ALLOW_NETWORK=1 pytest -m live_api
+    CONTRECHAMP_ALLOW_NETWORK=1 pytest -m live_api
 
 Limitation: this guards the pytest process. A test that shells out to a
 subprocess (node, ffmpeg, npx) is outside its reach — don't call paid APIs
@@ -28,12 +28,13 @@ from a subprocess in tests.
 
 from __future__ import annotations
 
-import os
 import socket
 
 import pytest
 
-_ALLOW_ENV_FLAG = "OPENMONTAGE_ALLOW_NETWORK"
+from lib import env_names
+
+_ALLOW_ENV_FLAG = "CONTRECHAMP_ALLOW_NETWORK"
 
 _LOOPBACK_HOSTS = {"localhost", "127.0.0.1", "::1", "0.0.0.0", ""}
 
@@ -47,7 +48,7 @@ class NetworkCallInTestError(RuntimeError):
 
 
 def _network_allowed() -> bool:
-    return os.environ.get(_ALLOW_ENV_FLAG, "").strip().lower() in {"1", "true", "yes"}
+    return (env_names.get("ALLOW_NETWORK") or "").strip().lower() in {"1", "true", "yes"}
 
 
 def _is_loopback(address) -> bool:

@@ -14,7 +14,7 @@ import json
 
 import pytest
 
-from lib import budget
+from lib import budget, env_names
 from lib.checkpoint import init_project, write_checkpoint
 from tools.base_tool import (
     BaseTool,
@@ -56,8 +56,9 @@ def _isolate(monkeypatch, tmp_path):
     root.mkdir(parents=True, exist_ok=True)
     monkeypatch.setattr(lib.events, "PROJECTS_DIR", root)
     budget.reset_trackers()
-    monkeypatch.delenv("OPENMONTAGE_BUDGET_DISABLED", raising=False)
-    monkeypatch.delenv("OPENMONTAGE_APPROVE_TOOLS", raising=False)
+    for name in ("BUDGET_DISABLED", "APPROVE_TOOLS", "BUDGET_MODE", "BUDGET_TOTAL_USD", "SINGLE_ACTION_USD"):
+        for var in env_names.names(name):
+            monkeypatch.delenv(var, raising=False)
     yield
     budget.reset_trackers()
 
@@ -73,8 +74,8 @@ def test_cap_refuses_paid_call_outside_a_project(tmp_path, monkeypatch):
     """No project means no cost_log.json to account against. In cap mode the
     gate cannot prove the call fits the ceiling, so it must refuse rather than
     wave it through (an agent writing to /tmp used to spend without limit)."""
-    monkeypatch.setenv("OPENMONTAGE_BUDGET_MODE", "cap")
-    monkeypatch.setenv("OPENMONTAGE_BUDGET_TOTAL_USD", "0.0")
+    monkeypatch.setenv("CONTRECHAMP_BUDGET_MODE", "cap")
+    monkeypatch.setenv("CONTRECHAMP_BUDGET_TOTAL_USD", "0.0")
     with pytest.raises(BudgetExceededError):
         FakePaidTool().execute({"cost": 5.0})
     with pytest.raises(BudgetExceededError):
@@ -84,21 +85,21 @@ def test_cap_refuses_paid_call_outside_a_project(tmp_path, monkeypatch):
 def test_outside_a_project_free_or_non_cap_calls_pass(tmp_path, monkeypatch):
     """Silent side: a free call in cap mode, and any call in warn mode, still
     run outside a project."""
-    monkeypatch.setenv("OPENMONTAGE_BUDGET_MODE", "cap")
-    monkeypatch.setenv("OPENMONTAGE_BUDGET_TOTAL_USD", "0.0")
+    monkeypatch.setenv("CONTRECHAMP_BUDGET_MODE", "cap")
+    monkeypatch.setenv("CONTRECHAMP_BUDGET_TOTAL_USD", "0.0")
     assert FakePaidTool().execute({"cost": 0.0}).success
-    monkeypatch.setenv("OPENMONTAGE_BUDGET_MODE", "warn")
+    monkeypatch.setenv("CONTRECHAMP_BUDGET_MODE", "warn")
     assert FakePaidTool().execute({"cost": 5.0}).success
 
 
 def test_cap_mode_refuses_to_exceed_budget(tmp_path, monkeypatch):
     project = _project(tmp_path)
-    monkeypatch.setenv("OPENMONTAGE_BUDGET_MODE", "cap")
-    monkeypatch.setenv("OPENMONTAGE_BUDGET_TOTAL_USD", "1.00")
-    monkeypatch.setenv("OPENMONTAGE_APPROVE_TOOLS", "*")
+    monkeypatch.setenv("CONTRECHAMP_BUDGET_MODE", "cap")
+    monkeypatch.setenv("CONTRECHAMP_BUDGET_TOTAL_USD", "1.00")
+    monkeypatch.setenv("CONTRECHAMP_APPROVE_TOOLS", "*")
     # Isolate the budget ceiling from the single-action approval threshold,
     # which would otherwise fire first on the large call.
-    monkeypatch.setenv("OPENMONTAGE_SINGLE_ACTION_USD", "999")
+    monkeypatch.setenv("CONTRECHAMP_SINGLE_ACTION_USD", "999")
 
     tool = FakePaidTool()
     # Well inside the budget: allowed, and recorded.
@@ -113,8 +114,8 @@ def test_first_paid_use_requires_approval(tmp_path, monkeypatch):
     """AGENT_GUIDE.md asks the agent to announce cost before every first paid
     call. Nothing enforced it; now the gate does."""
     project = _project(tmp_path)
-    monkeypatch.setenv("OPENMONTAGE_BUDGET_MODE", "warn")
-    monkeypatch.setenv("OPENMONTAGE_BUDGET_TOTAL_USD", "100.0")
+    monkeypatch.setenv("CONTRECHAMP_BUDGET_MODE", "warn")
+    monkeypatch.setenv("CONTRECHAMP_BUDGET_TOTAL_USD", "100.0")
 
     with pytest.raises(ApprovalRequiredError):
         FakePaidTool().execute({"project_dir": str(project), "cost": 0.20})
@@ -122,9 +123,9 @@ def test_first_paid_use_requires_approval(tmp_path, monkeypatch):
 
 def test_spend_is_recorded_and_reconciled(tmp_path, monkeypatch):
     project = _project(tmp_path)
-    monkeypatch.setenv("OPENMONTAGE_BUDGET_MODE", "observe")
-    monkeypatch.setenv("OPENMONTAGE_BUDGET_TOTAL_USD", "10.0")
-    monkeypatch.setenv("OPENMONTAGE_APPROVE_TOOLS", "*")
+    monkeypatch.setenv("CONTRECHAMP_BUDGET_MODE", "observe")
+    monkeypatch.setenv("CONTRECHAMP_BUDGET_TOTAL_USD", "10.0")
+    monkeypatch.setenv("CONTRECHAMP_APPROVE_TOOLS", "*")
 
     tool = FakePaidTool()
     tool.execute({"project_dir": str(project), "cost": 0.30})
@@ -141,7 +142,7 @@ def test_spend_is_recorded_and_reconciled(tmp_path, monkeypatch):
 
 def test_failed_call_is_refunded_not_charged(tmp_path, monkeypatch):
     project = _project(tmp_path)
-    monkeypatch.setenv("OPENMONTAGE_BUDGET_MODE", "observe")
+    monkeypatch.setenv("CONTRECHAMP_BUDGET_MODE", "observe")
 
     class Exploding(FakePaidTool):
         name = "exploding_paid_tool"
@@ -162,7 +163,7 @@ def test_checkpoint_backfills_cost_snapshot(tmp_path, monkeypatch):
     """Backlot's cost meter reads checkpoint['cost_snapshot']; nothing wrote it."""
     pipeline_dir = tmp_path / "projects"
     project = _project(tmp_path)
-    monkeypatch.setenv("OPENMONTAGE_BUDGET_MODE", "observe")
+    monkeypatch.setenv("CONTRECHAMP_BUDGET_MODE", "observe")
 
     FakePaidTool().execute({"project_dir": str(project), "cost": 0.40})
 
@@ -178,9 +179,9 @@ def test_checkpoint_backfills_cost_snapshot(tmp_path, monkeypatch):
 
 def test_kill_switch_disables_the_gate(tmp_path, monkeypatch):
     project = _project(tmp_path)
-    monkeypatch.setenv("OPENMONTAGE_BUDGET_DISABLED", "1")
-    monkeypatch.setenv("OPENMONTAGE_BUDGET_MODE", "cap")
-    monkeypatch.setenv("OPENMONTAGE_BUDGET_TOTAL_USD", "0.0")
+    monkeypatch.setenv("CONTRECHAMP_BUDGET_DISABLED", "1")
+    monkeypatch.setenv("CONTRECHAMP_BUDGET_MODE", "cap")
+    monkeypatch.setenv("CONTRECHAMP_BUDGET_TOTAL_USD", "0.0")
     assert FakePaidTool().execute({"project_dir": str(project), "cost": 9.0}).success
 
 
@@ -190,19 +191,19 @@ def test_kill_switch_disables_the_gate(tmp_path, monkeypatch):
 # ---------------------------------------------------------------------------
 
 def _strict(monkeypatch, total="0.0"):
-    monkeypatch.setenv("OPENMONTAGE_BUDGET_MODE", "cap")
-    monkeypatch.setenv("OPENMONTAGE_BUDGET_TOTAL_USD", total)
-    monkeypatch.setenv("OPENMONTAGE_APPROVE_TOOLS", "*")
-    monkeypatch.setenv("OPENMONTAGE_SINGLE_ACTION_USD", "999")
+    monkeypatch.setenv("CONTRECHAMP_BUDGET_MODE", "cap")
+    monkeypatch.setenv("CONTRECHAMP_BUDGET_TOTAL_USD", total)
+    monkeypatch.setenv("CONTRECHAMP_APPROVE_TOOLS", "*")
+    monkeypatch.setenv("CONTRECHAMP_SINGLE_ACTION_USD", "999")
 
 
 def test_current_ceiling_wins_over_ceiling_stored_in_log(tmp_path, monkeypatch):
     """Lowering the ceiling on a project that already has a cost_log.json must
     bite. The log used to overwrite the configured ceiling on load."""
     project = _project(tmp_path)
-    monkeypatch.setenv("OPENMONTAGE_BUDGET_MODE", "observe")
-    monkeypatch.setenv("OPENMONTAGE_BUDGET_TOTAL_USD", "10.0")
-    monkeypatch.setenv("OPENMONTAGE_APPROVE_TOOLS", "*")
+    monkeypatch.setenv("CONTRECHAMP_BUDGET_MODE", "observe")
+    monkeypatch.setenv("CONTRECHAMP_BUDGET_TOTAL_USD", "10.0")
+    monkeypatch.setenv("CONTRECHAMP_APPROVE_TOOLS", "*")
     FakePaidTool().execute({"project_dir": str(project), "cost": 0.10})
     assert json.loads((project / "cost_log.json").read_text())["budget_total_usd"] == 10.0
 
@@ -249,7 +250,7 @@ def test_unwritable_cost_log_is_a_governance_refusal(tmp_path, monkeypatch):
     if hasattr(os, "geteuid") and os.geteuid() == 0:
         pytest.skip("root ignores directory permissions")
     project = _project(tmp_path)
-    monkeypatch.setenv("OPENMONTAGE_BUDGET_MODE", "observe")
+    monkeypatch.setenv("CONTRECHAMP_BUDGET_MODE", "observe")
     project.chmod(0o500)
     try:
         with pytest.raises(ApprovalRequiredError, match="cost_log.json"):
@@ -341,16 +342,16 @@ def _events(project):
 
 
 @pytest.mark.parametrize("var,value", [
-    ("OPENMONTAGE_BUDGET_DISABLED", "1"),
-    ("OPENMONTAGE_APPROVE_TOOLS", "*"),
-    ("OPENMONTAGE_SINGLE_ACTION_USD", "999"),
+    ("CONTRECHAMP_BUDGET_DISABLED", "1"),
+    ("CONTRECHAMP_APPROVE_TOOLS", "*"),
+    ("CONTRECHAMP_SINGLE_ACTION_USD", "999"),
 ])
 def test_escape_hatch_leaves_a_trace(tmp_path, monkeypatch, var, value):
     """An escape hatch used to be invisible: no log, no event, nothing."""
     project = _project(tmp_path)
-    monkeypatch.setenv("OPENMONTAGE_BUDGET_MODE", "observe")
-    monkeypatch.delenv("OPENMONTAGE_BUDGET_TOTAL_USD", raising=False)
-    monkeypatch.delenv("OPENMONTAGE_SINGLE_ACTION_USD", raising=False)
+    monkeypatch.setenv("CONTRECHAMP_BUDGET_MODE", "observe")
+    monkeypatch.delenv("CONTRECHAMP_BUDGET_TOTAL_USD", raising=False)
+    monkeypatch.delenv("CONTRECHAMP_SINGLE_ACTION_USD", raising=False)
     monkeypatch.setenv(var, value)
     FakePaidTool().execute({"project_dir": str(project), "cost": 0.30})
     overrides = [e for e in _events(project) if e.get("event") == "budget_override"]
@@ -360,9 +361,9 @@ def test_escape_hatch_leaves_a_trace(tmp_path, monkeypatch, var, value):
 
 def test_no_override_event_without_escape_hatch(tmp_path, monkeypatch):
     project = _project(tmp_path)
-    for var in ("OPENMONTAGE_BUDGET_MODE", "OPENMONTAGE_BUDGET_TOTAL_USD",
-                "OPENMONTAGE_SINGLE_ACTION_USD", "OPENMONTAGE_APPROVE_TOOLS",
-                "OPENMONTAGE_BUDGET_DISABLED"):
+    for var in ("CONTRECHAMP_BUDGET_MODE", "CONTRECHAMP_BUDGET_TOTAL_USD",
+                "CONTRECHAMP_SINGLE_ACTION_USD", "CONTRECHAMP_APPROVE_TOOLS",
+                "CONTRECHAMP_BUDGET_DISABLED"):
         monkeypatch.delenv(var, raising=False)
     tracker = budget.tracker_for(project)
     tracker.approve_tool("fake_paid_tool")  # a real, recorded human approval
@@ -373,15 +374,15 @@ def test_no_override_event_without_escape_hatch(tmp_path, monkeypatch):
 def test_env_approval_is_not_persisted(tmp_path, monkeypatch):
     """An approval taken from the environment must end with the environment."""
     project = _project(tmp_path)
-    monkeypatch.setenv("OPENMONTAGE_BUDGET_MODE", "warn")
-    monkeypatch.setenv("OPENMONTAGE_BUDGET_TOTAL_USD", "100.0")
-    monkeypatch.setenv("OPENMONTAGE_APPROVE_TOOLS", "fake_paid_tool")
+    monkeypatch.setenv("CONTRECHAMP_BUDGET_MODE", "warn")
+    monkeypatch.setenv("CONTRECHAMP_BUDGET_TOTAL_USD", "100.0")
+    monkeypatch.setenv("CONTRECHAMP_APPROVE_TOOLS", "fake_paid_tool")
     assert FakePaidTool().execute({"project_dir": str(project), "cost": 0.20}).success
     assert "fake_paid_tool" not in json.loads(
         (project / "cost_log.json").read_text())["approved_tools"]
 
     budget.reset_trackers()
-    monkeypatch.delenv("OPENMONTAGE_APPROVE_TOOLS")
+    monkeypatch.delenv("CONTRECHAMP_APPROVE_TOOLS")
     with pytest.raises(ApprovalRequiredError):
         FakePaidTool().execute({"project_dir": str(project), "cost": 0.20})
 
@@ -392,7 +393,7 @@ def _config(tmp_path, monkeypatch, text):
     if text is not None:
         (root / "config.yaml").write_text(text)
     monkeypatch.setattr(budget, "_REPO_ROOT", root)
-    monkeypatch.delenv("OPENMONTAGE_BUDGET_MODE", raising=False)
+    monkeypatch.delenv("CONTRECHAMP_BUDGET_MODE", raising=False)
     return budget._budget_config()
 
 

@@ -14,11 +14,12 @@ The job then reports `cancel_requested` next to its real final status.
 from __future__ import annotations
 
 import asyncio
-import os
 import time
 import uuid
 from dataclasses import dataclass, field
 from typing import Any, Callable
+
+from lib import env_names
 
 ACTIVE = "running"
 DONE = ("completed", "failed")
@@ -64,7 +65,7 @@ class JobTracker:
     """In-memory, per-server-process registry of background jobs."""
 
     def __init__(self, max_running: int | None = None) -> None:
-        self.max_running = max_running or int(os.environ.get("OPENMONTAGE_MCP_MAX_JOBS", "2"))
+        self.max_running = max_running or int(env_names.get("MCP_MAX_JOBS", "2"))
         self._jobs: dict[str, Job] = {}
 
     def running(self) -> int:
