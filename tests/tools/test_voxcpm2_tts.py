@@ -19,6 +19,8 @@ from tools.tool_registry import ToolRegistry
 from tools.audio import voxcpm2_tts as voxcpm2_module
 from tools.audio.voxcpm2_tts import VoxCPM2TTS
 
+_DEFAULT_VENVS = list(voxcpm2_module._OFFICIAL_VENVS)  # before any fixture patches it
+
 
 def _make_model_dir(root: Path, complete: bool = True) -> Path:
     d = root / "VoxCPM2-4bit"
@@ -31,8 +33,10 @@ def _make_model_dir(root: Path, complete: bool = True) -> Path:
 
 
 @pytest.fixture(autouse=True)
-def _no_env_model_dir(monkeypatch):
+def _no_env_model_dir(monkeypatch, tmp_path):
     monkeypatch.delenv("VOXCPM2_MODEL_DIR", raising=False)
+    # isolate from a real .venv-voxcpm on the developer's machine
+    monkeypatch.setattr(voxcpm2_module, "_OFFICIAL_VENVS", [tmp_path / "no-venv-voxcpm"], raising=False)
 
 
 @pytest.fixture
@@ -216,3 +220,41 @@ def test_a_directory_is_not_an_interpreter(tmp_path, monkeypatch):
     monkeypatch.setattr(voxcpm2_module, "_MODEL_DIRS", [tmp_path / "none"])
     monkeypatch.setenv("VOXCPM2_PYTHON", str(tmp_path))
     assert VoxCPM2TTS().get_status() is ToolStatus.UNAVAILABLE
+
+
+# ---- Engine discovery without VOXCPM2_PYTHON ----
+
+def _fake_venv(root: Path) -> Path:
+    exe = root / "bin" / "python"
+    exe.parent.mkdir(parents=True)
+    exe.write_text("#!/bin/sh\n")
+    exe.chmod(0o755)
+    return exe
+
+
+def test_conventional_venv_is_found_without_the_variable(tmp_path, monkeypatch):
+    monkeypatch.delenv("VOXCPM2_PYTHON", raising=False)
+    monkeypatch.setattr(voxcpm2_module, "_MODEL_DIRS", [tmp_path / "no-mlx-model"])
+    exe = _fake_venv(tmp_path / ".venv-voxcpm")
+    monkeypatch.setattr(voxcpm2_module, "_OFFICIAL_VENVS", [tmp_path / ".venv-voxcpm"])
+    assert VoxCPM2TTS._official_python() == str(exe)
+    assert VoxCPM2TTS().get_status() is ToolStatus.AVAILABLE
+
+
+def test_the_variable_wins_over_the_conventional_venv(official_python, tmp_path, monkeypatch):
+    _fake_venv(tmp_path / ".venv-voxcpm")
+    monkeypatch.setattr(voxcpm2_module, "_OFFICIAL_VENVS", [tmp_path / ".venv-voxcpm"])
+    assert VoxCPM2TTS._official_python() == str(official_python)
+
+
+def test_the_default_venv_lives_at_the_repository_root():
+    assert _DEFAULT_VENVS == [PROJECT_ROOT / ".venv-voxcpm"]
+
+
+
+def test_an_empty_variable_from_env_example_does_not_hide_the_venv(tmp_path, monkeypatch):
+    # .env.example ships `VOXCPM2_PYTHON=` and `make setup` copies it to .env
+    monkeypatch.setenv("VOXCPM2_PYTHON", "")
+    exe = _fake_venv(tmp_path / ".venv-voxcpm")
+    monkeypatch.setattr(voxcpm2_module, "_OFFICIAL_VENVS", [tmp_path / ".venv-voxcpm"])
+    assert VoxCPM2TTS._official_python() == str(exe)

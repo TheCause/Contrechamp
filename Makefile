@@ -9,7 +9,7 @@ PIP = "$(RUN_PYTHON)" -m pip
 
 .DEFAULT_GOAL := setup
 
-.PHONY: setup install install-dev install-gpu test test-contracts lint clean preflight demo demo-list hyperframes-doctor hyperframes-warm venv ensure-venv
+.PHONY: setup setup-voxcpm2 install install-dev install-gpu test test-contracts lint clean preflight demo demo-list hyperframes-doctor hyperframes-warm venv ensure-venv
 
 # ---- Virtual environment ----
 
@@ -78,6 +78,12 @@ setup: ensure-venv
 	@echo "Done! Open this project in your AI coding assistant and start creating."
 	@echo "  Optional: add API keys to .env to unlock cloud providers."
 	@echo "  Optional: run 'make install-gpu' if you have an NVIDIA GPU."
+	@echo "  Optional: run 'make setup-voxcpm2' for local voice cloning with French narration (VoxCPM2)."
+
+# ---- Optional: VoxCPM2 voice cloning (own venv, Python 3.10-3.12) ----
+
+setup-voxcpm2:
+	@bash scripts/setup_voxcpm2.sh
 	@echo "  Optional: run 'make hyperframes-doctor' to fully validate the HyperFrames runtime."
 	@echo "  Optional: run 'make hyperframes-warm' anytime to refresh the npx cache to the latest hyperframes version."
 

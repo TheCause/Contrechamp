@@ -35,6 +35,8 @@ from tools.base_tool import (
 )
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+# Venvs holding the official engine, looked up when VOXCPM2_PYTHON is unset.
+_OFFICIAL_VENVS = [_PROJECT_ROOT / ".venv-voxcpm"]
 # 4bit is the default (better prosody + ~2x faster on 16GB machines);
 # bf16 is available for final renders. Both download into models/ via:
 #   huggingface-cli download mlx-community/VoxCPM2-4bit --local-dir models/VoxCPM2-4bit
@@ -85,9 +87,10 @@ print("VOXCPM_OUTPUT=" + str(out))
 """
 
 
-# Official `voxcpm` package (PyTorch, MPS/CUDA/CPU), run by the interpreter named
-# in VOXCPM2_PYTHON (a separate venv: voxcpm needs Python < 3.13). Weights come
-# from the Hugging Face cache (openbmb/VoxCPM2, Apache-2.0), offline.
+# Official `voxcpm` package (PyTorch, MPS/CUDA/CPU), run by its own interpreter
+# (a separate venv: voxcpm needs Python < 3.13): VOXCPM2_PYTHON if set, else the
+# venv `make setup-voxcpm2` creates. Weights come from the Hugging Face cache
+# (openbmb/VoxCPM2, Apache-2.0), offline.
 _OFFICIAL_SCRIPT = r"""
 import json, os
 from pathlib import Path
@@ -153,10 +156,9 @@ class VoxCPM2TTS(BaseTool):
         "  pip install 'mlx-audio[tts]'\n"
         "  huggingface-cli download mlx-community/VoxCPM2-4bit --local-dir models/VoxCPM2-4bit\n"
         "  (or VoxCPM2-bf16 for final renders; set VOXCPM2_MODEL_DIR to use a custom location)\n"
-        "Or the official engine in its own venv (Python < 3.13):\n"
-        "  python3.12 -m venv ~/voxcpm-venv && ~/voxcpm-venv/bin/pip install voxcpm soundfile\n"
-        "  ~/voxcpm-venv/bin/python -c \"from voxcpm import VoxCPM; VoxCPM.from_pretrained('openbmb/VoxCPM2')\"\n"
-        "  export VOXCPM2_PYTHON=~/voxcpm-venv/bin/python"
+        "Or the official engine in its own venv (Python 3.10-3.12):\n"
+        "  make setup-voxcpm2      # creates .venv-voxcpm, found without any variable\n"
+        "  (an engine installed elsewhere: set VOXCPM2_PYTHON to its interpreter, e.g. in .env)"
     )
     agent_skills = ["text-to-speech"]
 
@@ -276,8 +278,18 @@ class VoxCPM2TTS(BaseTool):
 
     @staticmethod
     def _official_python() -> str | None:
+        """The official engine's interpreter: VOXCPM2_PYTHON, else a known venv."""
+        def runnable(path: str) -> bool:
+            return bool(path) and os.path.isfile(path) and os.access(path, os.X_OK)
+
         exe = os.path.expanduser(os.environ.get("VOXCPM2_PYTHON", "").strip())
-        return exe if exe and os.path.isfile(exe) and os.access(exe, os.X_OK) else None
+        if exe:
+            return exe if runnable(exe) else None
+        for venv in _OFFICIAL_VENVS:
+            for candidate in (venv / "bin" / "python", venv / "Scripts" / "python.exe"):
+                if runnable(str(candidate)):
+                    return str(candidate)
+        return None
 
     def _backend(self, requested: str = "auto", mode: str = "reference") -> str | None:
         """The engine to run, or None when the requested one is not installed.

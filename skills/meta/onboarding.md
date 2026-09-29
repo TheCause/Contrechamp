@@ -40,7 +40,7 @@ Based on discovery, classify the setup:
 
 | Tier | What's Available | Best Pipelines |
 |------|-----------------|----------------|
-| **Zero-key** | Piper TTS + Pexels/Pixabay stock (if keys added) + Remotion and/or HyperFrames + FFmpeg | Animated Explainer (stock visuals + free narration) |
+| **Zero-key** | VoxCPM2 local voice cloning (`make setup-voxcpm2`) or Piper TTS + Pexels/Pixabay stock (if keys added) + Remotion and/or HyperFrames + FFmpeg | Animated Explainer (stock visuals + free narration) |
 | **Starter** | One configured image generation provider + free TTS + Remotion and/or HyperFrames | Animated Explainer, Animation (AI-generated visuals) |
 | **Standard** | Image gen + TTS + music gen | Animated Explainer, Animation, Screen Demo, Hybrid |
 | **Full** | Video gen + image gen + premium TTS + music | All pipelines including Cinematic, Avatar, Talking Head |
@@ -83,7 +83,7 @@ Present a **short, friendly capability summary**. Do NOT dump the raw provider m
 **Welcome to Contrechamp!** I'm your video production agent. Here's what I can do with your current setup:
 
 **Ready to go:**
-- [List 2-4 key capabilities in plain language, e.g., "Generate narration with free offline TTS (Piper)", "Create animated videos with spring transitions, captions, and charts (Remotion)", "Stock footage and images from Pexels"]
+- [List 2-4 key capabilities in plain language, e.g., "Generate narration with free offline TTS (VoxCPM2 voice cloning if installed, else Piper)", "Create animated videos with spring transitions, captions, and charts (Remotion)", "Stock footage and images from Pexels"]
 
 **Available pipelines:** [List the pipelines that work with their setup, with one-line descriptions]
 
@@ -105,7 +105,7 @@ Based on the user's tier, present **3 ready-to-use prompts** they can copy right
 
 > **Try this now:** "Make a 45-second animated explainer about why the sky is blue"
 >
-> This will research the topic, write a script, find stock visuals, generate narration with Piper, and compose an animated video with transitions and captions — all free.
+> This will research the topic, write a script, find stock visuals, generate narration offline (VoxCPM2 if installed, else Piper), and compose an animated video with transitions and captions — all free.
 
 > **Also try:** "I have a screen recording of a dashboard workflow — make it a polished product demo with captions and a voiceover" *(Screen Demo pipeline)*
 
