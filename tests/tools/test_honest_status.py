@@ -77,3 +77,52 @@ def test_pixabay_music_is_not_claimed_available_without_proof():
     tool = PixabayMusic()
     assert tool.get_status() != ToolStatus.AVAILABLE
     assert "403" in tool.status_reason() or "unverified" in tool.status_reason().lower()
+
+
+# ---- The voice actually used must be an installed one ----
+
+def _piper_with_voices(tmp_path, monkeypatch, names):
+    monkeypatch.setattr(piper_mod.shutil, "which", lambda n: str(_fake_binary(tmp_path / "bin")))
+    voices = tmp_path / "voices"
+    voices.mkdir()
+    for name in names:
+        (voices / f"{name}.onnx").write_bytes(b"x")
+    monkeypatch.setenv("PIPER_VOICES_DIR", str(voices))
+    seen = {}
+
+    def fake_run(cmd, **kwargs):
+        seen["model"] = cmd[cmd.index("--model") + 1]
+        out = Path(cmd[cmd.index("--output_file") + 1])
+        out.write_bytes(b"RIFF")
+        return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+
+    monkeypatch.setattr(piper_mod.subprocess, "run", fake_run)
+    return seen
+
+
+def test_available_piper_speaks_with_an_installed_voice_when_none_is_given(tmp_path, monkeypatch):
+    # seen on a real machine: AVAILABLE with French voices, then "Unable to find voice: en_US-lessac-medium"
+    seen = _piper_with_voices(tmp_path, monkeypatch, ["fr_FR-siwis-medium", "fr_FR-tom-medium"])
+    r = PiperTTS().execute({"text": "Bonjour.", "output_path": str(tmp_path / "o.wav")})
+    assert r.success and seen["model"] == "fr_FR-siwis-medium"
+    assert r.data["model"] == "fr_FR-siwis-medium"
+    assert r.data["model_substituted"] == {"wanted": "en_US-lessac-medium", "used": "fr_FR-siwis-medium"}
+
+
+def test_french_voice_preferred_over_other_installed_ones(tmp_path, monkeypatch):
+    seen = _piper_with_voices(tmp_path, monkeypatch, ["de_DE-thorsten-medium", "fr_FR-tom-medium"])
+    PiperTTS().execute({"text": "Bonjour.", "output_path": str(tmp_path / "o.wav")})
+    assert seen["model"] == "fr_FR-tom-medium"
+
+
+def test_installed_default_voice_is_used_as_is(tmp_path, monkeypatch):
+    seen = _piper_with_voices(tmp_path, monkeypatch, ["en_US-lessac-medium", "fr_FR-siwis-medium"])
+    r = PiperTTS().execute({"text": "Hello.", "output_path": str(tmp_path / "o.wav")})
+    assert seen["model"] == "en_US-lessac-medium" and "model_substituted" not in r.data
+
+
+def test_an_explicit_voice_that_is_not_installed_is_refused_by_name(tmp_path, monkeypatch):
+    seen = _piper_with_voices(tmp_path, monkeypatch, ["fr_FR-siwis-medium"])
+    r = PiperTTS().execute({"text": "Hello.", "model": "en_GB-alan-low", "output_path": str(tmp_path / "o.wav")})
+    assert not r.success and "en_GB-alan-low" in r.error and "fr_FR-siwis-medium" in r.error
+    assert "model" not in seen

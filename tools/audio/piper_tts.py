@@ -29,6 +29,8 @@ DEFAULT_VOICE_DIRS = [
     Path(__file__).resolve().parents[2] / "models" / "piper",
     Path.home() / ".piper" / "models",
 ]
+# Voice used when none is given, if installed (see PiperTTS._resolve_model).
+DEFAULT_MODEL = "en_US-lessac-medium"
 
 
 class PiperTTS(BaseTool):
@@ -80,6 +82,8 @@ class PiperTTS(BaseTool):
             "model": {
                 "type": "string",
                 "default": "en_US-lessac-medium",
+                "description": "An installed voice. Left out: en_US-lessac-medium if installed, else an "
+                "installed French voice, else the first installed one (reported as model_substituted).",
             },
             "speaker_id": {
                 "type": "integer",
@@ -158,7 +162,28 @@ class PiperTTS(BaseTool):
         result.duration_seconds = round(time.time() - start, 2)
         return result
 
+    def _resolve_model(self, inputs: dict[str, Any]) -> tuple[str | None, dict[str, str] | None, str | None]:
+        """(voice to run, substitution to report, error). The voice is always an installed one.
+
+        Given explicitly: used if installed, refused by name otherwise. Left out:
+        the default if installed, else an installed French voice, else the first one.
+        """
+        installed = self.installed_voices()
+        wanted = inputs.get("model")
+        if wanted:
+            if wanted in installed:
+                return wanted, None, None
+            return None, None, f"Piper voice {wanted!r} is not installed (installed: {installed})"
+        if DEFAULT_MODEL in installed:
+            return DEFAULT_MODEL, None, None
+        french = [v for v in installed if v.startswith("fr_")]
+        used = (french or installed)[0]
+        return used, {"wanted": DEFAULT_MODEL, "used": used}, None
+
     def _generate(self, inputs: dict[str, Any]) -> ToolResult:
+        model, substituted, error = self._resolve_model(inputs)
+        if error:
+            return ToolResult(success=False, error=error)
         output_path = Path(inputs.get("output_path", "tts_output.wav"))
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -166,7 +191,7 @@ class PiperTTS(BaseTool):
             [
                 self.piper_binary() or "piper",
                 "--data-dir", str(self.voices_dir()),
-                "--model", inputs.get("model", "en_US-lessac-medium"),
+                "--model", model,
                 "--speaker", str(inputs.get("speaker_id", 0)),
                 "--length-scale", str(inputs.get("length_scale", 1.0)),
                 "--sentence-silence", str(inputs.get("sentence_silence", 0.3)),
@@ -187,12 +212,13 @@ class PiperTTS(BaseTool):
             success=True,
             data={
                 "provider": self.provider,
-                "model": inputs.get("model", "en_US-lessac-medium"),
+                "model": model,
+                **({"model_substituted": substituted} if substituted else {}),
                 "speaker_id": inputs.get("speaker_id", 0),
                 "text_length": len(inputs["text"]),
                 "output": str(output_path),
                 "format": "wav",
             },
             artifacts=[str(output_path)],
-            model=inputs.get("model", "en_US-lessac-medium"),
+            model=model,
         )
