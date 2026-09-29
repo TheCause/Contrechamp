@@ -9,7 +9,13 @@ derived from what the pipeline already writes to `projects/<id>/`.
 python -m backlot open <project-id>   # start server if needed + open browser
 python -m backlot open                # library view (all projects)
 python -m backlot serve --port 4750   # run the server in the foreground
+python -m backlot serve --host 0.0.0.0   # same, visible on the local network
 ```
+
+The server listens on 127.0.0.1 only. `--host 0.0.0.0` (or `BACKLOT_HOST`)
+opens it to the local network. There is no authentication: every machine
+on that network can see the productions. The server only reads; media paths
+are confined to each project's folder.
 
 ## How it stays live
 
