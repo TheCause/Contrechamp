@@ -1,0 +1,23 @@
+OpenMontage — independent derived project (TheCause/OpenMontage)
+
+This repository is a modified version of OpenMontage by calesthio,
+https://github.com/calesthio/OpenMontage, and it is distributed under the
+same licence: the GNU Affero General Public License, version 3 (see LICENSE).
+
+Original work
+  OpenMontage — Copyright (C) calesthio and the OpenMontage contributors.
+  All credit for the original design, pipelines, tools and documentation
+  goes to them.
+
+Modifications
+  Modified by Régis Rigaud (TheCause) since 27 September 2026. The changes
+  are recorded in this repository's git history; the main ones are described
+  in docs/fork/ (lot 1: a final review that measures; lot 2: French first).
+
+Adopted contributions
+  Code taken from pull requests opened on the original project keeps its
+  original authors in the git history, and the pull request is named in the
+  commit message (cherry-pick -x) and in docs/fork/.
+
+As required by the AGPL, the complete corresponding source of this modified
+version is this repository.

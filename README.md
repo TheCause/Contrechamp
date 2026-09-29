@@ -9,6 +9,14 @@
 
 <h1 align="center">OpenMontage</h1>
 
+> **Independent derived project.** This repository is a modified version of
+> [calesthio/OpenMontage](https://github.com/calesthio/OpenMontage), maintained
+> separately since 27 September 2026 and distributed under the same licence,
+> **AGPL-3.0**. All credit for the original work goes to calesthio and the
+> OpenMontage contributors. What changed and who wrote it: [`NOTICE`](NOTICE)
+> and [`docs/fork/`](docs/fork/). The links to sponsors, discussions and issues
+> below belong to the original project.
+
 <p align="center"><strong>The first open-source, agentic video production system.</strong></p>
 
 <p align="center">
