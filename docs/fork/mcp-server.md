@@ -61,6 +61,17 @@ An adversarial review found a first set of bypasses (a URL-shaped output
 path, the governance files, ffmpeg filters, tools dispatching to hidden
 tools, an approval not tied to what was stored); each is now a test above.
 
+## Tried for real
+
+With Claude Code 2.1.274 as the client, the server started over stdio and
+connected. A project was created and a subtitle file written inside it; an
+output path with `../../` was refused. A gated stage asked `completed` was
+stored `awaiting_human` without a question. The same call, repeated, opened a
+dialog in Claude Code naming the stored checkpoint and its fingerprint. The
+call waited two minutes for the human, who read the checkpoint and approved;
+the stage was then `completed` with `human_approved: true`, and the pending
+version was kept in `history/`.
+
 ## Approving from a terminal
 
 For clients that cannot relay a question to their user:
