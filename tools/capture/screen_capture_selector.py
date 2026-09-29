@@ -34,6 +34,7 @@ class ScreenCaptureSelector(BaseTool):
     execution_mode = ExecutionMode.SYNC
     determinism = Determinism.DETERMINISTIC
     runtime = ToolRuntime.HYBRID
+    delegates_cost = True  # the provider it routes to is the one charged
 
     # `screen-demo` named the Layer 2 pipeline directory, not a Layer 3 skill,
     # so it never resolved. No Layer 3 skill covers OS screen capture — the

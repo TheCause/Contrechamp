@@ -289,7 +289,18 @@ Checkpoints persist pipeline state as JSON in the project's `pipeline/` director
 
 ## Budget Governance
 
-The `CostTracker` enforces spending controls across the pipeline.
+The `CostTracker` enforces spending controls across the pipeline, wired in by
+`lib/budget.py` through the same `BaseTool` wrapper that emits Backlot events —
+the one place that sees every tool call regardless of what the agent remembers
+to do. Every call with a non-zero estimate is governed, whatever the tool's
+runtime (`image_gen` and ComfyUI partner nodes spend too); selectors set
+`delegates_cost = True`, so the provider they route to is the one charged and
+a call is never charged twice. Spend is accounted in the owning project's
+`cost_log.json`; in `cap` mode a paid call that belongs to no project is
+refused. The gate fails closed: an unreadable or unwritable log refuses paid
+calls, and a budget config that cannot be read falls back to `cap`. Paid calls
+made under an `OPENMONTAGE_*` budget override leave a `budget_override` event
+in `events.jsonl`.
 
 ### Lifecycle
 

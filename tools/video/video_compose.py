@@ -2441,6 +2441,9 @@ class VideoCompose(BaseTool):
                     )
 
                 # OCR: read every sampled frame; glued words are unreadable text.
+                # The expected text, when declared, lets short glued pages
+                # ("EVERYRIDERGOES") be told from one long word.
+                all_expected = " ".join(str(item.get("text", "")) for item in expected_text) or None
                 ocr_reason = None
                 glued: list[str] = []
                 for seg_id, ts, frame in frames:
@@ -2448,7 +2451,8 @@ class VideoCompose(BaseTool):
                     if readings is None:
                         break
                     best = max(readings, key=lambda r: sum(c.isalpha() for c in r))
-                    found = sorted({g for r in readings for g in render_checks.glued_words(r)})
+                    found = sorted({g for r in readings
+                                    for g in render_checks.glued_words(r, expected=all_expected)})
                     visual_spotcheck["ocr_readings"].append(
                         {"segment": seg_id, "t": ts, "text": best, "glued_words": found}
                     )
@@ -2486,10 +2490,19 @@ class VideoCompose(BaseTool):
                                 default=0.0,
                             )
                             best = max(readings or [""], key=lambda r: sum(c.isalpha() for c in r))
+                            item_glued = sorted({g for r in readings or []
+                                                 for g in render_checks.glued_words(r, expected=item["text"])})
                             visual_spotcheck["ocr_readings"].append(
                                 {"expected": item["text"], "t": round(mid, 2), "text": best,
-                                 "similarity": round(score, 3), "exact": exact}
+                                 "similarity": round(score, 3), "exact": exact,
+                                 "glued_words": item_glued}
                             )
+                            if item_glued:
+                                unreadable = True
+                                visual_spotcheck["issues"].append(
+                                    f"Glued words on screen at {mid:.1f}s (missing spaces): "
+                                    f"{', '.join(item_glued[:6])}"
+                                )
                             needed = 1.0 if exact else render_checks.settings().text_match_min
                             if score < needed:
                                 unreadable = True
@@ -2619,7 +2632,95 @@ class VideoCompose(BaseTool):
                 f"Music planned but not checked: {audio_spotcheck['not_checked'].get('music_present')}"
             )
 
+        # Loudness: a finished narration flattened to about -30 LUFS once
+        # passed every level check above.
+        if technical_probe.get("has_audio") and duration > 0:
+            try:
+                level = render_checks.loudness(output_path)
+                audio_spotcheck["loudness"] = level
+                lufs = level.get("integrated_lufs")
+                floor = render_checks.settings().loudness_min_lufs
+                if lufs is None:
+                    audio_spotcheck["not_checked"]["loudness"] = level.get("reason", "no measure")
+                elif lufs < floor:
+                    audio_spotcheck["issues"].append(
+                        f"Integrated loudness {lufs:.1f} LUFS is under {floor:.0f} LUFS: voice too quiet")
+            except Exception as e:
+                audio_spotcheck["not_checked"]["loudness"] = f"loudness measure error: {e}"
+
+        # Last sentence: needs the narration timing (script_timing output) and
+        # the offset of the narration in the final video (intro, cold open).
+        narration_expected = bool((ed.get("audio") or {}).get("narration"))
+        try:
+            timing = ed_meta.get("narration_timing")
+            if isinstance(timing, (str, Path)) and Path(timing).exists():
+                timing = json.loads(Path(timing).read_text(encoding="utf-8"))
+            sentences = (timing or {}).get("sentences") if isinstance(timing, dict) else None
+            if sentences and technical_probe.get("has_audio") and duration > 0:
+                offset = float(ed_meta.get("narration_offset_s") or 0.0)
+                last = sentences[-1]
+                spoken = [w for w in (timing.get("words") or [])
+                          if w.get("match") != "punctuation" and w.get("sentence") == last.get("index")]
+                last_word = ((spoken[-1]["start"] + offset, spoken[-1]["end"] + offset)
+                             if spoken else None)
+                cfg = render_checks.settings()
+                language = ed_meta.get("language")
+
+                def _transcribe(wav: Path) -> list[dict]:
+                    from tools.analysis.transcriber import Transcriber
+
+                    r = Transcriber().execute({"input_path": str(wav), "language": language,
+                                               "model_size": cfg.last_sentence_model})
+                    if not r.success:
+                        raise RuntimeError(r.error)
+                    return r.data.get("word_timestamps", [])
+
+                ending = render_checks.check_last_sentence(
+                    output_path, last["start"] + offset, last["end"] + offset, duration,
+                    last_word=last_word, expected_text=last.get("text"), transcribe=_transcribe)
+                audio_spotcheck["last_sentence"] = ending
+                audio_spotcheck["issues"].extend(ending["issues"])
+                for key, reason in ending.get("not_checked", {}).items():
+                    audio_spotcheck["not_checked"][f"last_sentence_{key}"] = reason
+            else:
+                audio_spotcheck["not_checked"]["last_sentence"] = (
+                    "no narration_timing (script_timing output) in edit_decisions.metadata")
+        except Exception as e:
+            audio_spotcheck["not_checked"]["last_sentence"] = f"last sentence check error: {e}"
+        if narration_expected:
+            # consistent with transcript_comparison: an unmeasured narration
+            # check is an open issue when narration was planned
+            for key in ("loudness", "last_sentence", "last_sentence_heard", "last_sentence_level"):
+                if key in audio_spotcheck["not_checked"]:
+                    audio_spotcheck["issues"].append(
+                        f"Narration planned but {key.replace('_', ' ')} not checked: "
+                        f"{audio_spotcheck['not_checked'][key]}")
+
         issues.extend(audio_spotcheck.get("issues", []))
+
+        # Credits: every third-party asset needs a read licence and its credit.
+        credits_check: dict[str, Any] = {"issues": [], "warnings": [], "not_checked": {}}
+        try:
+            registry = ed_meta.get("credits")
+            if isinstance(registry, (str, Path)) and Path(registry).exists():
+                registry = json.loads(Path(registry).read_text(encoding="utf-8"))
+            if isinstance(registry, dict):
+                from lib import credits as credits_lib
+
+                declared = ed_meta.get("third_party_assets")
+                used = declared or [
+                    e["asset"] for e in registry.get("entries", []) if isinstance(e, dict) and e.get("asset")]
+                credits_check.update(credits_lib.check(registry, used))
+                if not declared:
+                    credits_check["not_checked"]["coverage"] = (
+                        "third_party_assets not declared: only the registry's own entries were "
+                        "checked, an asset used but missing from the registry cannot be seen")
+                issues.extend(credits_check["issues"])
+            else:
+                credits_check["not_checked"]["credits"] = (
+                    "no credits registry in edit_decisions.metadata.credits")
+        except Exception as e:
+            credits_check["not_checked"]["credits"] = f"credits check error: {type(e).__name__}: {e}"
 
         # --- 4. Promise preservation ---
         promise_preservation: dict[str, Any] = {
@@ -2815,6 +2916,7 @@ class VideoCompose(BaseTool):
                 "technical_probe": technical_probe,
                 "visual_spotcheck": visual_spotcheck,
                 "audio_spotcheck": audio_spotcheck,
+                "credits": credits_check,
                 "continuity": continuity,
                 "promise_preservation": promise_preservation,
                 "subtitle_check": subtitle_check,
@@ -2834,12 +2936,7 @@ class VideoCompose(BaseTool):
     @staticmethod
     def _ocr_language(language: str | None) -> str:
         """Map a project language ("fr", "fr-FR", "fra") to a tesseract code."""
-        codes = {"fr": "fra", "en": "eng", "es": "spa", "de": "deu", "it": "ita",
-                 "pt": "por", "nl": "nld", "zh": "chi_sim", "ja": "jpn", "ko": "kor"}
-        if not language:
-            return "eng"
-        lang = language.strip().lower()
-        return codes.get(lang.split("-")[0].split("_")[0], lang)
+        return render_checks.ocr_language(language)
 
     @staticmethod
     def _parse_probe_fps(fps_str: str) -> float:

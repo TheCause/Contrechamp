@@ -1,3 +1,4 @@
+import React from "react";
 import {
   AbsoluteFill,
   Sequence,
@@ -15,6 +16,9 @@ export interface WordCaption {
   // Force a page break after this word (e.g. sentence or scene boundaries).
   // Useful for CJK captions where pages should align with clause boundaries.
   pageBreakAfter?: boolean;
+  // Stop showing this word's page at this time, even if the next page starts
+  // later (a key-phrase card takes the screen: the page must not stay under it).
+  holdUntilMs?: number;
 }
 
 type CaptionOverlayProps = {
@@ -110,23 +114,31 @@ const PageRenderer: React.FC<{
             const isActive = w.startMs <= currentMs && w.endMs > currentMs;
             const isPast = w.endMs <= currentMs;
             return (
-              <span
-                key={`${w.startMs}-${i}`}
-                style={{
-                  // Keep each word unbroken so lines wrap only at word
-                  // boundaries. For space-delimited text this matches the
-                  // previous behavior; for CJK it prevents mid-word breaks.
-                  display: "inline-block",
-                  whiteSpace: "nowrap",
-                  color: isActive ? highlightColor : isPast ? color : `${color}99`,
-                  transition: "none", // CSS transitions forbidden in Remotion
-                  textShadow: isActive
-                    ? `0 0 20px ${highlightColor}66, 0 2px 4px rgba(0,0,0,0.5)`
-                    : "0 2px 4px rgba(0,0,0,0.5)",
-                }}
-              >
-                {w.word}{i < page.words.length - 1 ? wordSeparator : ""}
-              </span>
+              <React.Fragment key={`${w.startMs}-${i}`}>
+                <span
+                  style={{
+                    // Keep each word unbroken so lines wrap only at word
+                    // boundaries. For space-delimited text this matches the
+                    // previous behavior; for CJK it prevents mid-word breaks.
+                    display: "inline-block",
+                    whiteSpace: "nowrap",
+                    color: isActive ? highlightColor : isPast ? color : `${color}99`,
+                    transition: "none", // CSS transitions forbidden in Remotion
+                    textShadow: isActive
+                      ? `0 0 20px ${highlightColor}66, 0 2px 4px rgba(0,0,0,0.5)`
+                      : "0 2px 4px rgba(0,0,0,0.5)",
+                  }}
+                >
+                  {w.word}
+                </span>
+                {/* The separator MUST sit outside the inline-block span. A
+                    trailing space inside an inline-block box is trimmed to
+                    zero width, so putting it inside rendered every English
+                    caption as "EVERYRIDERGOES". It lives here instead, as a
+                    direct child of the pre-wrap parent. CJK passes "" and is
+                    unaffected. */}
+                {i < page.words.length - 1 ? wordSeparator : ""}
+              </React.Fragment>
             );
           })}
         </span>
@@ -152,7 +164,11 @@ export const CaptionOverlay: React.FC<CaptionOverlayProps> = ({
     <AbsoluteFill>
       {pages.map((page, i) => {
         const fromFrame = Math.round((page.startMs / 1000) * fps);
-        const nextStart = pages[i + 1]?.startMs ?? page.endMs + 500;
+        const lastWord = page.words[page.words.length - 1];
+        const nextStart = Math.min(
+          pages[i + 1]?.startMs ?? page.endMs + 500,
+          lastWord?.holdUntilMs ?? Number.POSITIVE_INFINITY
+        );
         const duration = Math.max(
           1,
           Math.round(((nextStart - page.startMs) / 1000) * fps)

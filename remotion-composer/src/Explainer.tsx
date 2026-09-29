@@ -23,6 +23,7 @@ import { CaptionOverlay, WordCaption } from "./components/CaptionOverlay";
 import { SectionTitle } from "./components/SectionTitle";
 import { StatReveal } from "./components/StatReveal";
 import { HeroTitle } from "./components/HeroTitle";
+import { KeyPhraseCard } from "./components/KeyPhraseCard";
 import { AnimeScene } from "./components/AnimeScene";
 import type { CameraMotion } from "./components/AnimeScene";
 import { TerminalScene } from "./components/TerminalScene";
@@ -271,7 +272,7 @@ interface Cut {
 }
 
 interface Overlay {
-  type: "section_title" | "stat_reveal" | "hero_title" | "provider_chip";
+  type: "section_title" | "stat_reveal" | "hero_title" | "provider_chip" | "key_phrase";
   in_seconds: number;
   out_seconds: number;
   text?: string;
@@ -813,6 +814,15 @@ const OverlayRenderer: React.FC<{ overlay: Overlay; theme: ThemeConfig }> = ({
         textColor={theme.textColor}
         subtitleColor={theme.mutedTextColor}
         scrimBackground={heroScrim(theme)}
+      />
+    );
+  }
+  if (overlay.type === "key_phrase" && overlay.text) {
+    return (
+      <KeyPhraseCard
+        text={overlay.text}
+        accentColor={overlay.accentColor || theme.accentColor}
+        position={overlay.position === "bottom" ? "bottom" : "center"}
       />
     );
   }

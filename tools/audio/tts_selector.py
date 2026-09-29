@@ -20,6 +20,7 @@ class TTSSelector(BaseTool):
     provider = "selector"
     stability = ToolStability.BETA
     runtime = ToolRuntime.HYBRID
+    delegates_cost = True  # the provider it routes to is the one charged
     agent_skills = ["text-to-speech", "elevenlabs"]
 
     capabilities = [

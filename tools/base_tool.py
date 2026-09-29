@@ -190,10 +190,68 @@ def _instrument_execute(fn: Callable) -> Callable:
                 "output_path": str(output_path) if output_path else None,
             })
 
+        # Budget gate: any call with a non-zero estimate is governed, whatever
+        # the tool's runtime; selectors (delegates_cost) are skipped because
+        # the provider they call is charged. See lib/budget.py. Governance
+        # refusals propagate; the gate fails closed when it cannot account.
+        entry_id = None
+        tracker = None
+        estimated = 0.0
+        if not getattr(self, "delegates_cost", False):
+            try:
+                estimated = float(self.estimate_cost(inputs) or 0.0)
+            except Exception:
+                estimated = 0.0
+        if estimated > 0:
+            try:
+                from lib import budget as _budget
+            except Exception:
+                _budget = None
+            if _budget is not None:
+                try:
+                    if project_dir is None:
+                        _budget.refuse_unattributed(tool_name, estimated)
+                    else:
+                        overrides = _budget.active_overrides()
+                        if overrides:
+                            _budget.logger.warning(
+                                "budget: paid call to %s ($%.2f) under override %s",
+                                tool_name, estimated, ", ".join(overrides),
+                            )
+                            emit_event(project_dir, {
+                                **base, "event": "budget_override",
+                                "overrides": overrides,
+                                "estimated_usd": round(estimated, 4),
+                            })
+                        tracker = _budget.tracker_for(project_dir)
+                        if tracker is not None:
+                            entry_id = _budget.charge(
+                                tracker, tool_name,
+                                inputs.get("operation", "execute")
+                                if isinstance(inputs, dict) else "execute",
+                                estimated,
+                            )
+                except Exception as exc:
+                    # A refusal must reach the caller; restore the nesting
+                    # depth and close the "start" event the board shows.
+                    depth_state.value = depth
+                    if project_dir is not None:
+                        emit_event(project_dir, {
+                            **base, "event": "error",
+                            "error": str(exc)[:300],
+                            "duration_s": 0.0,
+                        })
+                    raise
+
         started = time.monotonic()
         try:
             result = fn(self, inputs, *args, **kwargs)
         except Exception as exc:
+            if tracker is not None and entry_id is not None:
+                try:
+                    tracker.refund(entry_id)
+                except Exception:
+                    pass
             if project_dir is not None:
                 emit_event(project_dir, {
                     **base, "event": "error",
@@ -203,6 +261,17 @@ def _instrument_execute(fn: Callable) -> Callable:
             raise
         finally:
             depth_state.value = depth
+
+        if tracker is not None and entry_id is not None:
+            try:
+                actual = getattr(result, "cost_usd", None)
+                tracker.reconcile(
+                    entry_id,
+                    float(actual) if isinstance(actual, (int, float)) else 0.0,
+                    success=bool(getattr(result, "success", True)),
+                )
+            except Exception:
+                pass
 
         if project_dir is None:
             # The tool may have created its own project dir during execute
@@ -242,6 +311,9 @@ class BaseTool(ABC):
     execution_mode: ExecutionMode = ExecutionMode.SYNC
     determinism: Determinism = Determinism.DETERMINISTIC
     runtime: ToolRuntime = ToolRuntime.LOCAL
+    # True for tools that only route to another tool's execute() (selectors).
+    # The budget gate then charges the provider, not the router.
+    delegates_cost: bool = False
 
     # --- Dependencies ---
     # For API tools, add "env:ENVVAR_NAME" to signal required API keys

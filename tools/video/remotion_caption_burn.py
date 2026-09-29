@@ -34,10 +34,12 @@ import json
 import math
 import re
 import shutil
+import subprocess
 import time
 from pathlib import Path
 from typing import Any
 
+from lib import render_checks
 from tools.base_tool import (
     BaseTool,
     Determinism,
@@ -133,6 +135,13 @@ class RemotionCaptionBurn(BaseTool):
                     "See asset_manifest overlays from the asset-director."
                 ),
             },
+            "language": {
+                "type": "string",
+                "description": (
+                    "Caption language (\"fr\", \"en\", ...). Used to read the "
+                    "burned captions back with OCR; defaults to English."
+                ),
+            },
             "force_ffmpeg": {
                 "type": "boolean",
                 "default": False,
@@ -188,6 +197,7 @@ class RemotionCaptionBurn(BaseTool):
 
         for seg in segments:
             words = seg.get("words", [])
+            block: list[dict] = []
             if words:
                 for w in words:
                     raw = w["word"].strip()
@@ -198,7 +208,7 @@ class RemotionCaptionBurn(BaseTool):
                         trailing = raw[-1]
                     if fixed != raw and not fixed.endswith(trailing):
                         fixed = fixed + trailing
-                    captions.append({
+                    block.append({
                         "word": fixed,
                         "startMs": int(w["start"] * 1000),
                         "endMs": int(w["end"] * 1000),
@@ -209,12 +219,73 @@ class RemotionCaptionBurn(BaseTool):
                 per_word = dur / max(len(text_words), 1)
                 for i, tw in enumerate(text_words):
                     fixed = corr.get(tw.lower().strip(".,!?;:"), tw)
-                    captions.append({
+                    block.append({
                         "word": fixed,
                         "startMs": int((seg["start"] + i * per_word) * 1000),
                         "endMs": int((seg["start"] + (i + 1) * per_word) * 1000),
                     })
+            captions += self._finish_block(block)
         return captions
+
+    # Punctuation that a transcript can emit as its own token ("vrai ?" in
+    # French typography). Rendered as a separate caption word it got a
+    # breakable space before it and could land alone on a line or a page.
+    _SPACED_CLOSERS = "?!:;»%"
+    _SENTENCE_END = re.compile(r"[.!?…]+[\"'»”’)\]]*$")
+    _ABBREVIATIONS = {"m.", "mm.", "mme.", "mlle.", "dr.", "mr.", "mrs.", "ms.", "st.", "vs."}
+
+    @classmethod
+    def _is_sentence_end(cls, word: str) -> bool:
+        w = word.strip()
+        if not cls._SENTENCE_END.search(w):
+            return False
+        if w.lower() in cls._ABBREVIATIONS or re.fullmatch(r"[^\W\d_]\.", w):
+            return False  # "M. Dupont", "J. Smith"
+        return True
+
+    @classmethod
+    def _finish_block(cls, block: list[dict]) -> list[dict]:
+        """Attach stray punctuation, then mark page breaks.
+
+        A block is one transcript segment or one SRT cue. Pages break after
+        every sentence end and at the end of the block: CaptionOverlay honours
+        `pageBreakAfter`, and without it pagination ran through sentence and
+        segment boundaries ("...GOES DOWN" + "NOT..." rendered as one page
+        reading "DOWN NOT EVERY RIDER GETS").
+        """
+        out: list[dict] = []
+        pending_open = ""
+        opener: dict | None = None
+        for cap in block:
+            word = cap["word"].strip()
+            if word and not any(ch.isalnum() for ch in word):
+                if word.startswith("«"):
+                    pending_open += word + "\u202f"
+                    opener = opener or cap
+                    continue
+                if word[0] in "—–":
+                    # dialogue dash or incise: it opens what follows, with a
+                    # normal space ("Dupont — le maire — arrive.")
+                    pending_open += word + " "
+                    opener = opener or cap
+                    continue
+                if out:
+                    sep = "\u202f" if word[0] in cls._SPACED_CLOSERS else ""
+                    out[-1]["word"] += sep + word
+                    out[-1]["endMs"] = max(out[-1]["endMs"], cap["endMs"])
+                    continue
+            if pending_open:
+                cap = {**cap, "word": pending_open + cap["word"], "startMs": opener["startMs"]}
+                pending_open, opener = "", None
+            out.append(dict(cap))
+        if pending_open:  # an opening quote with nothing after it: keep it as is
+            out.append({**opener, "word": pending_open.rstrip("\u202f")})
+        for cap in out:
+            if cls._is_sentence_end(cap["word"]):
+                cap["pageBreakAfter"] = True
+        if out:
+            out[-1]["pageBreakAfter"] = True
+        return out
 
     def _srt_to_word_captions(
         self, srt_path: str, corrections: dict[str, str] | None = None
@@ -251,13 +322,15 @@ class RemotionCaptionBurn(BaseTool):
             text = " ".join(lines[2:]).strip()
             words = text.split()
             per_word = (end_ms - start_ms) / max(len(words), 1)
+            block: list[dict] = []
             for i, w in enumerate(words):
                 fixed = corr.get(w.lower().strip(".,!?;:"), w)
-                captions.append({
+                block.append({
                     "word": fixed,
                     "startMs": int(start_ms + i * per_word),
                     "endMs": int(start_ms + (i + 1) * per_word),
                 })
+            captions += self._finish_block(block)
         return captions
 
     # ------------------------------------------------------------------ #
@@ -312,7 +385,12 @@ class RemotionCaptionBurn(BaseTool):
 
         # Build props JSON
         props = {
-            "videoSrc": f"public/talking-head/{video_filename}",
+            # staticFile() paths are relative to public/, and Remotion
+            # throws if the prefix is included: "Do not include the
+            # public/ prefix when using staticFile()". Passing
+            # "public/talking-head/..." made every Remotion caption
+            # render fail before drawing a frame.
+            "videoSrc": f"talking-head/{video_filename}",
             "captions": captions,
             "overlays": overlays or [],
             "wordsPerPage": words_per_page,
@@ -428,6 +506,50 @@ class RemotionCaptionBurn(BaseTool):
             artifacts=[output_path],
         )
 
+    # ------------------------------------------------------------------ #
+    #  Read the burned captions back
+    # ------------------------------------------------------------------ #
+
+    REVIEW_FRAMES = 4
+
+    def _review_captions(
+        self, output_path: str, captions: list[dict], language: str | None = None
+    ) -> dict[str, Any]:
+        """OCR a few frames of the output and look for glued caption words.
+
+        This tool is not followed by video_compose's final review, so without
+        this nothing read its output. A review that could not run says
+        "not_checked" with the reason; it never reads as "pass".
+        """
+        expected = " ".join(c["word"] for c in captions)
+        step = max(len(captions) / self.REVIEW_FRAMES, 1)
+        picked = sorted({int(i * step) for i in range(self.REVIEW_FRAMES) if int(i * step) < len(captions)})
+        work = Path(output_path).parent / ".caption_review_frames"
+        lang = render_checks.ocr_language(language)
+        readings_out: list[dict] = []
+        glued: list[str] = []
+        for n, idx in enumerate(picked):
+            cap = captions[idx]
+            t = (cap["startMs"] + cap["endMs"]) / 2000
+            frame = render_checks.extract_frame(Path(output_path), t, work / f"caption_{n}.png")
+            if not frame:
+                continue
+            readings, reason = render_checks.ocr_readings(frame, lang)
+            if readings is None:
+                return {"status": "not_checked", "reason": reason, "frames_checked": 0}
+            found = sorted({g for r in readings for g in render_checks.glued_words(r, expected=expected)})
+            best = max(readings, key=lambda r: sum(ch.isalpha() for ch in r)) if readings else ""
+            readings_out.append({"t": round(t, 2), "text": best, "glued_words": found})
+            glued += [g for g in found if g not in glued]
+        if not readings_out:
+            return {"status": "not_checked", "reason": "no frame could be extracted", "frames_checked": 0}
+        return {
+            "status": "revise" if glued else "pass",
+            "frames_checked": len(readings_out),
+            "glued_words": glued,
+            "readings": readings_out,
+        }
+
     @staticmethod
     def _ms_to_srt(ms: int) -> str:
         h = ms // 3600000
@@ -475,14 +597,43 @@ class RemotionCaptionBurn(BaseTool):
         overlays = inputs.get("overlays")
 
         # Choose render method
+        remotion_failure = None
+        result = None
         if not force_ffmpeg and self._remotion_available():
-            result = self._render_remotion(
-                input_path, output_path, captions,
-                words_per_page, font_size, highlight_color,
-                overlays=overlays,
-            )
-        else:
+            try:
+                result = self._render_remotion(
+                    input_path, output_path, captions,
+                    words_per_page, font_size, highlight_color,
+                    overlays=overlays,
+                )
+            except subprocess.CalledProcessError as exc:
+                # A failed Remotion render used to escape execute() as an
+                # exception: no ToolResult, no fallback. Fall back to FFmpeg
+                # and say so, so the plainer render is never mistaken for
+                # the animated one.
+                detail = str(exc)
+                stderr = exc.stderr if isinstance(exc.stderr, str) else ""
+                if stderr and stderr.strip() not in detail:
+                    detail = f"{detail}\n{stderr.strip()}"
+                remotion_failure = detail[-2000:]
+        if result is None:
             result = self._render_ffmpeg(input_path, output_path, captions)
+            if remotion_failure is not None:
+                result.data["remotion_failure"] = remotion_failure
+                if not result.success:
+                    result.error = (
+                        f"Remotion render failed ({remotion_failure[-300:]}); "
+                        f"FFmpeg fallback failed too: {result.error}"
+                    )
+
+        if result.success:
+            review = self._review_captions(output_path, captions, inputs.get("language"))
+            result.data["caption_review"] = review
+            if review["status"] == "revise":
+                result.data["caption_review_issue"] = (
+                    "Glued words on screen (missing spaces): "
+                    + ", ".join(review["glued_words"][:6])
+                )
 
         result.duration_seconds = round(time.time() - start, 2)
         return result
