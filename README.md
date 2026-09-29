@@ -15,8 +15,8 @@
 > licence, **AGPL-3.0**. All credit for the original work goes to calesthio and
 > the OpenMontage contributors. What changed and who wrote it:
 > [`NOTICE`](NOTICE) and [`docs/fork/`](docs/fork/). Below, "OpenMontage"
-> names the original project only: its showcase videos, YouTube channel,
-> sponsors, discussions and issues belong to it.
+> names the original project only: its showcase videos, YouTube channel and
+> sponsors belong to it.
 
 <p align="center"><strong>An agentic video production system, seen from the other side: French first, checks that measure, and the human who approves.</strong></p>
 
@@ -41,7 +41,7 @@
 <p align="center">
   <a href="https://www.youtube.com/@OpenMontage"><img src="https://img.shields.io/badge/YouTube-%40OpenMontage-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="YouTube"></a>
   <a href="https://x.com/calesthioailabs"><img src="https://img.shields.io/badge/X-%40calesthioailabs-111111?style=for-the-badge&logo=x&logoColor=white" alt="X"></a>
-  <a href="https://github.com/calesthio/OpenMontage/discussions"><img src="https://img.shields.io/badge/Community-GitHub%20Discussions-0b1220?style=for-the-badge&logo=github&logoColor=white" alt="GitHub Discussions"></a>
+  <a href="https://github.com/TheCause/Contrechamp/discussions"><img src="https://img.shields.io/badge/Community-GitHub%20Discussions-0b1220?style=for-the-badge&logo=github&logoColor=white" alt="GitHub Discussions"></a>
 </p>
 
 ## Sponsors
@@ -728,11 +728,11 @@ See `docs/ARCHITECTURE.md` for the full technical reference, `docs/PROVIDERS.md`
 
 ### Join the Community
 
-We use [GitHub Discussions](https://github.com/calesthio/OpenMontage/discussions) to share work and ideas:
+We use [GitHub Discussions](https://github.com/TheCause/Contrechamp/discussions) to share work and ideas:
 
-- **[Show and Tell](https://github.com/calesthio/OpenMontage/discussions/categories/show-and-tell)** — Share videos you've made, prompts that worked well, or creative workflows you've discovered
-- **[Ideas](https://github.com/calesthio/OpenMontage/discussions/categories/ideas)** — Suggest new pipelines, tools, style playbooks, or integrations
-- **[Q&A](https://github.com/calesthio/OpenMontage/discussions/categories/q-a)** — Ask questions about setup, pipelines, or troubleshooting
+- **[Show and Tell](https://github.com/TheCause/Contrechamp/discussions/categories/show-and-tell)** — Share videos you've made, prompts that worked well, or creative workflows you've discovered
+- **[Ideas](https://github.com/TheCause/Contrechamp/discussions/categories/ideas)** — Suggest new pipelines, tools, style playbooks, or integrations
+- **[Q&A](https://github.com/TheCause/Contrechamp/discussions/categories/q-a)** — Ask questions about setup, pipelines, or troubleshooting
 
 Made something cool? Post it in Show and Tell — we'd love to see what you build.
 
@@ -740,9 +740,9 @@ Made something cool? Post it in Show and Tell — we'd love to see what you buil
 
 ## Contact
 
-For updates, releases, and behind-the-scenes build notes, follow [@calesthioailabs](https://x.com/calesthioailabs).
+For the original OpenMontage project's updates and build notes, follow [@calesthioailabs](https://x.com/calesthioailabs).
 
-For bugs, feature requests, and workflow discussions, use [GitHub Issues](https://github.com/calesthio/OpenMontage/issues) and [GitHub Discussions](https://github.com/calesthio/OpenMontage/discussions) so everything stays visible and actionable.
+For bugs, feature requests, and workflow discussions, use [GitHub Issues](https://github.com/TheCause/Contrechamp/issues) and [GitHub Discussions](https://github.com/TheCause/Contrechamp/discussions) so everything stays visible and actionable.
 
 ---
 
