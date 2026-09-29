@@ -180,6 +180,6 @@ def _default_engine(registry) -> tuple[Any, Any]:
         return piper, {"wanted": "voxcpm2_tts", "used": "piper_tts", "reason": reason}
     return None, (
         "No narration engine available: voxcpm2_tts is not installed (make setup-voxcpm2) "
-        "and piper_tts is not available either (pip install piper-tts)."
+        "and piper_tts is not available either (see its install_instructions)."
     )
 
