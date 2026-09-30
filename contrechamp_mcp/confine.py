@@ -38,10 +38,12 @@ _PROTECTED_DIRS = frozenset({"history"})
 
 # Inputs that hand the tool something other than data: an ffmpeg filter graph
 # (can open any file: movie=, amovie=, sendcmd=), code to execute, raw command
-# arguments, a whole ComfyUI graph, raw provider parameters, or a switch that
-# waives an approval. Refused whatever their value, except where noted.
+# arguments, a whole ComfyUI graph (inline or as a file: a graph may hold paid
+# Partner Nodes the tool estimates at $0), raw provider parameters, or a switch
+# that waives an approval. Refused whatever their value, except where noted.
 _FORBIDDEN_KEYS = frozenset({
-    "custom_vf", "custom_af", "extra_args", "workflow_json", "extra_params",
+    "custom_vf", "custom_af", "extra_args", "workflow_json", "workflow_path",
+    "extra_params",
 })
 _FORBIDDEN_TRUE = frozenset({"allow_unsafe_code"})
 _FORBIDDEN_FALSE = frozenset({"require_approval"})
