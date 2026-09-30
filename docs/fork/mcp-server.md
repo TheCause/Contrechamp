@@ -52,7 +52,7 @@ configurations to `contrechamp_mcp`. Environment variables are now
 |---|---|---|
 | A call stays inside one project | `project_id` must be a kebab-case slug; every path, at any depth of the inputs, resolves inside `projects/<id>/` (symlinks followed); `~`, `../`, other absolute paths and any scheme under a path key (`https://../x` included) are refused; a file-like value that exists on disk is a path whatever its key; confined paths are passed to the tool absolute | `test_confine.py`, `test_project_id_cannot_climb_out_of_projects`, `test_a_tool_cannot_be_pointed_at_a_file_outside_the_project`, `test_a_web_url_cannot_smuggle_a_path` |
 | The governance files are out of reach | tool paths must go through a subdirectory: `project.json`, `checkpoint_*.json`, `cost_log.json`, `events.jsonl`, `decision_log.json` and `history/` cannot be read or written by a tool | `test_governance_files_are_out_of_reach` |
-| No code, filters or waivers | `custom_vf`, `custom_af` (ffmpeg filters can open any file), `extra_args`, `workflow_json`, `extra_params` are refused; `allow_unsafe_code` must stay false, `require_approval` cannot be switched off; a `*_tool` input must name an exposed tool | `test_inputs_that_carry_code_filters_or_waivers_are_refused`, `test_harmless_values_of_those_keys_pass` |
+| No code, filters or waivers | `custom_vf`, `custom_af` (ffmpeg filters can open any file), `extra_args`, `workflow_json`, `workflow_path` (a ComfyUI graph may hold paid Partner Nodes estimated at $0), `extra_params` are refused; `allow_unsafe_code` must stay false, `require_approval` cannot be switched off; a `*_tool` input must name an exposed tool | `test_inputs_that_carry_code_filters_or_waivers_are_refused`, `test_harmless_values_of_those_keys_pass` |
 | The agent cannot approve | approvals are resolved parameters (`Resolve(...)` in the SDK): filled by a question to the client's user, absent from the tool's input schema | `test_the_approval_is_not_an_argument_the_model_can_fill`, `test_gated_stage_is_not_completed_when_the_human_refuses` |
 | The human approves what they can read | the question names the stored `checkpoint_<stage>.json` and its fingerprint; other artifacts in the approving call are stored for review again, never approved; a project whose pipeline cannot be read refuses checkpoints | `test_gated_stage_completes_when_the_human_approves_what_is_stored`, `test_an_approval_cannot_be_obtained_for_a_swapped_payload`, `test_a_project_without_its_pipeline_refuses_checkpoints` |
 | A client that cannot ask is not a yes | no elicitation capability → the call is refused and names the terminal command | `test_client_without_a_human_channel_cannot_complete_a_gate` |
@@ -102,8 +102,9 @@ python -m contrechamp_mcp approve-tool <project_id> <tool_name>
 - **Rendered HTML is not audited.** `hyperframes_compose` and the Remotion
   path of `video_compose` render content the client influences.
 - **The gate trusts each tool's estimate.** A tool that estimates $0 for a
-  call that costs money is not charged (a known case: ComfyUI partner nodes;
-  custom ComfyUI graphs are refused through MCP).
+  call that costs money is not charged (a known case: ComfyUI partner nodes
+  inside a custom graph; custom ComfyUI graphs, `workflow_json` or
+  `workflow_path`, are therefore refused through MCP).
 - **A job that hangs keeps its slot** (two by default,
   `CONTRECHAMP_MCP_MAX_JOBS`) until the server restarts.
 - The single-action ceiling (`single_action_approval_usd`) cannot be approved

@@ -175,6 +175,7 @@ async def test_governance_files_are_out_of_reach(projects, target):
     {"custom_af": "amovie=/etc/x.wav"},
     {"extra_args": ["--flag"]},
     {"workflow_json": {"1": {}}},
+    {"workflow_path": "assets/graph.json"},
     {"extra_params": {"x": 1}},
     {"allow_unsafe_code": True},
     {"require_approval": False},
