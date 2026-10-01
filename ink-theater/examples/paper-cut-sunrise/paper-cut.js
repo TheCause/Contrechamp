@@ -36,7 +36,7 @@
     return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
   }
 
-  // ---- easing & timing (ports of the Cairo engine's helpers) ---------------------
+  // ---- easing & timing (ports of a reference Python implementation) ---------------------
   function clamp(x, a, b) { a = a == null ? 0 : a; b = b == null ? 1 : b; return Math.max(a, Math.min(b, x)); }
   function prog(t, t0, t1) { if (t1 <= t0) return t >= t1 ? 1 : 0; return clamp((t - t0) / (t1 - t0)); }
   function lerp(a, b, x) { return a + (b - a) * x; }
@@ -125,7 +125,7 @@
   }
 
   // ---- the paper fill: doubled drop shadow (screen space) + rim -------------------
-  var SHADOW_RGB = "41,20,10";            // (0.16, 0.08, 0.04) of the Cairo engine
+  var SHADOW_RGB = "41,20,10";            // (0.16, 0.08, 0.04) of the reference implementation
   var defsEl = null;
   function defs() {
     if (defsEl) return defsEl;
@@ -209,7 +209,7 @@
   // Shadow registry: every shadow copy remembers its frame (the group it is drawn
   // in). Once per frame we read each frame's CTM and set the copy's local offset so
   // that, on screen, it is always (dx, dy) device pixels down-right — exactly what
-  // the Cairo engine does with device_to_user_distance.
+  // a raster reference implementation does in device space.
   var shadowFrames = [];
   function registerShadow(sh, frame) {
     sh.setAttribute("transform", "translate(" + sh.__pcOff[0] + "," + sh.__pcOff[1] + ")");
@@ -248,7 +248,7 @@
 
   // ---- paper grain ---------------------------------------------------------------
   // Raster overlay (recommended): a seeded noise canvas made ONCE at load, composited
-  // with mix-blend-mode: overlay — a port of the Cairo engine's grain_surface().
+  // with mix-blend-mode: overlay — ported from a reference Python implementation.
   function grainRaster(container, o) {
     o = o || {};
     var W = o.width || 1080, H = o.height || 1920, r = IT.rng(o.seed || 7);
@@ -351,7 +351,7 @@
   // Pose = the InkPuppet 16-point format (hips, chest, neck, head, shL/elL/haL,
   // shR/elR/haR, hipL/knL/ftL, hipR/knR/ftR, rootY, groundY), y down, origin at the
   // hips or the ground. `workerPose` builds one from joint ANGLES with the chunky
-  // proportions of the Cairo worker; mocap clips (long limbs) also drive it.
+  // proportions of the reference worker character; mocap clips (long limbs) also drive it.
   function vec(aDeg, L) { var a = aDeg * Math.PI / 180; return [L * Math.sin(a), L * Math.cos(a)]; }
   function add(p, q) { return [p[0] + q[0], p[1] + q[1]]; }
   function workerPose(p) {
@@ -543,7 +543,7 @@
         state.face = { turn: p.turn || 0, gaze: p.gaze || [0, 0], mouth: p.mouth || "smile", brow: p.brow || 0, blink: p.blink || 0, openHands: p.openHands || 0 };
         var po = workerPose(p);
         state.pose = po; draw();
-        pup.place(0, (p.bob || 0) / pup.scale);   // bob is in scene pixels, like the Cairo engine
+        pup.place(0, (p.bob || 0) / pup.scale);   // bob is in scene pixels, like the reference implementation
       }
     };
     pup.setPose(state.pose); pup.place(0, 0);

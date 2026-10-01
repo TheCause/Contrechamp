@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=1080, height=1920" />
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script src="gsap.min.js"></script>
     <script src="ink-theater.js"></script>
     <script src="paper-cut.js"></script>
     <style>
@@ -38,15 +38,15 @@
 
     <script>
       /*
-       * "The sunset factory", first 5 s: the shutter opens, the sun rolls out of the
+       * "The paper factory", first 5 s: the shutter opens, the sun rolls out of the
        * factory onto the conveyor, pushed by the blue worker; the green worker beckons
        * ("come on, come on"); the red worker readies his paint roller.
-       * Ported from a Python/Cairo reference (same timings, poses and camera).
+       * Ported from a reference Python implementation (same timings, poses and camera).
        * The whole frame is a pure function of t (PaperCut.drive) => seek-safe.
        */
       window.__timelines = window.__timelines || {};
       var VARIANT = { shadow: "clones", grain: "raster" };   // bench switches: shadow clones|filter, grain raster|turbulence
-      var DURATION = 5;
+      var DURATION = +document.getElementById("root").dataset.duration;   // one source of truth: data-duration
       var PC = window.PaperCut, IT = window.InkTheater, el = IT.el;
       PC.config.shadowMode = VARIANT.shadow;
       var clamp = PC.clamp, prog = PC.prog, lerp = PC.lerp, E = PC.ease, damped = PC.damped, paper = PC.paper;
@@ -228,7 +228,7 @@
 
       // ------------------------------------------------------------- build the set (once)
       var world = document.getElementById("world"), svgDefs = document.querySelector("#world-svg defs");
-      var R = IT.rng(PC.hashKey("sunset-factory"));     // one seeded stream for decorative scatter
+      var R = IT.rng(PC.hashKey("paper-factory"));     // one seeded stream for decorative scatter
 
       // sky: blank page + pencil lines, then the painted bands (revealed by clip)
       paper(world, [[-40, -40], [W + 40, -40], [W + 40, H + 40], [-40, H + 40]], "#e8e0cf", { shadow: false, edge: false });
@@ -417,7 +417,8 @@
         sunGlow.setAttribute("opacity", (0.42 * sun.power * core).toFixed(4));
         sunG.setAttribute("transform", T(sun.x, sun.y));
         sunBody.setAttribute("transform", "rotate(" + (sun.rot / D2R).toFixed(3) + ")");
-        if (sun.dim > 0) sunParts.forEach(function (sp) { sp[0].fill.setAttribute("fill", PC.mix(sp[1], "#e08a5a", sun.dim * 0.55)); });
+        // always set (dim may be 0): a value written only "when needed" is not seek-safe
+        sunParts.forEach(function (sp) { sp[0].fill.setAttribute("fill", sun.dim > 0 ? PC.mix(sp[1], "#e08a5a", sun.dim * 0.55) : sp[1]); });
 
         var gear = t < 13 ? t * 0.5 + (sun.x - SUN_X0) / 60 : t * 0.5 + 4.75;
         gearG.setAttribute("transform", T(128, 1365, gear / D2R));

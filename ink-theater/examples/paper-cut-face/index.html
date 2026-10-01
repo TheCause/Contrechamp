@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en" data-resolution="portrait">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <script src="gsap.min.js"></script>
+    <script src="ink-theater.js"></script>
+    <script src="paper-cut.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1080px; height: 1920px; overflow: hidden; background: #e8e0cf; }
+      #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+      .stage { position: absolute; inset: 0; background: #e8e0cf; }
+      .stage svg { position: absolute; inset: 0; display: block; width: 1080px; height: 1920px; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="4" data-width="1080" data-height="1920">
+      <section id="scene" class="clip" data-start="0" data-duration="4" data-track-index="1">
+        <div class="stage">
+          <svg data-paper-cut viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg">
+            <defs></defs>
+            <g id="world"></g>
+          </svg>
+        </div>
+      </section>
+    </div>
+    <script>
+      /*
+       * Expression demo + seek-safety fixture for the paper-cut puppet.
+       * Body: one `drive` (a slow wave). Face: a `track` whose keys deliberately
+       * leave fields out (brow/turn only in the second key) — the face at time t
+       * must not depend on which time was rendered before. A second track tilts a sign.
+       */
+      window.__timelines = window.__timelines || {};
+      var PC = window.PaperCut, el = window.InkTheater.el, world = document.getElementById("world");
+      var DURATION = +document.getElementById("root").dataset.duration;
+      PC.paper(world, PC.tornRect("ground", -20, 1300, 1120, 700, 3), "#8eab73", { depth: 1.4 });
+      var signG = el("g", {}); world.appendChild(signG);
+      PC.paper(signG, PC.tornRect("sign", -90, -50, 180, 100, 1.5), "#f6ead0", { depth: 1 });
+      var pup = PC.puppet(world.appendChild(el("g", {})), { look: { name: "face", overall: "#3f7f9e" }, cx: 540, ground: 1360, scale: 3.2 });
+      var tl = gsap.timeline({ paused: true });
+      PC.drive(tl, DURATION, function (t) {
+        var w = Math.sin(2 * Math.PI * 0.5 * t);
+        pup.setPose(PC.workerPose({ arms: [-12, -6, 120 + 20 * w, 160 - 30 * w], lean: 2 * w }));
+      });
+      PC.track(tl, PC.keyed([
+        [1.0, { mouth: "o", gaze: [0, -1] }],
+        [3.0, { mouth: "wavy", gaze: [-1, 0.3], brow: 1, turn: -0.8, openHands: 1 }]
+      ]), function (f) { pup.setFace(f); });
+      PC.track(tl, [[2.0, { a: 0 }], [3.5, { a: 18 }]], function (v) {
+        signG.setAttribute("transform", "translate(820,1180) rotate(" + v.a.toFixed(3) + ")");
+      });
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

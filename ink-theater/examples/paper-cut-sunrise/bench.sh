@@ -9,13 +9,12 @@ shadow=${1:?shadow}; grain=${2:?grain}; secs=${3:?seconds}
 here=$(cd "$(dirname "$0")" && pwd)
 work=$(mktemp -d "${TMPDIR:-/tmp}/paper-cut-bench.XXXXXX")
 trap 'rm -rf "$work"' EXIT
-cp "$here"/index.html "$here"/ink-theater.js "$here"/paper-cut.js "$work"/
+cp "$here"/index.html "$here"/ink-theater.js "$here"/paper-cut.js "$here"/gsap.min.js "$work"/
 sed -i.bak \
   -e "s/var VARIANT = { shadow: \"clones\", grain: \"raster\" };/var VARIANT = { shadow: \"$shadow\", grain: \"$grain\" };/" \
-  -e "s/var DURATION = 5;/var DURATION = $secs;/" \
   -e "s/data-duration=\"5\"/data-duration=\"$secs\"/g" "$work/index.html"
 grep -q "shadow: \"$shadow\", grain: \"$grain\"" "$work/index.html" || { echo "variant patch failed" >&2; exit 2; }
-grep -q "var DURATION = $secs;" "$work/index.html" || { echo "duration patch failed" >&2; exit 2; }
+grep -q "data-duration=\"$secs\"" "$work/index.html" || { echo "duration patch failed" >&2; exit 2; }
 export HYPERFRAMES_NO_TELEMETRY=1
 t0=$(date +%s)
 npx --yes "${CONTRECHAMP_HYPERFRAMES_SPEC:-hyperframes}" render "$work" --output "$work/out.mp4" --fps 30 --quiet >"$work/log.txt" 2>&1 || { tail -20 "$work/log.txt"; exit 1; }
