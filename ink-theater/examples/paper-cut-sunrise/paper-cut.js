@@ -324,26 +324,28 @@
     }
     return copy(keys[keys.length - 1][1]);
   }
-  // drive(tl, duration, render): one linear proxy tween over [start, start+duration];
-  // render(t) is called with the ABSOLUTE time, then shadows are re-aimed. Write
-  // render as a pure function of t and the scene is seek-safe by construction.
+  // drive(tl, duration, render, {start}): render(t) gets the ABSOLUTE time, then
+  // shadows are re-aimed. The proxy tween spans [0, start+duration] (render sees
+  // max(t, start) before `start`), so EVERY seek — forward, backward, from before
+  // the start or after the end — re-renders. Write render as a pure function of t.
   function drive(tl, duration, render, o) {
     o = o || {};
-    var start = o.start || 0, proxy = { u: 0 };
-    function at(t) { render(t); updateShadows(); }
-    at(start);
-    tl.to(proxy, { u: 1, duration: duration, ease: "none", onUpdate: function () { at(start + proxy.u * duration); } }, start);
+    var start = o.start || 0, end = start + duration, proxy = { u: 0 };
+    function at(t) { render(Math.max(start, t)); updateShadows(); }
+    at(0);
+    tl.to(proxy, { u: 1, duration: end, ease: "none", onUpdate: function () { at(proxy.u * end); } }, 0);
     return tl;
   }
-  // track(tl, keys, apply, {start, end}): sample keyed values on the timeline —
-  // e.g. drive a puppet's face while InkPuppet.choreograph drives its body.
+  // track(tl, keys, apply, {end}): apply(sample(keys, t), t) on the timeline — e.g. a
+  // puppet's face while InkPuppet.choreograph drives its body. Same rule as `drive`:
+  // the tween spans [0, end] and before the first key the first key holds, so the
+  // value at t never depends on which time was rendered before.
   function track(tl, keys, apply, o) {
     o = o || {};
-    var start = o.start != null ? o.start : keys[0][0], end = o.end != null ? o.end : keys[keys.length - 1][0];
-    var proxy = { u: 0 }, dur = Math.max(1e-3, end - start);
+    var end = Math.max(1e-3, o.end != null ? o.end : keys[keys.length - 1][0]), proxy = { u: 0 };
     function at(t) { apply(sample(keys, t), t); updateShadows(); }
-    at(start);
-    tl.to(proxy, { u: 1, duration: dur, ease: "none", onUpdate: function () { at(start + proxy.u * dur); } }, start);
+    at(0);
+    tl.to(proxy, { u: 1, duration: end, ease: "none", onUpdate: function () { at(proxy.u * end); } }, 0);
     return tl;
   }
 
@@ -533,7 +535,9 @@
       outer: outer, cx: opts.cx != null ? opts.cx : 540, ground: opts.ground != null ? opts.ground : 1600, scale: scale,
       setPose: function (po) { state.pose = po; draw(); },
       // setFace({turn, gaze:[x,y], mouth: smile|grin|o|flat|wavy, brow, blink, openHands})
-      setFace: function (fc) { for (var p in fc) if (fc[p] != null) state.face[p] = fc[p]; draw(); },
+      // Sets the WHOLE face: a field left out takes its default (never the previous
+      // call's value), so the face at time t depends only on t.
+      setFace: function (fc) { var f = copy(DEFAULT_FACE); for (var p in fc) if (fc[p] != null) f[p] = fc[p]; state.face = f; draw(); },
       place: function (groundY, rootY) {
         outer.setAttribute("transform", T(pup.cx, pup.ground + ((rootY || 0) - (groundY || 0)) * pup.scale, 0, pup.scale));
       },

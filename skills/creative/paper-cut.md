@@ -33,7 +33,9 @@
 
 ## Determinism & speed (measured on the render Mac, 1080×1920, 30 fps)
 
-- Seeded shapes, no clocks, one `drive` per scene ⇒ the same frame renders to the same bytes, and a frame reached after seeking backwards is identical. Check it with `python scripts/paper_cut_checks.py <composition> --out <dir>` ((b) determinism, (c) seek-back, (a) review sheets to compare by eye).
+- Seeded shapes, no clocks, one `drive` per scene ⇒ the same frame renders to the same bytes, and a frame reached after seeking backwards or forwards is identical. **Write every attribute on every frame**: a value set only "when needed" (e.g. a colour only while dimmed) keeps a stale value after a backward seek. `setFace` sets the whole face (omitted fields = defaults), `drive`/`track` re-render on every seek.
+- Check it with `python scripts/paper_cut_checks.py <composition> --out <dir>`: probe times over the whole duration visited ascending, descending and interleaved — (b) determinism, (c) seek-safety — behind a render gate (no uniform frame, the scene must move, no "seeks skipped"), plus (a) review sheets to compare by eye (`--sheet-offset 0.1` matches sheets cut with `ffmpeg fps=4`). Pin the CLI with `CONTRECHAMP_HYPERFRAMES_SPEC=hyperframes@<version>` to compare across days.
+- **gsap**: the examples load the repo's vendored copy (`.agents/skills/music-to-video/references/motion-primitives/assets/gsap.min.js`, GSAP standard license) through a symlink — never add another copy (its license is not AGPL-compatible free software), never hot-link a CDN at render time.
 - Shadows as copies + raster grain: 20 s (600 frames) in ~20 s wall. SVG-filter shadows double that (~41 s) — keep `PaperCut.config.shadowMode = "clones"` (default). Bench: `ink-theater/examples/paper-cut-sunrise/bench.sh`.
 
 ## Reference build
