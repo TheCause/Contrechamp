@@ -27,6 +27,8 @@ import sys
 from pathlib import Path
 
 NPX = shutil.which("npx") or "npx"
+# npm spec of the CLI; pin it (e.g. hyperframes@0.8.105) to compare renders across days.
+HF_SPEC = os.environ.get("CONTRECHAMP_HYPERFRAMES_SPEC", "hyperframes")
 
 # Runtime sources of non-determinism that a paper-cut engine/scene must never use.
 FORBIDDEN_JS = re.compile(r"\bMath\.random\s*\(|\bDate\.now\s*\(|\bperformance\.now\s*\(|\bnew\s+Date\s*\(")
@@ -53,7 +55,7 @@ def snapshot(project: Path, times: list[float], out: Path) -> list[Path]:
     """Capture frames at `times` (in that order, one page) — returns paths in order."""
     out.mkdir(parents=True, exist_ok=True)
     env = dict(os.environ, HYPERFRAMES_NO_TELEMETRY="1")
-    cmd = [NPX, "--yes", "hyperframes", "snapshot", str(project), "--at", ",".join(f"{t:g}" for t in times),
+    cmd = [NPX, "--yes", HF_SPEC, "snapshot", str(project), "--at", ",".join(f"{t:g}" for t in times),
            "--no-end", "--describe", "false", "-o", str(out)]
     proc = subprocess.run(cmd, env=env, capture_output=True, text=True, timeout=600)
     if proc.returncode != 0:

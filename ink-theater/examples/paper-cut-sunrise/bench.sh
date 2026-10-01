@@ -18,7 +18,7 @@ grep -q "shadow: \"$shadow\", grain: \"$grain\"" "$work/index.html" || { echo "v
 grep -q "var DURATION = $secs;" "$work/index.html" || { echo "duration patch failed" >&2; exit 2; }
 export HYPERFRAMES_NO_TELEMETRY=1
 t0=$(date +%s)
-npx --yes hyperframes render "$work" --output "$work/out.mp4" --fps 30 --quiet >"$work/log.txt" 2>&1 || { tail -20 "$work/log.txt"; exit 1; }
+npx --yes "${CONTRECHAMP_HYPERFRAMES_SPEC:-hyperframes}" render "$work" --output "$work/out.mp4" --fps 30 --quiet >"$work/log.txt" 2>&1 || { tail -20 "$work/log.txt"; exit 1; }
 t1=$(date +%s)
 frames=$(ffprobe -v error -count_frames -select_streams v:0 -show_entries stream=nb_read_frames -of csv=p=0 "$work/out.mp4")
 echo "variant=$shadow+$grain seconds=$secs frames=$frames wall_s=$((t1 - t0)) bytes=$(stat -f%z "$work/out.mp4" 2>/dev/null || stat -c%s "$work/out.mp4")"
