@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="en" data-resolution="portrait">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script src="ink-theater.js"></script>
+    <script src="paper-cut.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1080px; height: 1920px; overflow: hidden; background: #e8e0cf; }
+      #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+      .stage { position: absolute; inset: 0; background: #e8e0cf; isolation: isolate; }
+      .stage svg { position: absolute; inset: 0; display: block; width: 1080px; height: 1920px; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1080" data-height="1920">
+      <section id="scene" class="clip" data-start="0" data-duration="5" data-track-index="1">
+        <div class="stage" id="stage">
+          <svg id="world-svg" data-paper-cut viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg">
+            <defs></defs>
+            <g id="world"></g>
+          </svg>
+          <svg id="over-svg" viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="vignette" gradientUnits="userSpaceOnUse" cx="540" cy="1000" r="1250">
+                <stop offset="0.4" stop-color="#1f0d05" stop-opacity="0" />
+                <stop offset="1" stop-color="#1f0d05" stop-opacity="0.33" />
+              </radialGradient>
+            </defs>
+            <rect x="0" y="0" width="1080" height="1920" fill="url(#vignette)" />
+            <rect id="fade" x="0" y="0" width="1080" height="1920" fill="#e8e0cf" opacity="1" />
+          </svg>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      /*
+       * "The sunset factory", first 5 s: the shutter opens, the sun rolls out of the
+       * factory onto the conveyor, pushed by the blue worker; the green worker beckons
+       * ("come on, come on"); the red worker readies his paint roller.
+       * Ported from a Python/Cairo reference (same timings, poses and camera).
+       * The whole frame is a pure function of t (PaperCut.drive) => seek-safe.
+       */
+      window.__timelines = window.__timelines || {};
+      var VARIANT = { shadow: "clones", grain: "raster" };   // bench switches: shadow clones|filter, grain raster|turbulence
+      var DURATION = 5;
+      var PC = window.PaperCut, IT = window.InkTheater, el = IT.el;
+      PC.config.shadowMode = VARIANT.shadow;
+      var clamp = PC.clamp, prog = PC.prog, lerp = PC.lerp, E = PC.ease, damped = PC.damped, paper = PC.paper;
+      var W = 1080, H = 1920, D2R = Math.PI / 180;
+      var FLOOR = 1480, BELT_Y = 1440, SUN_R = 95, FG_Y = 1668, JIB_Y = 640;
+      var BANDS = ["#f7bd45", "#f39a3c", "#ef7360", "#e7678f", "#c56a9f", "#8f6fb1"], BAND_H = 222, BAND_TOP0 = 1330;
+      var EV = { shutter: 0.5, roll0: 1.3, roll1: 4.0, paint0: 5.0, paint_step: 0.72, paint_dur: 0.62, trolley0: 9.8,
+        hook_down: 10.6, latch: 11.3, lift0: 11.6, lift1: 13.0, release: 13.0, bump: 15.2, tip: 15.85, crash: 16.15 };
+      var LOOK1 = { name: "w1", skin: "#f2c6a0", overall: "#3f7f9e", shirt: "#f4e9d8" };
+      var LOOK2 = { name: "w2", skin: "#c98d63", overall: "#d4573f", shirt: "#f2d7a6", brow: "#3a2418" };
+      var LOOK3 = { name: "w3", skin: "#f0b994", overall: "#5b8a4e", shirt: "#e9eef2", mustache: true, brow: "#6b4430" };
+      var SUN_X0 = 325, SUN_X1 = 610, SUN_SKY_X = 540, SUN_SKY_Y = 826, BELT_SUN_Y = BELT_Y - SUN_R, HOOK_UP = JIB_Y + 70;
+      function T(x, y, rotDeg, s) { return "translate(" + x.toFixed(2) + "," + y.toFixed(2) + ")" + (rotDeg ? " rotate(" + rotDeg.toFixed(3) + ")" : "") + (s != null && s !== 1 ? " scale(" + s.toFixed(4) + ")" : ""); }
+      function g(parent, attrs) { var n = el("g", attrs || {}); parent.appendChild(n); return n; }
+      function line(parent, pts, color, w, op) {
+        var p = el("path", { d: "M" + pts.map(function (q) { return q[0].toFixed(2) + " " + q[1].toFixed(2); }).join("L"), fill: "none", stroke: color, "stroke-width": w, "stroke-opacity": op == null ? 1 : op, "stroke-linecap": "round", "stroke-linejoin": "round" });
+        parent.appendChild(p); return p;
+      }
+      function band_rect(i) { var y1 = BAND_TOP0 - BAND_H * i; return [y1 - BAND_H - 14, y1 + 14]; }
+
+      // ------------------------------------------------------------- key poses
+      var REST = [-12, -6, 12, 6], HIPS = [-45, 32, 45, -32], SHRUG = [-25, -128, 25, 128];
+      var K1 = PC.keyed([
+        [0.0, { x: 482, turn: 0.6, gaze: [1, 0], arms: [70, 85, 75, 88], lean: 8, mouth: "smile", brow: 0, shrug: 0, openHands: 0 }],
+        [4.0, {}],
+        [4.35, { arms: [-12, -6, 160, -135], lean: 0, turn: 0.2, gaze: [0, -0.3], mouth: "flat" }],
+        [4.75, { arms: [-12, -6, 160, -125] }],
+        [5.0, { arms: [-12, -6, 60, 165], turn: 0.6, gaze: [1, 0], mouth: "grin" }],
+        [5.5, { arms: REST, turn: 0.0, gaze: [-0.3, -1], mouth: "o", brow: 0.6 }],
+        [7.0, { gaze: [0.5, -1], mouth: "smile", brow: 0.2 }],
+        [9.0, { x: 482, turn: 0.8, gaze: [1, -0.2] }],
+        [9.8, { x: 800, turn: -0.4, gaze: [-0.5, -1], arms: [-12, -6, 30, 70] }],
+        [13.4, {}],
+        [13.8, { arms: HIPS, gaze: [-0.6, -1], mouth: "grin", turn: -0.4 }],
+        [15.2, {}],
+        [15.5, { turn: -0.7, gaze: [-1, 0.3], mouth: "o", brow: 0.6 }],
+        [16.25, { gaze: [-0.6, -1], brow: 1.0, arms: [-30, -20, 30, 20] }],
+        [18.0, {}],
+        [18.4, { turn: -0.8, gaze: [-1, 0.5], mouth: "flat", brow: 0.3 }],
+        [19.0, {}],
+        [19.45, { arms: SHRUG, shrug: 1, openHands: 1, brow: 1, mouth: "wavy", turn: -0.4, gaze: [-0.7, 0.3] }],
+        [20.0, {}]
+      ]);
+      var K2 = PC.keyed([
+        [0.0, { x: 330, turn: 0.3, gaze: [1, -0.2], arms: [-12, -6, 20, 175], mouth: "smile", brow: 0, shrug: 0, lean: 0, openHands: 0 }],
+        [4.3, {}],
+        [9.9, { turn: 0.4, gaze: [0.7, -1] }],
+        [13.6, {}],
+        [14.0, { arms: [-12, -6, 150, 168], mouth: "grin", gaze: [0.6, -1], turn: 0.5 }],
+        [14.45, {}],
+        [14.7, { arms: [-60, 60, 60, -60] }],
+        [15.25, {}],
+        [15.5, { turn: 0.7, gaze: [1, 0.3], mouth: "o", brow: 0.6, arms: REST }],
+        [16.2, { gaze: [0.2, -1], brow: 1.0, arms: [-40, -60, 40, 60] }],
+        [18.0, {}],
+        [18.4, { turn: 0.8, gaze: [1, 0], mouth: "flat", brow: 0.3, arms: REST }],
+        [19.0, {}],
+        [19.45, { arms: SHRUG, shrug: 1, openHands: 1, brow: 1, mouth: "wavy", turn: 0.5, gaze: [0.8, 0.2] }],
+        [20.0, {}]
+      ]);
+      var K3 = PC.keyed([
+        [0.0, { x: 730, turn: -0.6, gaze: [-1, 0], arms: REST, mouth: "smile", brow: 0, shrug: 0, lean: 0, openHands: 0 }],
+        [1.3, { arms: [-70, -160, 12, 6], mouth: "grin" }],
+        [3.8, {}],
+        [4.1, { arms: [-60, -168, 12, 6] }],
+        [4.8, { arms: REST }],
+        [5.0, { mouth: "grin", brow: 0.4 }],
+        [9.5, {}],
+        [9.9, { arms: [-150, -175, 150, 175], gaze: [-0.4, -1], turn: -0.3, mouth: "smile" }],
+        [13.0, {}],
+        [13.4, { arms: REST }],
+        [13.8, { arms: [-20, 70, 20, -70], gaze: [0.2, -1], turn: 0.4, mouth: "smile", brow: 0.3, lean: 3 }],
+        [15.2, { x: 612 }],
+        [15.3, { x: 630, mouth: "o", brow: 1.0, lean: -7, arms: [-150, -165, 150, 165] }],
+        [15.6, { x: 735, turn: -0.9, gaze: [-1, 0.6], arms: [-30, 159, 30, -159], lean: 0 }],
+        [16.1, {}],
+        [16.35, { turn: -0.3, gaze: [-0.4, -1], arms: [-30, -40, 30, 40] }],
+        [18.0, {}],
+        [18.4, { turn: -0.9, gaze: [-1, 0.1], mouth: "flat", brow: 0.3, arms: REST }],
+        [19.0, {}],
+        [19.45, { arms: SHRUG, shrug: 1, openHands: 1, brow: 1, mouth: "wavy", turn: -0.5, gaze: [-0.8, 0.2] }],
+        [20.0, {}]
+      ]);
+      function blink(t, off) { var ph = (t + off) % 3.4; return ph < 0.14 ? 1 - Math.abs(ph - 0.07) / 0.07 : 0; }
+      function walkOf(x, v) { var w = clamp(Math.abs(v) / 60); return { legs: 22 * Math.sin(x / 15) * w, bob: -Math.abs(Math.sin(x / 15)) * 5 * w }; }
+      function pose_at(keys, t, off) {
+        var p = PC.sample(keys, t), v = (PC.sample(keys, t + 0.03).x - PC.sample(keys, t - 0.03).x) / 0.06, wk = walkOf(p.x, v);
+        p.legs = wk.legs; p.bob = wk.bob; p.blink = blink(t, off); p.squash = 1 + 0.012 * Math.sin(t * 2.4 + off);
+        return p;
+      }
+
+      // ------------------------------------------------------------- object states
+      function sun_state(t) {
+        var x = t < EV.roll0 ? SUN_X0 : lerp(SUN_X0, SUN_X1, E.io(prog(t, EV.roll0, EV.roll1)));
+        var rot = (x - SUN_X0) / SUN_R, y = BELT_SUN_Y, power = 0.7, dim = 0;
+        if (t >= EV.lift0) {
+          var u = E.io5(prog(t, EV.lift0, EV.lift1)), sway = 16 * Math.sin(2 * Math.PI * 0.8 * (t - EV.lift0)) * Math.sin(Math.PI * clamp(u));
+          x = lerp(SUN_X1, SUN_SKY_X, u) + sway; y = lerp(BELT_SUN_Y, SUN_SKY_Y + 34, u); rot += 0.06 * sway / 16;
+        }
+        if (t >= EV.release) {
+          var f = E.out(prog(t, EV.release, EV.release + 0.8));
+          y = lerp(SUN_SKY_Y + 34, SUN_SKY_Y, f) + 3 * Math.sin(2 * Math.PI * 0.5 * (t - EV.release));
+          power = 0.7 + 0.9 * Math.sin(Math.PI * prog(t, EV.release, EV.release + 1.0)) + 0.3 * f;
+        }
+        if (t >= 17.0) {
+          var s = E.io(prog(t, 17.0, 19.0));
+          y = lerp(SUN_SKY_Y, 1430, s) + 3 * Math.sin(2 * Math.PI * 0.5 * (t - EV.release)) * (1 - s); dim = s; power *= 1 - 0.6 * s;
+        }
+        return { x: x, y: y, rot: rot, power: power, dim: dim, slot: t >= 13.6 ? "sky" : "mid" };
+      }
+      function crane_state(t) {
+        var tx = 860;
+        tx = lerp(tx, SUN_X1, E.io(prog(t, EV.trolley0, EV.hook_down)));
+        tx = lerp(tx, SUN_SKY_X, E.io5(prog(t, EV.lift0, EV.lift1)));
+        tx = lerp(tx, 860, E.io(prog(t, 13.4, 14.4)));
+        var hy = HOOK_UP;
+        hy = lerp(hy, BELT_SUN_Y - 118, E.io(prog(t, EV.hook_down, EV.latch)));
+        hy = lerp(hy, SUN_SKY_Y + 34 - 118, E.io5(prog(t, EV.lift0, EV.lift1)));
+        hy = lerp(hy, HOOK_UP - 10, E.io(prog(t, EV.release + 0.1, EV.release + 0.6)));
+        var open = 1 - E.io(prog(t, EV.latch, EV.latch + 0.2)) + E.io(prog(t, EV.release, EV.release + 0.2));
+        var txHook = (EV.lift0 <= t && t < EV.release) ? sun_state(t).x : tx;
+        return { tx: tx, txHook: txHook, hy: hy, open: clamp(open) };
+      }
+      function roller_state(t) {
+        var n = BANDS.length, bp = [], dirs = [], i;
+        for (i = 0; i < n; i++) { var s0 = EV.paint0 + i * EV.paint_step; bp.push(E.io(prog(t, s0, s0 + EV.paint_dur))); dirs.push(i % 2 === 0 ? 1 : -1); }
+        var active = EV.paint0 - 0.45 <= t && t <= EV.paint0 + (n - 1) * EV.paint_step + EV.paint_dur + 0.5;
+        if (!active) return { bp: bp, dirs: dirs, roller: null };
+        for (i = 0; i < n; i++) {
+          var s = EV.paint0 + i * EV.paint_step, yr = band_rect(i), cy = i < n - 1 ? (yr[0] + yr[1]) / 2 : 150;
+          var front = dirs[i] < 0 ? W + 30 - bp[i] * (W + 60) : -30 + bp[i] * (W + 60);
+          front = clamp(front, 110, W - 110);
+          if (t < s) {
+            var prevEnd = i === 0 ? EV.paint0 - 0.45 : s - EV.paint_step + EV.paint_dur, u = E.io(prog(t, prevEnd, s));
+            var startX = dirs[i] > 0 ? 110 : W - 110;
+            if (i === 0) return { bp: bp, dirs: dirs, roller: ["extend", u, startX, cy] };
+            var pr = band_rect(i - 1);
+            return { bp: bp, dirs: dirs, roller: ["paint", startX, lerp((pr[0] + pr[1]) / 2, cy, u)] };
+          }
+          if (t <= s + EV.paint_dur) return { bp: bp, dirs: dirs, roller: ["paint", front, cy] };
+        }
+        var end = EV.paint0 + (n - 1) * EV.paint_step + EV.paint_dur;
+        return { bp: bp, dirs: dirs, roller: ["retract", E.io(prog(t, end, end + 0.5)), dirs[n - 1] < 0 ? 110 : W - 110, 150] };
+      }
+      var JAR_X = 520, JAR_Y = FG_Y - 80;
+      function jar_state(t) {
+        var x = JAR_X, y = JAR_Y, rot = 0;
+        if (t >= EV.bump) rot = 0.16 * Math.sin(2 * Math.PI * 3.2 * (t - EV.bump)) * (0.4 + prog(t, EV.bump, EV.tip));
+        if (t >= EV.tip) { var u = prog(t, EV.tip, EV.crash); rot = lerp(0.16, 1.57, E.in(u)); x = lerp(JAR_X + 22, JAR_X + 85, u); y = lerp(JAR_Y, FG_Y - 26, E.in(u)); }
+        if (t >= EV.crash) { var b = t - EV.crash; rot = 1.57 - 0.08 * damped(b, 3, 7); x = JAR_X + 85; y = FG_Y - 26 - 6 * Math.abs(damped(b, 2.5, 8)); }
+        return { x: x, y: y, rot: rot };
+      }
+      var CAM = [[0.0, 470, 1300, 1.50], [4.1, 500, 1300, 1.45], [5.9, 540, 960, 1.0], [9.4, 540, 960, 1.0],
+        [10.3, 580, 1050, 1.15], [13.4, 560, 1000, 1.15], [14.8, 540, 1250, 1.38], [15.9, 560, 1300, 1.45],
+        [16.6, 580, 1180, 1.3], [17.8, 540, 960, 1.0], [18.0, 540, 960, 1.0], [19.1, 565, 1340, 1.62], [20.0, 565, 1340, 1.66]];
+      function camera(t) {
+        var c = CAM[CAM.length - 1].slice(1);
+        for (var i = 0; i < CAM.length - 1; i++) if (CAM[i][0] <= t && t <= CAM[i + 1][0]) {
+          var u = E.io(prog(t, CAM[i][0], CAM[i + 1][0])); c = [1, 2, 3].map(function (j) { return lerp(CAM[i][j], CAM[i + 1][j], u); }); break;
+        }
+        var z = c[2], hw = W / (2 * z), hh = H / (2 * z);
+        return [clamp(c[0], hw, W - hw), clamp(c[1], hh, H - hh), z];
+      }
+      function hand_pos(x, y, s, p) {     // screen position of the right hand (pole grip)
+        var au = p.arms[2], af = p.arms[3], sh = p.shrug || 0, lean = (p.lean || 0) * D2R;
+        var lx = 26 + 25 * Math.sin(au * D2R) + 24 * Math.sin(af * D2R), ly = -94 - sh * 13 + 25 * Math.cos(au * D2R) + 24 * Math.cos(af * D2R);
+        return [x + (lx * Math.cos(lean) - ly * Math.sin(lean)) * s, y + (p.bob || 0) + (lx * Math.sin(lean) + ly * Math.cos(lean)) * s * (p.squash || 1)];
+      }
+      function pole_geometry(t, roller, x2) {
+        var base = [x2 + 34, FG_Y - 110], rest = [x2 + 50, FG_Y - 150];
+        if (!roller) {
+          if (t >= 13.6) { var u = E.io(prog(t, 13.6, 13.85)); return [base, [lerp(rest[0], 262, u), lerp(rest[1], FG_Y - 170, u)]]; }
+          return [base, rest];
+        }
+        if (roller[0] === "extend") return [base, [lerp(rest[0], roller[2], roller[1]), lerp(rest[1], roller[3], roller[1])]];
+        if (roller[0] === "retract") return [base, [lerp(roller[2], rest[0], roller[1]), lerp(roller[3], rest[1], roller[1])]];
+        return [base, [roller[1], roller[2]]];
+      }
+
+      // ------------------------------------------------------------- build the set (once)
+      var world = document.getElementById("world"), svgDefs = document.querySelector("#world-svg defs");
+      var R = IT.rng(PC.hashKey("sunset-factory"));     // one seeded stream for decorative scatter
+
+      // sky: blank page + pencil lines, then the painted bands (revealed by clip)
+      paper(world, [[-40, -40], [W + 40, -40], [W + 40, H + 40], [-40, H + 40]], "#e8e0cf", { shadow: false, edge: false });
+      for (var k = 0; k < 7; k++) line(world, [[70, 120 + k * 190], [W - 70, 123 + k * 190]], "#8c8073", 1.2, 0.10);
+      var bands = BANDS.map(function (c, i) {
+        var yr = band_rect(i), y0 = i === BANDS.length - 1 ? -20 : yr[0], y1 = yr[1];
+        var clip = el("clipPath", { id: "band" + i }), cr = el("rect", { x: -30, y: y0 - 30, width: 0, height: y1 - y0 + 60 });
+        clip.appendChild(cr); svgDefs.appendChild(clip);
+        var bg = g(world, { "clip-path": "url(#band" + i + ")" });
+        paper(bg, PC.tornPoly("band" + i, [[-20, y0], [W + 20, y0], [W + 20, y1], [-20, y1]], 5.0, 22), c, { depth: 1.2 });
+        var r = PC.rngFor("bandstrokes" + i);
+        for (var j = 0; j < 9; j++) {
+          var yy = y0 + 20 + r() * (y1 - y0 - 40);
+          var p = el("path", { d: "M-10 " + yy.toFixed(1) + "C300 " + (yy + r() * 12 - 6).toFixed(1) + " 700 " + (yy + r() * 12 - 6).toFixed(1) + " " + (W + 10) + " " + yy.toFixed(1),
+            fill: "none", stroke: PC.shade(c, r() < 0.5 ? -0.06 : 0.08), "stroke-opacity": 0.55, "stroke-width": (6 + r() * 10).toFixed(1) });
+          bg.appendChild(p);
+        }
+        return { rect: cr, y0: y0, y1: y1 };
+      });
+      var sunSkyAnchor = g(world);
+      // hills + back floor
+      var far = [[-20, FLOOR]], near = [[-20, FLOOR]], x;
+      for (x = -20; x <= W + 40; x += 60) far.push([x, 1290 - 50 * Math.sin(x / 210 + 0.6) - 25 * Math.sin(x / 90)]);
+      for (x = -20; x <= W + 40; x += 50) near.push([x, 1370 - 40 * Math.sin(x / 160 + 2.1) - 14 * Math.sin(x / 55)]);
+      far.push([W + 20, FLOOR]); near.push([W + 20, FLOOR]);
+      paper(world, PC.tornPoly("hill_far", far, 3, 20), "#a9b98d", { depth: 1.2 });
+      paper(world, PC.tornPoly("hill_near", near, 3, 20), "#8eab73", { depth: 1.2 });
+      paper(world, PC.tornRect("floor", -20, FLOOR - 4, W + 40, 120, 2.5), "#d2b98e", { depth: 1.0 });
+      // crane tower
+      paper(world, PC.tornRect("mast", 893, JIB_Y - 10, 46, FLOOR - JIB_Y + 6, 1.0), "#f1b237", { depth: 1.2 });
+      var zz = [];
+      for (k = 0; k < Math.floor((FLOOR - JIB_Y) / 46); k++) { var yk = JIB_Y + 6 + k * 46; zz.push([898, yk], [934, yk + 23]); }
+      zz.push([898, JIB_Y + 6 + k * 46]);
+      line(world, zz, PC.shade("#f1b237", -0.35), 3);
+      paper(world, PC.tornRect("cbase", 868, FLOOR - 26, 96, 30, 1), "#5d5f68", { depth: 1.0 });
+      // lever box
+      var leverBox = g(world, { transform: T(860, FLOOR) }), lever = g(leverBox);
+      paper(lever, PC.tornRect("lever", -3, -26, 6, 28, 0.4), "#3b3437", { depth: 0.4 });
+      paper(lever, PC.tornCircle("knob", 6), "#e2553f", { depth: 0.4 });
+      paper(leverBox, PC.tornRect("lbox", -18, -46, 36, 46, 0.8), "#5d5f68", { depth: 0.8 });
+      // factory, back layer: dark bay, lamp light, chimney, smoke
+      paper(world, PC.tornRect("bay", 230, 1218, 222, 264, 1.0), "#4c302b", { shadow: false });
+      world.appendChild(el("path", { d: "M340 1235L270 " + FLOOR + "L420 " + FLOOR + "Z", fill: "#f6c76a", "fill-opacity": 0.25 }));
+      paper(g(world, { transform: T(340, 1232) }), PC.tornEllipse("lamp", 16, 8), "#2f2a2a", { depth: 0.5 });
+      paper(world, PC.tornRect("chimney", 82, 960, 58, 190, 1.2), "#b5523c", { depth: 1.0 });
+      for (k = 0; k < 2; k++) paper(world, PC.tornRect("chs" + k, 78, 980 + k * 60, 66, 14, 1), "#f2e6cf", { depth: 0.4 });
+      var puffs = [0, 1, 2, 3].map(function (k) { var pg = g(world); return { g: pg, piece: paper(pg, PC.tornCircle("puff" + k, 14, 1.6), "#fbf6ec", { depth: 0.5 }) }; });
+      // worker 1 (back plane): pushes the sun out
+      var w1 = PC.puppet(g(world), { look: LOOK1, cx: 482, ground: FLOOR, scale: 0.92 });
+      // the sun
+      var sunMidAnchor = g(world);
+      var sunG = g(world), sunGlow = PC.glow(sunG, 0, 0, SUN_R * 2.3, "#ffd24a", 0.3), sunBody = g(sunG), sunParts = [];
+      for (k = 0; k < 12; k++) sunParts.push([paper(g(sunBody, { transform: "rotate(" + (k * 30) + ")" }), PC.tornPoly("ray" + k, [[-13, -SUN_R + 6], [13, -SUN_R + 6], [0, -SUN_R - 30]], 0.8), "#ffb733", { depth: 0.8 }), "#ffb733"]);
+      sunParts.push([paper(sunBody, PC.tornCircle("sun", SUN_R, 1.8), "#ffcf3a", { depth: 1.4 }), "#ffcf3a"]);
+      sunParts.push([paper(sunBody, PC.tornCircle("sun2", SUN_R * 0.74, 1.6), "#ffe27a", { depth: 0.4 }), "#ffe27a"]);
+      sunParts.push([paper(sunBody, PC.tornCircle("sun3", SUN_R * 0.42, 1.2), "#fff1b0", { depth: 0.3 }), "#fff1b0"]);
+      var spiral = []; for (k = 0; k < 40; k++) spiral.push([(12 + k * 1.55) * Math.cos(k * 0.32), (12 + k * 1.55) * Math.sin(k * 0.32)]);
+      var spiralP = line(sunBody, spiral, "#f2a52a", 5, 0.55);
+      // factory, front layer
+      var body = "#d8694b";
+      paper(world, PC.tornPoly("fbody", [[30, 1120], [452, 1120], [452, 1220], [230, 1220], [230, FLOOR], [30, FLOOR]], 1.6), body, { depth: 1.3 });
+      for (k = 0; k < 3; k++) {
+        var x0 = 30 + k * 141;
+        paper(world, PC.tornPoly("roof" + k, [[x0 - 4, 1124], [x0 + 22, 1052], [x0 + 145, 1124]], 1.5), "#8a4a3d", { depth: 1.0 });
+        paper(world, PC.tornPoly("roofw" + k, [[x0 + 6, 1118], [x0 + 24, 1068], [x0 + 34, 1118]], 0.8), "#c8d7d6", { depth: 0.2 });
+      }
+      var bricks = g(world, { stroke: PC.shade(body, -0.18), "stroke-opacity": 0.55, "stroke-width": 2, fill: "none" });
+      for (k = 0; k < 26; k++) bricks.appendChild(el("rect", { x: (45 + R() * 155).toFixed(1), y: (1260 + R() * 200).toFixed(1), width: 26, height: 11 }));
+      [92, 168].forEach(function (wx, k) {
+        var wg = g(world, { transform: T(wx, 1185) });
+        paper(wg, PC.tornCircle("winr" + k, 25), "#7b3a2e", { depth: 0.6 });
+        paper(wg, PC.tornCircle("win" + k, 18), "#cfe0dc", { depth: 0.2 });
+      });
+      var gearG = g(world), teeth = [];
+      for (k = 0; k < 24; k++) { var ga = k * 2 * Math.PI / 24, gr = (Math.floor(k / 2) % 2 === 0) ? 52 : 40; teeth.push([gr * Math.cos(ga), gr * Math.sin(ga)]); }
+      paper(gearG, PC.tornPoly("gear", teeth, 0.8, 6), "#e8a33d", { depth: 1.0 });
+      paper(gearG, PC.tornCircle("gearin", 16), "#8a4a3d", { depth: 0.4 });
+      var sign = g(world, { transform: T(340, 1170) });
+      paper(sign, PC.tornRect("sign", -52, -30, 104, 60, 1.2), "#f6ead0", { depth: 0.9 });
+      var ss = []; for (k = 0; k < 11; k++) ss.push([24 * Math.cos(Math.PI + k * Math.PI / 10), 24 * Math.sin(Math.PI + k * Math.PI / 10)]);
+      paper(g(sign, { transform: T(0, 14) }), PC.tornPoly("signsun", ss), "#f39a3c", { depth: 0.3 });
+      for (k = 0; k < 5; k++) { var sa = Math.PI + (k + 0.5) * Math.PI / 5; line(sign, [[32 * Math.cos(sa), 14 + 32 * Math.sin(sa)], [40 * Math.cos(sa), 14 + 40 * Math.sin(sa)]], "#f39a3c", 4); }
+      var shClip = el("clipPath", { id: "shutterclip" }), shRect = el("rect", { x: 230, y: 1218, width: 222, height: 262 });
+      shClip.appendChild(shRect); svgDefs.appendChild(shClip);
+      var shutter = g(g(world, { "clip-path": "url(#shutterclip)" }));
+      paper(shutter, PC.tornRect("shutter", 232, 1218 - 262, 218, 262, 1.0), "#9aa3a8", { depth: 0.6 });
+      for (k = 0; k < 14; k++) line(shutter, [[234, 1218 - 262 + 18 * k + 12], [448, 1218 - 262 + 18 * k + 12]], "#6f787e", 3);
+      paper(world, PC.tornRect("shutbox", 226, 1206, 230, 18, 1), "#7d6a60", { depth: 0.8 });
+      // conveyor
+      [300, 520, 770].forEach(function (lx) { paper(world, PC.tornRect("leg" + lx, lx - 7, BELT_Y + 12, 14, FLOOR - BELT_Y - 8, 0.8), "#6b6f7a", { depth: 0.8 }); });
+      paper(world, PC.tornRect("belt", 222, BELT_Y, 590, 22, 1.2), "#3d3a42", { depth: 1.2 });
+      var dashes = []; for (k = 0; k < 32; k++) dashes.push(line(world, [[0, BELT_Y + 3], [-4, BELT_Y + 9]], "#bfb8ad", 2, 0.55));
+      var rollers = [];
+      for (k = 0; k < 15; k++) { var rg = g(world); paper(rg, PC.tornCircle("rol" + k, 8, 0.5), "#9ba0a8", { depth: 0.3 }); line(rg, [[-6, 0], [6, 0]], "#40404d", 2, 0.8); rollers.push(rg); }
+      // crane jib, trolley and hook
+      paper(world, PC.tornPoly("peak", [[900, JIB_Y - 8], [932, JIB_Y - 8], [916, JIB_Y - 92]], 1), "#f1b237", { depth: 1.0 });
+      [340, 1040].forEach(function (cx) { line(world, [[916, JIB_Y - 90], [cx, JIB_Y + 2]], "#5a4a3a", 2.4); });
+      paper(world, PC.tornRect("jib", 328, JIB_Y, 740, 28, 1.2), "#f1b237", { depth: 1.2 });
+      var jz = []; for (k = 0; k < 25; k++) { var jx = 334 + k * 29; jz.push([jx, JIB_Y + 4], [jx + 14, JIB_Y + 24]); } jz.push([334 + 25 * 29, JIB_Y + 4]);
+      line(world, jz, PC.shade("#f1b237", -0.35), 2.6);
+      paper(world, PC.tornRect("cab", 940, JIB_Y + 22, 66, 54, 1.0), "#e2553f", { depth: 1.0 });
+      paper(world, PC.tornRect("cabw", 952, JIB_Y + 32, 32, 24, 0.6), "#cfe0dc", { depth: 0.2 });
+      paper(world, PC.tornRect("cw", 1010, JIB_Y - 6, 70, 46, 1.0), "#6b6f7a", { depth: 1.0 });
+      var trolley = g(world); paper(trolley, PC.tornRect("trolley", -22, JIB_Y + 24, 44, 18, 0.8), "#5d5f68", { depth: 0.8 });
+      var cables = [line(world, [[0, 0], [0, 1]], "#3b3437", 2.6), line(world, [[0, 0], [0, 1]], "#3b3437", 2.6)];
+      var hook = g(world); paper(hook, PC.tornRect("block", -15, -26, 30, 22, 0.6), "#e2553f", { depth: 0.8 });
+      var hookArc = el("path", { fill: "none", stroke: "#4a4a52", "stroke-width": 7, "stroke-linecap": "round" }); hook.appendChild(hookArc);
+      // foreground ground + flowers
+      var fg1 = [[-20, 1585]], fg2 = [[-20, 1760]];
+      for (x = -20; x <= W + 40; x += 40) { fg1.push([x, 1572 + 10 * Math.sin(x / 70)]); fg2.push([x, 1745 + 16 * Math.sin(x / 110 + 1)]); }
+      fg1.push([W + 20, 1940], [-20, 1940]); fg2.push([W + 20, 1940], [-20, 1940]);
+      paper(world, PC.tornPoly("fg1", fg1, 3.5, 16), "#6f9257", { depth: 1.6 });
+      paper(world, PC.tornPoly("fg2", fg2, 3.5, 16), "#5b7c48", { depth: 1.6 });
+      for (k = 0; k < 16; k++) {
+        var fl = g(world, { transform: T(30 + R() * (W - 60), 1790 + R() * 100) }), col = ["#f6e7c8", "#f3b0a4", "#f7d06a"][Math.floor(R() * 3)];
+        for (var j = 0; j < 5; j++) paper(g(fl, { transform: "rotate(" + (j * 72) + ")" }), PC.tornEllipse("pet" + k, 5, 9), col, { depth: 0.3, edge: false });
+        paper(fl, PC.tornCircle("fc" + k, 4), "#e0873a", { depth: 0.2, edge: false });
+      }
+      // the paint pole (planted behind worker 2, or held in front of him)
+      var polePlantedAnchor = g(world);
+      var w2 = PC.puppet(g(world), { look: LOOK2, cx: 330, ground: FG_Y, scale: 1.1 });
+      var poleHeldAnchor = g(world);
+      var poleG = g(world), poleSegs = [];
+      var POLE_COLS = ["#8a5a3b", "#a7adb5", "#c7ccd2", "#d9dde2"], POLE_W = [9, 7, 6, 5];
+      for (k = 0; k < 4; k++) poleSegs.push([line(poleG, [[0, 0], [0, 1]], "rgb(41,20,10)", POLE_W[k] + 2, 0.2), line(poleG, [[0, 0], [0, 1]], POLE_COLS[k], POLE_W[k])]);
+      var rollHead = g(poleG);
+      paper(rollHead, PC.tornRect("rollf", -6, -112, 12, 224, 0.8), "#6b6f7a", { depth: 0.6 });
+      var rollPaper = paper(rollHead, PC.tornRect("roll", -24, -105, 48, 210, 1.4), "#f6ead0", { depth: 1.2 });
+      rollHead.appendChild(el("rect", { x: -16, y: -100, width: 6, height: 200, fill: "#ffffff", "fill-opacity": 0.25 }));
+      // crate + star jar
+      var crate = g(world);
+      paper(crate, PC.tornRect("crate", -48, -80, 96, 80, 1.5), "#b98351", { depth: 1.4 });
+      line(crate, [[-46, -54], [46, -54]], "#7d5532", 3); line(crate, [[-46, -27], [46, -27]], "#7d5532", 3); line(crate, [[-44, -76], [44, -4]], "#7d5532", 3);
+      var jar = g(world), jarGlow = PC.glow(jar, 0, -30, 70, "#fff3b0", 0.3), jarStars = [];
+      [[-12, -14, 7, 0.2], [8, -22, 8, 1.1], [-3, -36, 6, 2.0], [12, -44, 6, 0.7], [-13, -46, 7, 1.6], [2, -10, 6, 2.6]].forEach(function (s, i) {
+        var sg = g(jar); paper(sg, PC.starPoly("js" + i, s[2]), "#fff0a8", { depth: 0.2, edge: false }); jarStars.push([sg, s]);
+      });
+      var jarBody = [[-24, -60], [24, -60], [26, -8], [20, 0], [-20, 0], [-26, -8]];
+      paper(jar, PC.tornPoly("jarbody", jarBody, 0.8), "#cfe6f2", { depth: 0.4, alpha: 0.42 });
+      jar.appendChild(el("path", { d: PC.polyD(PC.tornPoly("jarbody", jarBody, 0.8)), fill: "none", stroke: "rgb(64,102,128)", "stroke-opacity": 0.55, "stroke-width": 2.5 }));
+      paper(jar, PC.tornRect("jarneck", -20, -66, 40, 8, 0.6), "#b8d4e2", { depth: 0.2, alpha: 0.7 });
+      line(jar, [[-15, -50], [-17, -16]], "#ffffff", 4, 0.55);
+      paper(g(jar, { transform: T(0, -60) }), PC.tornRect("lid", -27, -12, 54, 14, 0.8), "#c4553b", { depth: 0.6 });
+      // worker 3 (front, moustache)
+      var w3 = PC.puppet(g(world), { look: LOOK3, cx: 730, ground: FG_Y, scale: 1.14 });
+
+      // grain: raster overlay (default) or SVG feTurbulence at a fixed seed
+      if (VARIANT.grain === "turbulence") PC.grainTurbulence(document.getElementById("world-svg"), { seed: 7 });
+      else document.getElementById("stage").insertBefore(PC.grainRaster(null, { seed: 7, width: W, height: H }), document.getElementById("over-svg"));
+
+      // ------------------------------------------------------------- one frame = f(t)
+      function render(t) {
+        var cam = camera(t);
+        world.setAttribute("transform", "translate(540,960) scale(" + cam[2].toFixed(4) + ") translate(" + (-cam[0]).toFixed(2) + "," + (-cam[1]).toFixed(2) + ")");
+        var rs = roller_state(t), roller = rs.roller, sun = sun_state(t), cr = crane_state(t);
+        bands.forEach(function (b, i) {
+          var reach = rs.bp[i] * (W + 60);
+          b.rect.setAttribute("width", reach.toFixed(2));
+          b.rect.setAttribute("x", (rs.dirs[i] > 0 ? -30 : W + 30 - reach).toFixed(2));
+        });
+        lever.setAttribute("transform", T(0, -44, ((9.8 <= t && t < 13.4) ? 0.35 + 0.15 * Math.sin(t * 5) : -0.3) / D2R));
+        puffs.forEach(function (p, k) {
+          var ph = (t * 0.32 + k / 4) % 1.0, rr = Math.round((14 + ph * 34) * 10) / 10, a = Math.sin(ph * Math.PI) * 0.85;
+          p.g.setAttribute("transform", T(111 + ph * 60 + 10 * Math.sin(ph * 6 + k), 940 - ph * 260));
+          PC.reshape(p.piece, PC.tornCircle("puff" + k, rr, 1.6));
+          p.g.setAttribute("opacity", a.toFixed(3));
+        });
+        var shutterOpen = E.io(prog(t, EV.shutter, EV.shutter + 0.7)), hgt = (1 - shutterOpen) * 262;
+        shRect.setAttribute("height", Math.max(0, hgt).toFixed(2));
+        shutter.setAttribute("transform", T(0, hgt));
+        shutter.style.display = hgt > 2 ? "" : "none";
+
+        // worker 1 pushes the sun until it is out (his x follows the sun)
+        var p1 = pose_at(K1, t, 0.3);
+        if (t < EV.roll1 + 0.05) {
+          p1.x = sun.x - 128;
+          var wk = walkOf(p1.x, (sun_state(t + 0.03).x - sun_state(t - 0.03).x) / 0.06); p1.legs = wk.legs; p1.bob = wk.bob;
+        }
+        if (9.8 <= t && t < 13.4) p1.arms = [-12, -6, 30, 70 + 14 * Math.sin(t * 5)];
+        w1.set(p1);
+
+        // the sun: behind the hills once it is in the sky, on the belt before
+        world.insertBefore(sunG, sun.slot === "sky" ? sunSkyAnchor : sunMidAnchor);
+        var core = lerp(1, 0.55, sun.dim);
+        sunGlow.setAttribute("r", (SUN_R * (2.3 + 0.9 * sun.power)).toFixed(2));
+        sunGlow.setAttribute("opacity", (0.42 * sun.power * core).toFixed(4));
+        sunG.setAttribute("transform", T(sun.x, sun.y));
+        sunBody.setAttribute("transform", "rotate(" + (sun.rot / D2R).toFixed(3) + ")");
+        if (sun.dim > 0) sunParts.forEach(function (sp) { sp[0].fill.setAttribute("fill", PC.mix(sp[1], "#e08a5a", sun.dim * 0.55)); });
+
+        var gear = t < 13 ? t * 0.5 + (sun.x - SUN_X0) / 60 : t * 0.5 + 4.75;
+        gearG.setAttribute("transform", T(128, 1365, gear / D2R));
+        var off = t < EV.lift0 ? -(Math.min(sun.x, SUN_X1) - SUN_X0) : -(SUN_X1 - SUN_X0);
+        dashes.forEach(function (d, k) { var dx = 225 + ((((k * 22 + off) % 586) + 586) % 586); d.setAttribute("transform", "translate(" + dx.toFixed(2) + ",0)"); });
+        rollers.forEach(function (r, k) { r.setAttribute("transform", T(238 + k * 40, BELT_Y + 11, off / 9 / D2R)); });
+        var tx = (EV.lift0 <= t && t < EV.release) ? cr.txHook : cr.tx;
+        trolley.setAttribute("transform", T(tx, 0));
+        cables[0].setAttribute("d", "M" + (tx - 5).toFixed(2) + " " + (JIB_Y + 40) + "L" + (tx - 3).toFixed(2) + " " + (cr.hy - 22).toFixed(2));
+        cables[1].setAttribute("d", "M" + (tx + 5).toFixed(2) + " " + (JIB_Y + 40) + "L" + (tx + 3).toFixed(2) + " " + (cr.hy - 22).toFixed(2));
+        hook.setAttribute("transform", T(tx, cr.hy));
+        var ha = (30 + 50 * cr.open) * D2R, ae = Math.PI - ha;
+        hookArc.setAttribute("d", "M0 -4A12 12 0 " + (ae + Math.PI / 2 > Math.PI ? 1 : 0) + " 1 " + (12 * Math.cos(ae)).toFixed(2) + " " + (8 + 12 * Math.sin(ae)).toFixed(2));
+
+        // worker 2 + paint pole
+        var p2 = pose_at(K2, t, 1.7);
+        if (14.7 <= t && t < 15.25) { var c = Math.sin(2 * Math.PI * 3 * (t - 14.7)); p2.arms = [-60 + 8 * c, 60 + 22 * c, 60 - 8 * c, -60 - 22 * c]; }
+        if (EV.crash <= t && t < EV.crash + 0.8) p2.bob -= 16 * Math.sin(Math.PI * prog(t, EV.crash, EV.crash + 0.45));
+        var planted = t >= 13.85, pg = pole_geometry(t, roller, p2.x), hand = pg[0], tip = pg[1];
+        if (!planted && roller) {
+          var ang = Math.atan2(tip[0] - hand[0], tip[1] - hand[1]) / D2R; ang = ((ang + 180) % 360 + 360) % 360 - 180;
+          p2.arms = [lerp(-12, ang, 0.35) - 10, ang - 4, lerp(12, ang, 0.55), ang];
+          p2.turn = clamp((tip[0] - p2.x) / 400, -1, 1); p2.gaze = [p2.turn, -1]; p2.lean = -4 * p2.turn; p2.mouth = "grin";
+        }
+        w2.set(p2);
+        var pa, pb, painting = false;
+        if (planted) { pa = [262, FG_Y]; pb = [262, FG_Y - 170]; world.insertBefore(poleG, polePlantedAnchor); }
+        else { var hp = hand_pos(p2.x, FG_Y, 1.1, p2); pa = [hp[0], hp[1] + 14]; pb = tip; painting = !!roller; world.insertBefore(poleG, poleHeldAnchor); }
+        var L = Math.hypot(pb[0] - pa[0], pb[1] - pa[1]) || 1, ux = (pb[0] - pa[0]) / L, uy = (pb[1] - pa[1]) / L;
+        poleSegs.forEach(function (s, k) {
+          var sx = pa[0] + ux * L / 4 * k, sy = pa[1] + uy * L / 4 * k, ex = pa[0] + ux * L / 4 * (k + 1), ey = pa[1] + uy * L / 4 * (k + 1);
+          s[0].setAttribute("d", "M" + (sx + 2).toFixed(2) + " " + (sy + 4).toFixed(2) + "L" + (ex + 2).toFixed(2) + " " + (ey + 4).toFixed(2));
+          s[1].setAttribute("d", "M" + sx.toFixed(2) + " " + sy.toFixed(2) + "L" + ex.toFixed(2) + " " + ey.toFixed(2));
+        });
+        var rcol = "#f6ead0";
+        if (roller && roller[0] === "paint" && !planted) {
+          var bi = 0, best = 1e9;
+          BANDS.forEach(function (b, j) { var yr = band_rect(j), dd = Math.abs((yr[0] + yr[1]) / 2 - roller[2]); if (dd < best) { best = dd; bi = j; } });
+          rcol = BANDS[bi];
+        }
+        rollPaper.fill.setAttribute("fill", rcol); rollPaper.fill.setAttribute("stroke", PC.shade(rcol, 0.35));
+        rollHead.setAttribute("transform", T(pb[0], pb[1], 0, 0.42 + 0.58 * clamp((L - 230) / 300)));
+
+        // crate + jar
+        var shake = t >= EV.bump ? 5 * damped(t - EV.bump, 6, 9) : 0, js = jar_state(t);
+        crate.setAttribute("transform", T(JAR_X + shake, FG_Y));
+        jar.setAttribute("transform", T(js.x + (t < EV.tip ? shake : 0), js.y, js.rot / D2R));
+        jarGlow.setAttribute("opacity", (0.35 * (0.75 + 0.25 * Math.sin(t * 6))).toFixed(4));
+        jarStars.forEach(function (s) { s[0].setAttribute("transform", T(s[1][0], s[1][1], (s[1][3] + t * 0.5) / D2R)); });
+
+        // worker 3: "come on, come on" while the sun rolls out
+        var p3 = pose_at(K3, t, 2.9);
+        if (1.3 <= t && t < 3.8) { var wv = Math.sin(2 * Math.PI * 1.6 * (t - 1.3)); p3.arms = [-70 + 6 * wv, -160 + 30 * wv, 12, 6]; }
+        if (5.0 <= t && t < 9.6 && roller && roller[0] === "paint") { var fr = clamp((roller[1] - 730) / 500, -1, 1); p3.turn = lerp(p3.turn, fr, 0.8); p3.gaze = [fr, -1]; }
+        if (9.9 <= t && t < 13.0) { var w9 = Math.sin(2 * Math.PI * 1.4 * (t - 9.9)); p3.arms = [-150 + 10 * w9, -175 + 22 * w9, 150 - 10 * w9, 175 - 22 * w9]; }
+        if (EV.bump <= t && t < EV.bump + 0.25) { var bq = Math.sin(Math.PI * prog(t, EV.bump, EV.bump + 0.25)); p3.squash *= 1 - 0.06 * bq; p3.bob -= 6 * bq; }
+        w3.set(p3);
+
+        // opening: the page fades in from blank paper
+        document.getElementById("fade").setAttribute("opacity", (t < 0.45 ? 1 - E.io(t / 0.45) : 0).toFixed(4));
+      }
+
+      var tl = gsap.timeline({ paused: true });
+      PC.drive(tl, DURATION, render);
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>
