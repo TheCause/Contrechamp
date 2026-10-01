@@ -221,7 +221,9 @@
     for (var i = 0; i < shadowFrames.length; i++) {
       var f = shadowFrames[i], m = f.getCTM && f.getCTM();
       if (!m) continue;
-      var key = r2(m.a * 1000) + "," + r2(m.b * 1000) + "," + r2(m.c * 1000) + "," + r2(m.d * 1000);
+      // EXACT key: a rounded key would reuse offsets computed for a slightly different
+      // matrix on an earlier frame, i.e. the image would depend on seek history.
+      var key = m.a + "," + m.b + "," + m.c + "," + m.d;
       if (f.__pcKey === key) continue;
       f.__pcKey = key;
       var det = m.a * m.d - m.b * m.c || 1;
