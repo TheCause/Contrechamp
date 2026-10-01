@@ -1,12 +1,14 @@
 """Synthesized sound effects from an event list.
 
 Every sound is computed from oscillators and seeded noise: no sound file, no
-licence, no network. The same events and seed always give the same WAV bytes.
+licence, no network. The same events and seed give the same WAV bytes in a
+given environment (numpy version and platform): FFT rounding may differ elsewhere.
 
 The report carries MEASUREMENTS read back from the written file, never
-assumptions: sample peak (dBFS), integrated loudness (LUFS, ffmpeg ebur128 —
-``null`` + ``not_checked`` when the meter cannot run), and for each event the
-energy found in its window compared to the background without it.
+assumptions: sample peak (dBFS), true peak (dBTP) and integrated loudness
+(LUFS) from ffmpeg ebur128 — ``null`` + ``not_checked`` when the meter cannot
+run — and for each event the share of its expected sound found in its window
+(absent = issue; masked under louder sounds = information only).
 """
 
 from __future__ import annotations
@@ -164,6 +166,45 @@ SYNTHS = {
 
 # ---------------------------------------------------------------- validation
 
+def _number(value: Any, what: str, lo: float | None = None, hi: float | None = None,
+            lo_open: bool = False, hi_open: bool = False) -> float:
+    """A finite real number (never a bool or a string) inside the given bounds."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+        raise ValueError(f"{what}={value!r} must be a finite number")
+    if lo is not None and (value <= lo if lo_open else value < lo):
+        raise ValueError(f"{what}={value!r} must be {'>' if lo_open else '>='} {lo}")
+    if hi is not None and (value >= hi if hi_open else value > hi):
+        raise ValueError(f"{what}={value!r} must be {'<' if hi_open else '<='} {hi}")
+    return float(value)
+
+
+NYQUIST = SR / 2
+MAX_DURATION = 300.0  # seconds; memory grows linearly, see estimated_ram_mb()
+MAX_EVENT_DUR = 120.0
+
+
+def _params(kind: str, ev: dict[str, Any], where: str) -> dict[str, Any]:
+    p = {**KIND_PARAMS[kind], **{k: ev[k] for k in KIND_PARAMS[kind] if k in ev}}
+    out: dict[str, Any] = {}
+    for key, value in p.items():
+        what = f"{where}: {key}"
+        if key == "freqs":
+            if not isinstance(value, list) or not value:
+                raise ValueError(f"{what}={value!r} must be a non-empty list of frequencies")
+            out[key] = [_number(f, what, 0, NYQUIST, lo_open=True, hi_open=True) for f in value]
+        elif key in ("freq", "freq_end", "lo", "hi"):
+            out[key] = _number(value, what, 0, NYQUIST, lo_open=True, hi_open=True)
+        elif key == "dur":
+            out[key] = _number(value, what, 0, MAX_EVENT_DUR, lo_open=True)
+        elif key == "noise":
+            out[key] = _number(value, what, 0, 1)
+        elif key == "wobble":
+            out[key] = _number(value, what, 0, 0.5)
+    if "lo" in out and out["lo"] >= out["hi"]:
+        raise ValueError(f"{where}: lo={out['lo']} must be below hi={out['hi']}")
+    return out
+
+
 def validate_events(events: Any, duration: float) -> list[dict[str, Any]]:
     """Normalized copies of the events. Raises ValueError with an explicit message."""
     if not isinstance(events, list) or not events:
@@ -173,25 +214,17 @@ def validate_events(events: Any, duration: float) -> list[dict[str, Any]]:
         if not isinstance(ev, dict):
             raise ValueError(f"event {i}: must be an object, got {type(ev).__name__}")
         kind = ev.get("kind")
-        if kind not in KIND_PARAMS:
+        if not isinstance(kind, str) or kind not in KIND_PARAMS:
             raise ValueError(f"event {i}: unknown kind {kind!r} (known: {sorted(KIND_PARAMS)})")
         extra = set(ev) - EVENT_KEYS - set(KIND_PARAMS[kind])
         if extra:
             raise ValueError(f"event {i} ({kind}): unknown parameter(s) {sorted(extra)} "
                              f"(allowed: {sorted(EVENT_KEYS | set(KIND_PARAMS[kind]))})")
-        t = ev.get("t")
-        if not isinstance(t, (int, float)) or not 0 <= t < duration:
-            raise ValueError(f"event {i} ({kind}): t={t!r} must be a number in [0, {duration})")
-        gain = ev.get("gain", 1.0)
-        if not isinstance(gain, (int, float)) or gain <= 0:
-            raise ValueError(f"event {i} ({kind}): gain={gain!r} must be > 0")
-        pan = ev.get("pan", 0.5)
-        if not isinstance(pan, (int, float)) or not 0 <= pan <= 1:
-            raise ValueError(f"event {i} ({kind}): pan={pan!r} must be in [0, 1] (0 = left)")
-        params = {**KIND_PARAMS[kind], **{k: ev[k] for k in KIND_PARAMS[kind] if k in ev}}
-        if params.get("dur", 1) <= 0:
-            raise ValueError(f"event {i} ({kind}): dur must be > 0")
-        out.append({"t": float(t), "kind": kind, "gain": float(gain), "pan": float(pan), "params": params})
+        where = f"event {i} ({kind})"
+        t = _number(ev.get("t"), f"{where}: t", 0, duration, hi_open=True)
+        gain = _number(ev.get("gain", 1.0), f"{where}: gain", 0, 1000, lo_open=True)
+        pan = _number(ev.get("pan", 0.5), f"{where}: pan (0 = left, 1 = right)", 0, 1)
+        out.append({"t": t, "kind": kind, "gain": gain, "pan": pan, "params": _params(kind, ev, where)})
     return out
 
 
@@ -235,15 +268,30 @@ def _fade(n_total: int) -> np.ndarray:
     return fade
 
 
+def true_peak_estimate(stereo: np.ndarray, oversample: int = 4) -> float:
+    """Peak between samples: x4 band-limited (FFT) upsampling, by 1 s blocks."""
+    n = stereo.shape[1]
+    block, pad = SR, SR // 20
+    peak = float(np.max(np.abs(stereo))) if stereo.size else 0.0
+    for s in range(0, n, block):
+        a, b = max(s - pad, 0), min(s + block + pad, n)
+        up = np.fft.irfft(np.fft.rfft(stereo[:, a:b]), (b - a) * oversample) * oversample
+        keep = up[:, (s - a) * oversample:(min(s + block, n) - a) * oversample]
+        if keep.size:
+            peak = max(peak, float(np.max(np.abs(keep))))
+    return peak
+
+
 def normalization_gain(stereo: np.ndarray, peak_dbfs: float) -> float:
-    peak = float(np.max(np.abs(stereo)))
+    """Gain that puts the TRUE (inter-sample) peak at ``peak_dbfs``."""
+    peak = true_peak_estimate(stereo)
     if peak <= 0:
         raise ValueError("the render is silent: nothing to normalize")
     return 10 ** (peak_dbfs / 20) / peak
 
 
 def _db(x: float) -> float:
-    return 10 * math.log10(max(x, 1e-12))
+    return 10 * math.log10(max(x, 1e-30))
 
 
 def _event_contribution(ev, sig, ir, reverb_mix, gain, fade, n_total):
@@ -267,28 +315,65 @@ def _event_contribution(ev, sig, ir, reverb_mix, gain, fade, n_total):
     return lo, seg
 
 
-def event_presence(wav: np.ndarray, start: int, contrib: np.ndarray, fps: float,
-                   margin_db: float) -> dict[str, Any]:
-    """Energy in the event's window (±1 frame around its loudest instant), read
-    from the file, against the same window with the event's expected
-    contribution removed (the background it sits on)."""
-    if contrib.shape[1] == 0:
-        return {"window": None, "energy_db": None, "floor_db": None, "margin_db": None, "present": False}
-    hop = max(SR // 200, 1)
-    power = (contrib ** 2).sum(axis=0)
-    frames = np.add.reduceat(power, np.arange(0, len(power), hop))
-    peak = start + int(np.argmax(frames)) * hop + hop // 2
+ABSENT_BELOW_ALPHA = 0.5  # under half of the expected sound found in its window = absent (issue)
+MASKED_BELOW_DB = -10.0   # event 10 dB under the other sounds in its window = masked (information)
+QUANT_NOISE_POWER = (1 / FULL_SCALE) ** 2 / 12
+
+
+def _window(start: int, contrib: np.ndarray, n: int, fps: float) -> tuple[int, int]:
+    """±1 frame around the loudest instant of the event's own contribution."""
+    peak = start
+    if contrib.shape[1]:
+        hop = max(SR // 200, 1)
+        power = (contrib ** 2).sum(axis=0)
+        frames = np.add.reduceat(power, np.arange(0, len(power), hop))
+        peak = start + int(np.argmax(frames)) * hop + hop // 2
     half = int(round(SR / fps))
-    a, b = max(peak - half, 0), min(peak + half, wav.shape[1])
-    c = np.zeros((2, b - a))
-    lo, hi = max(a, start), min(b, start + contrib.shape[1])
-    if hi > lo:
-        c[:, lo - a:hi - a] = contrib[:, lo - start:hi - start]
-    w = wav[:, a:b]
-    energy, floor = _db(float(np.mean(w ** 2))), _db(float(np.mean((w - c) ** 2)))
-    margin = energy - floor
-    return {"window": [round(a / SR, 4), round(b / SR, 4)], "energy_db": round(energy, 2),
-            "floor_db": round(floor, 2), "margin_db": round(margin, 2), "present": margin >= margin_db}
+    return max(peak - half, 0), min(peak + half, n)
+
+
+def event_presence(wav: np.ndarray, contribs: list[tuple[int, np.ndarray]],
+                   fps: float = 30.0) -> list[dict[str, Any]]:
+    """How much of each event's expected sound the file holds in its window.
+
+    residual = file - expected contributions of ALL OTHER events (in the window);
+    alpha = <residual, c> / <c, c> is the least-squares scale of the event in the
+    file: ~1 when it is there, ~0 when it is missing or misplaced. Masking (the
+    event far under the other sounds) is reported apart: it is not an absence.
+    """
+    n = wav.shape[1]
+    total = np.zeros_like(wav)
+    for start, c in contribs:
+        total[:, start:start + c.shape[1]] += c
+    out = []
+    for start, c in contribs:
+        a, b = _window(start, c, n, fps)
+        cw = np.zeros((2, b - a))
+        lo, hi = max(a, start), min(b, start + c.shape[1])
+        if hi > lo:
+            cw[:, lo - a:hi - a] = c[:, lo - start:hi - start]
+        entry: dict[str, Any] = {"window": [round(a / SR, 4), round(b / SR, 4)]}
+        if not cw.size or float(np.mean(cw ** 2)) <= QUANT_NOISE_POWER:
+            entry.update(alpha=None, event_to_rest_db=None, present=False, masked=False,
+                         reason="expected sound below the 16-bit floor of the file (faded out or too quiet)")
+            out.append(entry)
+            continue
+        w = wav[:, a:b]
+        residual = w - (total[:, a:b] - cw)
+        alpha = float(np.sum(residual * cw) / np.sum(cw * cw))
+        to_rest = _db(float(np.sum(cw * cw))) - _db(float(np.sum((w - cw) ** 2)))
+        entry.update(alpha=round(alpha, 4), event_to_rest_db=round(to_rest, 2),
+                     present=alpha >= ABSENT_BELOW_ALPHA, masked=to_rest < MASKED_BELOW_DB)
+        if not entry["present"]:
+            entry["reason"] = f"only {alpha:.2f} of the expected sound is in its window"
+        out.append(entry)
+    return out
+
+
+def estimated_ram_mb(duration: float) -> int:
+    """Upper estimate of a render's peak memory: about 12 float64 stereo copies of
+    the bus at once (FFT padding up to x2, reverb and filter working arrays)."""
+    return int(12 * 2 * (duration + 1) * SR * 8 / 2 ** 20) + 200
 
 
 def read_wav(path: Path) -> np.ndarray:
@@ -315,8 +400,7 @@ def measure_loudness(path: Path) -> dict[str, Any]:
 
 
 def render(events: list[dict[str, Any]], duration: float, output: Path, *, seed: int = DEFAULT_SEED,
-           peak_dbfs: float = -1.0, reverb_mix: float = 0.18, fps: float = 30.0,
-           presence_margin_db: float = 1.0) -> dict[str, Any]:
+           peak_dbfs: float = -1.0, reverb_mix: float = 0.18, fps: float = 30.0) -> dict[str, Any]:
     """Render validated events to a 48 kHz stereo 16-bit WAV and measure it."""
     n_total = int(round(duration * SR))
     ir = room_ir(seed)
@@ -326,8 +410,14 @@ def render(events: list[dict[str, Any]], duration: float, output: Path, *, seed:
         _place(dry, ev, sig)
     fade = _fade(n_total)
     stereo = _post(dry, ir, reverb_mix)[:, :n_total] * fade
+    del dry
     gain = normalization_gain(stereo, peak_dbfs)
-    pcm = np.clip(np.round(stereo * gain * FULL_SCALE), -FULL_SCALE, FULL_SCALE).astype("<i2")
+    scaled = stereo * gain * FULL_SCALE
+    del stereo
+    if not np.all(np.isfinite(scaled)):
+        raise ValueError("the render produced non-finite samples")
+    pcm = np.clip(np.round(scaled), -FULL_SCALE, FULL_SCALE).astype("<i2")
+    del scaled
     output.parent.mkdir(parents=True, exist_ok=True)
     with wave.open(str(output), "wb") as w:
         w.setnchannels(2)
@@ -340,22 +430,30 @@ def render(events: list[dict[str, Any]], duration: float, output: Path, *, seed:
     peak = float(np.max(np.abs(wav)))
     peak_db = round(20 * math.log10(peak), 2) if peak > 0 else None
     loud = measure_loudness(output)
+    tp = loud.get("true_peak_dbtp")
 
-    per_event, issues, not_checked = [], [], {}
-    for i, (ev, sig) in enumerate(zip(events, sigs)):
-        start, contrib = _event_contribution(ev, sig, ir, reverb_mix, gain, fade, n_total)
-        m = event_presence(wav, start, contrib, fps, presence_margin_db)
+    contribs = [_event_contribution(ev, sig, ir, reverb_mix, gain, fade, n_total) for ev, sig in zip(events, sigs)]
+    per_event, issues, masked, not_checked = [], [], [], {}
+    for i, (ev, m) in enumerate(zip(events, event_presence(wav, contribs, fps))):
         per_event.append({"index": i, "t": ev["t"], "kind": ev["kind"], "gain": ev["gain"], "pan": ev["pan"], **m})
         if not m["present"]:
-            issues.append(f"event {i} ({ev['kind']} at {ev['t']:.3f}s) not found in its window: "
-                          f"margin {m['margin_db']} dB < {presence_margin_db} dB over the background")
+            issues.append(f"event {i} ({ev['kind']} at {ev['t']:.3f}s) absent from its window: {m['reason']}")
+        elif m["masked"]:
+            masked.append(f"event {i} ({ev['kind']} at {ev['t']:.3f}s) is in the file, masked "
+                          f"{m['event_to_rest_db']} dB under the other sounds in its window (information only)")
     peak_ok = peak_db is not None and peak_db <= PEAK_LIMIT_DBFS
     if not peak_ok:
         issues.append(f"sample peak {peak_db} dBFS above the {PEAK_LIMIT_DBFS} dBFS limit")
+    tp_ok = None if tp is None else tp <= PEAK_LIMIT_DBFS
+    if tp_ok is False:
+        issues.append(f"true peak {tp} dBTP above the {PEAK_LIMIT_DBFS} dBTP limit")
     if loud.get("integrated_lufs") is None:
         not_checked["integrated_lufs"] = loud.get("reason", "loudness not measured")
+    if tp is None:
+        not_checked["true_peak_dbtp"] = loud.get("reason", "true peak not measured")
     checks = {
         "peak_under_limit": peak_ok,
+        "true_peak_under_limit": tp_ok,
         "all_events_present": all(e["present"] for e in per_event),
         "loudness_measured": loud.get("integrated_lufs") is not None,
     }
@@ -373,14 +471,18 @@ def render(events: list[dict[str, Any]], duration: float, output: Path, *, seed:
         "status": status,
         "checks": checks,
         "issues": issues,
+        "masked": masked,
         "not_checked": not_checked,
         "measurements": {
             "peak_dbfs": peak_db,
+            "true_peak_dbtp": tp,
             "integrated_lufs": loud.get("integrated_lufs"),
-            "true_peak_dbtp": loud.get("true_peak_dbtp"),
             "peak_limit_dbfs": PEAK_LIMIT_DBFS,
-            "presence_margin_db": presence_margin_db,
+            "absent_below_alpha": ABSENT_BELOW_ALPHA,
+            "masked_below_db": MASKED_BELOW_DB,
             "window_frames_per_second": fps,
+            "events_absent": sum(not e["present"] for e in per_event),
+            "events_masked": len(masked),
         },
         "events": per_event,
     }
@@ -449,16 +551,16 @@ class SfxSynth(BaseTool):
                 "description": "Per-kind parameters and defaults: see KIND_PARAMS. Unknown kind or "
                 "parameter is an error.",
             },
-            "duration_seconds": {"type": "number", "exclusiveMinimum": 0, "maximum": 3600},
+            "duration_seconds": {"type": "number", "exclusiveMinimum": 0, "maximum": MAX_DURATION},
             "output_path": {"type": "string", "default": "sfx_synth.wav"},
             "seed": {"type": "integer", "default": DEFAULT_SEED},
             "peak_dbfs": {"type": "number", "default": -1.0, "minimum": -30, "maximum": PEAK_LIMIT_DBFS},
             "reverb_mix": {"type": "number", "default": 0.18, "minimum": 0, "maximum": 1},
-            "presence_margin_db": {"type": "number", "default": 1.0, "minimum": 0},
         },
     }
 
-    resource_profile = ResourceProfile(cpu_cores=1, ram_mb=1024, vram_mb=0, disk_mb=50, network_required=False)
+    resource_profile = ResourceProfile(cpu_cores=1, ram_mb=estimated_ram_mb(MAX_DURATION), vram_mb=0,
+                                       disk_mb=int(MAX_DURATION * SR * 4 / 2 ** 20) + 10, network_required=False)
     idempotency_key_fields = ["events", "duration_seconds", "seed", "peak_dbfs", "reverb_mix"]
     side_effects = ["writes a WAV file to output_path"]
     user_visible_verification = ["Listen to the WAV against the animation", "Read status, issues and not_checked"]
@@ -472,23 +574,21 @@ class SfxSynth(BaseTool):
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
         start = time.time()
         try:
-            duration = inputs.get("duration_seconds")
-            if not isinstance(duration, (int, float)) or not 0 < duration <= 3600:
-                raise ValueError(f"duration_seconds={duration!r} must be a number in (0, 3600]")
-            peak_dbfs = float(inputs.get("peak_dbfs", -1.0))
-            if not -30 <= peak_dbfs <= PEAK_LIMIT_DBFS:
-                raise ValueError(f"peak_dbfs={peak_dbfs} must be in [-30, {PEAK_LIMIT_DBFS}]")
-            reverb_mix = float(inputs.get("reverb_mix", 0.18))
-            if not 0 <= reverb_mix <= 1:
-                raise ValueError(f"reverb_mix={reverb_mix} must be in [0, 1]")
-            events = validate_events(inputs.get("events"), float(duration))
-            data = render(
-                events, float(duration), Path(inputs.get("output_path", "sfx_synth.wav")),
-                seed=int(inputs.get("seed", DEFAULT_SEED)), peak_dbfs=peak_dbfs, reverb_mix=reverb_mix,
-                presence_margin_db=float(inputs.get("presence_margin_db", 1.0)),
-            )
+            duration = _number(inputs.get("duration_seconds"), "duration_seconds", 0, MAX_DURATION, lo_open=True)
+            peak_dbfs = _number(inputs.get("peak_dbfs", -1.0), "peak_dbfs", -30, PEAK_LIMIT_DBFS)
+            reverb_mix = _number(inputs.get("reverb_mix", 0.18), "reverb_mix", 0, 1)
+            seed = inputs.get("seed", DEFAULT_SEED)
+            if isinstance(seed, bool) or not isinstance(seed, int) or seed < 0:
+                raise ValueError(f"seed={seed!r} must be a non-negative integer")
+            output = inputs.get("output_path", "sfx_synth.wav")
+            if not isinstance(output, (str, Path)) or not str(output):
+                raise ValueError(f"output_path={output!r} must be a path")
+            events = validate_events(inputs.get("events"), duration)
+            data = render(events, duration, Path(output), seed=seed, peak_dbfs=peak_dbfs, reverb_mix=reverb_mix)
         except ValueError as exc:
             return ToolResult(success=False, error=str(exc))
+        except Exception as exc:  # never let an exception escape: report it
+            return ToolResult(success=False, error=f"sfx_synth failed: {type(exc).__name__}: {exc}")
         return ToolResult(
             success=True, data=data, artifacts=[data["output"]], seed=data["seed"],
             duration_seconds=round(time.time() - start, 2),

@@ -78,8 +78,10 @@ TARGET LUFS:    -14 LUFS (YouTube/TikTok/IG) | -16 LUFS (podcasts)
 ### Synthesized SFX (`sfx_synth`, local, free)
 
 For code-animated scenes (Ink Theater, cut-paper, motion graphics), `sfx_synth` renders
-license-free foley from an event list — no sound file, no network, same bytes for the same
-events and `seed`.
+license-free foley from an event list — no sound file, no network. Same events and `seed` give
+the same bytes **in a given environment** (verified identical on two Apple-silicon Macs with the same
+numpy); another numpy version or platform may round differently, so compare by ear and by report,
+not by hash, across machines.
 
 ```python
 SfxSynth().execute({
@@ -96,16 +98,23 @@ SfxSynth().execute({
 - Kinds and their optional parameters: `click` (freq, dur, noise), `thud` (freq, dur),
   `metal` / `bell` / `marimba` / `sparkle` (freq, dur), `motor` (freq, freq_end, dur, wobble),
   `swish` (dur, lo, hi), `pad` (dur, freqs). An unknown kind or parameter is an error.
-- `gain` is relative (the render is peak-normalized to `peak_dbfs`, default −1 dBFS, never above
-  −0.5); `pan` 0 = left, 1 = right. Output: 48 kHz stereo 16-bit WAV with a short room reverb.
+- `gain` is relative (the render is normalized on its true, inter-sample peak to `peak_dbfs`,
+  default −1 dBTP, never above −0.5); `pan` 0 = left, 1 = right. Output: 48 kHz stereo 16-bit WAV
+  with a short room reverb; up to 300 s per call (memory grows with duration).
 - Take events from the animation's own timeline (the same dictionary of key times the scene uses),
   so sound and picture cannot drift apart.
 - **Read the report, not the defaults.** It is measured from the written file: `peak_dbfs`,
-  `integrated_lufs` (ffmpeg `ebur128`; `null` + `not_checked` when ffmpeg is missing), and per event
-  the energy in a ±1 frame (30 fps) window around its loudest instant against the background without
-  it. An event under `presence_margin_db` (default 1 dB) is listed in `issues`: either the render lost
-  it, or it is masked by louder sounds — raise its gain or drop it. `status: pass` only when every
-  check ran and no issue is open.
+  `true_peak_dbtp` and `integrated_lufs` (ffmpeg `ebur128`; `null` + `not_checked` when ffmpeg is
+  missing — never `pass`). Per event, in a ±1 frame (30 fps) window around its loudest instant, the
+  file minus every *other* expected event leaves a residual; `alpha` is how much of the event's
+  expected sound that residual holds (~1 = there).
+  - **Absent** (`alpha` < 0.5, or rounded away by the 16-bit file, e.g. inside the final fade-out):
+    an issue, `status: revise`. The render lost or moved it — fix the event list or the timing.
+  - **Masked** (event more than 10 dB under the other sounds in its window): information only, in
+    `masked`, never in `issues`. The event is in the file; quiet layers under louder ones are often
+    intended (a sparkle under a pad). Listen before changing anything — do not raise its gain just
+    because it is listed.
+  - `status: pass` only when every check ran and no issue is open.
 - The result is a stem: mix it under narration/music with `audio_mixer` (`role: "sfx"`), and still
   normalize the final mix to the platform target below.
 
