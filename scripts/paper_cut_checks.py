@@ -83,7 +83,25 @@ def compare(a: Path | None, b: Path | None) -> dict:
     if a is None or b is None or not Path(a).is_file() or not Path(b).is_file():
         return {"verdict": "not_checked", "reason": "missing frame", "a": str(a), "b": str(b)}
     ha, hb = sha256(a), sha256(b)
-    return {"verdict": "pass" if ha == hb else "fail", "a": str(a), "b": str(b), "sha_a": ha, "sha_b": hb}
+    row = {"verdict": "pass" if ha == hb else "fail", "a": str(a), "b": str(b), "sha_a": ha, "sha_b": hb}
+    if ha != hb:
+        row.update(pixel_diff(a, b))   # diagnostic only: the verdict stays byte-exact
+    return row
+
+
+def pixel_diff(a: Path, b: Path) -> dict:
+    """How different two frames are (count of differing pixels, max channel delta, bbox)."""
+    try:
+        from PIL import Image, ImageChops
+        ia, ib = Image.open(a).convert("RGB"), Image.open(b).convert("RGB")
+        if ia.size != ib.size:
+            return {"pixels_differing": None, "note": f"size {ia.size} vs {ib.size}"}
+        d = ImageChops.difference(ia, ib)
+        gray = d.convert("L").point(lambda v: 255 if v else 0)
+        return {"pixels_differing": gray.histogram()[255], "max_channel_delta": max(hi for _, hi in d.getextrema()),
+                "bbox": d.getbbox()}
+    except Exception as e:  # noqa: BLE001
+        return {"pixels_differing": None, "note": str(e)}
 
 
 def compare_sessions(ref: dict, other: dict, times: list[float]) -> dict:

@@ -81,6 +81,18 @@ def test_gate_passes_on_real_moving_frames(tmp_path):
     assert checks.gate({1.0: a, 2.0: b}, [1.0, 2.0])["verdict"] == "pass"
 
 
+def test_two_pixel_difference_still_fails_and_is_described(tmp_path):
+    from PIL import Image
+    a, b = tmp_path / "a.png", tmp_path / "b.png"
+    im = Image.open(FIX / "healthy_frame.jpg").convert("RGB")
+    im.save(a)
+    im.putpixel((10, 10), (0, 0, 0))
+    im.putpixel((20, 20), (0, 0, 0))
+    im.save(b)
+    r = checks.compare(a, b)
+    assert r["verdict"] == "fail" and r["pixels_differing"] == 2
+
+
 def test_seek_skipped_output_is_detected():
     out = "◆  Capturing 2 frames\n   ⚠ No player API — seeks will be skipped\n"
     assert checks.seek_warnings(out)
