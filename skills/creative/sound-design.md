@@ -75,6 +75,40 @@ TARGET LUFS:    -14 LUFS (YouTube/TikTok/IG) | -16 LUFS (podcasts)
 - Fine-tune in **1-frame increments** for sync
 - When stacking whooshes, keep them in different frequency bands
 
+### Synthesized SFX (`sfx_synth`, local, free)
+
+For code-animated scenes (Ink Theater, cut-paper, motion graphics), `sfx_synth` renders
+license-free foley from an event list — no sound file, no network, same bytes for the same
+events and `seed`.
+
+```python
+SfxSynth().execute({
+    "duration_seconds": 20.0,
+    "output_path": "projects/<id>/assets/audio/sfx.wav",
+    "events": [
+        {"t": 0.5, "kind": "click", "gain": 0.12, "pan": 0.35, "freq": 2200, "dur": 0.03},
+        {"t": 15.2, "kind": "thud", "gain": 0.45, "pan": 0.48, "freq": 85, "dur": 0.4},
+        {"t": 16.9, "kind": "pad", "gain": 0.016, "dur": 3.6},
+    ],
+})
+```
+
+- Kinds and their optional parameters: `click` (freq, dur, noise), `thud` (freq, dur),
+  `metal` / `bell` / `marimba` / `sparkle` (freq, dur), `motor` (freq, freq_end, dur, wobble),
+  `swish` (dur, lo, hi), `pad` (dur, freqs). An unknown kind or parameter is an error.
+- `gain` is relative (the render is peak-normalized to `peak_dbfs`, default −1 dBFS, never above
+  −0.5); `pan` 0 = left, 1 = right. Output: 48 kHz stereo 16-bit WAV with a short room reverb.
+- Take events from the animation's own timeline (the same dictionary of key times the scene uses),
+  so sound and picture cannot drift apart.
+- **Read the report, not the defaults.** It is measured from the written file: `peak_dbfs`,
+  `integrated_lufs` (ffmpeg `ebur128`; `null` + `not_checked` when ffmpeg is missing), and per event
+  the energy in a ±1 frame (30 fps) window around its loudest instant against the background without
+  it. An event under `presence_margin_db` (default 1 dB) is listed in `issues`: either the render lost
+  it, or it is masked by louder sounds — raise its gain or drop it. `status: pass` only when every
+  check ran and no issue is open.
+- The result is a stem: mix it under narration/music with `audio_mixer` (`role: "sfx"`), and still
+  normalize the final mix to the platform target below.
+
 ## Platform Loudness Targets (2025)
 
 | Platform | Integrated LUFS | True Peak | Notes |
