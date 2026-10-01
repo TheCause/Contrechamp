@@ -371,9 +371,10 @@ def event_presence(wav: np.ndarray, contribs: list[tuple[int, np.ndarray]],
 
 
 def estimated_ram_mb(duration: float) -> int:
-    """Upper estimate of a render's peak memory: about 12 float64 stereo copies of
-    the bus at once (FFT padding up to x2, reverb and filter working arrays)."""
-    return int(12 * 2 * (duration + 1) * SR * 8 / 2 ** 20) + 200
+    """Upper estimate of a render's peak memory: 14 float64 stereo copies of the
+    bus (FFT padding up to x2, reverb and filter working arrays) + interpreter.
+    Measured: 3012 MiB peak for 300 s with 269 events (estimate: 3286 MiB)."""
+    return int(14 * 2 * (duration + 1) * SR * 8 / 2 ** 20) + 200
 
 
 def read_wav(path: Path) -> np.ndarray:
