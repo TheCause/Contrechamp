@@ -1,0 +1,2935 @@
+{
+ "about": "Real answers of four blind reviewers (no sound, no script) on contact sheets of four renders of the paper_factory short. v1 and v2: the jar falls on the red worker's side (defect). v3 and final: it falls on the green worker's side, as the brief says. bump_fall and stars_night of v1/v2 were answered 'partiel' and are recoded 'contradicts' (the description says the opposite of the brief). Cell times of the v1-v3 sheets are approximate (+0.083 s from the nominal grid, measured on v3).",
+ "reviews": {
+  "v1": {
+   "review": {
+    "version": "1.0",
+    "reviewer": {
+     "id": "blind-v1",
+     "audio_access": false,
+     "authored_video": false,
+     "saw_script_or_code": false
+    },
+    "verdicts": [
+     {
+      "beat_id": "shutter",
+      "observed": "s00 #2-#3: a grey slatted shutter covers the doorway of a red paper factory with a sun sign above it. #4 (0.83 s): the shutter has lifted to about half height and a yellow spiral sun shows underneath. #5 (1.08 s): the doorway is fully open, the sun fills it.",
+      "who_does_what": [
+       {
+        "who": "grey shutter on the red factory",
+        "does": "rises from closed to open between 0.58 s and 1.08 s"
+       }
+      ],
+      "verdict": "lisible",
+      "evidence": [
+       {
+        "sheet": "s00",
+        "cell": 3
+       },
+       {
+        "sheet": "s00",
+        "cell": 4
+       },
+       {
+        "sheet": "s00",
+        "cell": 5
+       }
+      ]
+     },
+     {
+      "beat_id": "sun_rolled",
+      "observed": "s00 #7-#8 and s02 #1-#8: a small worker in blue overalls and yellow helmet appears behind the sun inside the doorway and pushes it rightward along the dark conveyor belt; the sun travels from the doorway to the right of the factory by ~3.8 s. The red-overalls worker (left, holding a tall white pole) and the green-overalls mustached worker (right, waving) stand in front with a jar on a crate between them.",
+      "who_does_what": [
+       {
+        "who": "worker in blue overalls",
+        "does": "pushes the sun out of the factory along the conveyor to the right"
+       },
+       {
+        "who": "sun",
+        "does": "moves left to right along the belt"
+       }
+      ],
+      "verdict": "lisible",
+      "evidence": [
+       {
+        "sheet": "s00",
+        "cell": 8
+       },
+       {
+        "sheet": "s02",
+        "cell": 3
+       },
+       {
+        "sheet": "s02",
+        "cell": 8
+       }
+      ]
+     },
+     {
+      "beat_id": "sky_painted",
+      "observed": "s04 #4-#8: the red worker raises his long pole, which turns out to be a paint roller on a very long handle; the view pulls back (s04 #6) to show a tall crane on the right. Orange and yellow bands appear (s04 #6-#8, s06 #1), then a coral band (s06 #3-#5), a pink band (s06 #6-#8), a mauve/purple band (s08 #1-#4) and a dark violet top band (s08 #5). Each band is visibly rolled across by the roller at the end of the red worker's handle. By s08 #7 the roller is lowered.",
+      "who_does_what": [
+       {
+        "who": "red-overalls worker (left)",
+        "does": "paints the sky band by band with a long-handled roller"
+       },
+       {
+        "who": "green-overalls worker (right)",
+        "does": "watches, then raises arms in cheer (s08 #8)"
+       }
+      ],
+      "verdict": "lisible",
+      "evidence": [
+       {
+        "sheet": "s06",
+        "cell": 3
+       },
+       {
+        "sheet": "s06",
+        "cell": 6
+       },
+       {
+        "sheet": "s08",
+        "cell": 4
+       }
+      ]
+     },
+     {
+      "beat_id": "crane",
+      "observed": "s08 #7-#8: the blue worker has moved to the base of the crane on the right, at a lever. s10 #3-#8: the crane hook lowers on its cable down to the sun on the conveyor. s12 #1-#6: hook attached to the top of the sun, which rises up into the coloured sky to the top of the frame. Green worker cheers with both arms up throughout.",
+      "who_does_what": [
+       {
+        "who": "blue-overalls worker at the crane base",
+        "does": "operates the crane lever"
+       },
+       {
+        "who": "crane hook",
+        "does": "descends, catches the sun, lifts it into the sky"
+       },
+       {
+        "who": "green-overalls worker",
+        "does": "cheers, arms up"
+       }
+      ],
+      "verdict": "lisible",
+      "evidence": [
+       {
+        "sheet": "s10",
+        "cell": 6
+       },
+       {
+        "sheet": "s12",
+        "cell": 1
+       },
+       {
+        "sheet": "s12",
+        "cell": 5
+       }
+      ]
+     },
+     {
+      "beat_id": "admiration",
+      "observed": "s12 #7-#8, s14 #1-#4: framing tightens; the sun hangs in the orange sky. Red worker stands with hands on hips, roller planted beside him; green worker stands with arms down; blue worker at the crane. Faces are turned to the viewer; no clear upward gaze or pointing at the sun; expressions are small smiles at best.",
+      "who_does_what": [
+       {
+        "who": "red-overalls worker",
+        "does": "stands, hands on hips"
+       },
+       {
+        "who": "green-overalls worker",
+        "does": "stands still, then (s14 #3-#4) starts moving toward the crate"
+       }
+      ],
+      "verdict": "partiel",
+      "evidence": [
+       {
+        "sheet": "s14",
+        "cell": 1
+       },
+       {
+        "sheet": "s14",
+        "cell": 3
+       }
+      ]
+     },
+     {
+      "beat_id": "bump_fall",
+      "observed": "s14 #4-#5: the green worker has walked LEFT, toward and right up against the crate (he approaches it facing the viewer, not stepping backward). s14 #6: jar still upright. s14 #7: the jar tilts to the LEFT while the green worker's arm is extended against/toward it. s14 #8: jar tipped further left, green's arm stretched out toward it. s16 #1: the jar is in the air beside the RED worker's legs, green's arm still pointing at it. s16 #2: the jar lies on the ground at the red worker's feet, glowing. Red worker has his mouth open in surprise.",
+      "who_does_what": [
+       {
+        "who": "green-overalls worker",
+        "does": "walks into the crate and his outstretched hand is on/next to the jar as it tips — reads as a hand push or as pointing"
+       },
+       {
+        "who": "jar",
+        "does": "tips LEFT and falls at the red worker's feet"
+       },
+       {
+        "who": "red-overalls worker",
+        "does": "looks surprised, mouth open"
+       }
+      ],
+      "verdict": "contradicts",
+      "evidence": [
+       {
+        "sheet": "s14",
+        "cell": 7
+       },
+       {
+        "sheet": "s14",
+        "cell": 8
+       },
+       {
+        "sheet": "s16",
+        "cell": 1
+       },
+       {
+        "sheet": "s16",
+        "cell": 2
+       }
+      ],
+      "between_cells_risk": "No dense sheet provided; the actual contact (crate bump vs hand) falls between s14 #6 and #7."
+     },
+     {
+      "beat_id": "hands_on_cheeks",
+      "observed": "s14 #7-#8 and s16 #1: the green worker has one arm extended horizontally toward the jar/left; no frame shows both his hands at his cheeks. Red worker has hands at hips/sides with mouth open.",
+      "who_does_what": [
+       {
+        "who": "green-overalls worker",
+        "does": "extends one arm toward the falling jar (pointing/reaching), not hands on cheeks"
+       }
+      ],
+      "verdict": "absent",
+      "evidence": [
+       {
+        "sheet": "s14",
+        "cell": 7
+       },
+       {
+        "sheet": "s14",
+        "cell": 8
+       }
+      ],
+      "between_cells_risk": "Window is 0.55 s with only two regular cells; a brief cheek gesture could fall between them, but both visible cells show an extended arm instead. No dense sheet available."
+     },
+     {
+      "beat_id": "stars_night",
+      "observed": "s16 #2: sparkles burst out around the jar lying at the red worker's feet, near the factory doorway. s16 #3-#5: stars scatter upward across the sky. s16 #4-#8: a dark blue night band descends from the top until the whole sky is navy and star-filled (s16 #8). The sun remains visible in the night sky until it sinks behind the hills (s18 #3-#6).",
+      "who_does_what": [
+       {
+        "who": "jar (fallen at red worker's feet)",
+        "does": "releases stars"
+       },
+       {
+        "who": "stars",
+        "does": "rise from the left/red side and spread across the sky"
+       },
+       {
+        "who": "sky",
+        "does": "turns to night from the top down"
+       }
+      ],
+      "verdict": "contradicts",
+      "evidence": [
+       {
+        "sheet": "s16",
+        "cell": 2
+       },
+       {
+        "sheet": "s16",
+        "cell": 5
+       },
+       {
+        "sheet": "s16",
+        "cell": 8
+       }
+      ]
+     },
+     {
+      "beat_id": "looks",
+      "observed": "s18 #1-#3 (18.08-18.58 s): framing zooms in; red worker open-mouthed, green worker standing; eyes are tiny and mostly face the viewer. In s18 #3-#4 eyes may glance sideways but no clear head turn toward each other.",
+      "who_does_what": [
+       {
+        "who": "red and green workers",
+        "does": "stand facing the viewer, possibly a side glance"
+       }
+      ],
+      "verdict": "partiel",
+      "evidence": [
+       {
+        "sheet": "s18",
+        "cell": 2
+       },
+       {
+        "sheet": "s18",
+        "cell": 3
+       }
+      ],
+      "between_cells_risk": "Instantaneous beat (18.3 s); a quick glance could sit between s18 #1 and #2."
+     },
+     {
+      "beat_id": "shrug",
+      "observed": "s18 #6-#8: green worker and blue worker (at the crane) both lift their forearms with palms up, outward; red worker lifts his hands slightly at his sides (s18 #6-#7). Classic shrug pose, held.",
+      "who_does_what": [
+       {
+        "who": "green-overalls worker",
+        "does": "shrugs, palms up"
+       },
+       {
+        "who": "blue-overalls worker",
+        "does": "shrugs, palms up"
+       },
+       {
+        "who": "red-overalls worker",
+        "does": "small shrug, hands raised a little"
+       }
+      ],
+      "verdict": "lisible",
+      "evidence": [
+       {
+        "sheet": "s18",
+        "cell": 6
+       },
+       {
+        "sheet": "s18",
+        "cell": 7
+       }
+      ]
+     }
+    ],
+    "other_findings": [
+     {
+      "sheet": "s16",
+      "cell": 1,
+      "finding": "Attribution: the jar falls and breaks at the RED worker's feet while the green worker's arm points at it. A viewer reads either 'green pushed the jar onto red' or 'green points at red: it's your fault' — the brief wants it to fall on green's side."
+     },
+     {
+      "sheet": "s14",
+      "cell": 5,
+      "finding": "Green worker walks forward/left INTO the crate rather than stepping back in excitement; no backward step visible."
+     },
+     {
+      "sheet": "s04",
+      "cell": 6,
+      "finding": "Abrupt zoom-out between s04 #5 and #6 (crane appears suddenly); also zoom-ins at s12 #8 and s18 #3. Fine if eased, jarring if cut."
+     },
+     {
+      "sheet": "s16",
+      "cell": 8,
+      "finding": "The sun stays high in the night sky among stars until ~18.5 s, then sinks behind the hills (s18 #3-#6) with no one acting on it; may puzzle a viewer (night before dusk)."
+     },
+     {
+      "sheet": "s00",
+      "cell": 7,
+      "finding": "The brief places the blue worker at the crane controls; on screen he first appears inside the factory pushing the sun, then walks to the crane by s08 #7. Not a defect, just differs from brief."
+     }
+    ]
+   },
+   "sheet_cells": {
+    "s00": [
+     {
+      "cell": 1,
+      "t": 0.083
+     },
+     {
+      "cell": 2,
+      "t": 0.333
+     },
+     {
+      "cell": 3,
+      "t": 0.583
+     },
+     {
+      "cell": 4,
+      "t": 0.833
+     },
+     {
+      "cell": 5,
+      "t": 1.083
+     },
+     {
+      "cell": 6,
+      "t": 1.333
+     },
+     {
+      "cell": 7,
+      "t": 1.583
+     },
+     {
+      "cell": 8,
+      "t": 1.833
+     }
+    ],
+    "s02": [
+     {
+      "cell": 1,
+      "t": 2.083
+     },
+     {
+      "cell": 2,
+      "t": 2.333
+     },
+     {
+      "cell": 3,
+      "t": 2.583
+     },
+     {
+      "cell": 4,
+      "t": 2.833
+     },
+     {
+      "cell": 5,
+      "t": 3.083
+     },
+     {
+      "cell": 6,
+      "t": 3.333
+     },
+     {
+      "cell": 7,
+      "t": 3.583
+     },
+     {
+      "cell": 8,
+      "t": 3.833
+     }
+    ],
+    "s04": [
+     {
+      "cell": 1,
+      "t": 4.083
+     },
+     {
+      "cell": 2,
+      "t": 4.333
+     },
+     {
+      "cell": 3,
+      "t": 4.583
+     },
+     {
+      "cell": 4,
+      "t": 4.833
+     },
+     {
+      "cell": 5,
+      "t": 5.083
+     },
+     {
+      "cell": 6,
+      "t": 5.333
+     },
+     {
+      "cell": 7,
+      "t": 5.583
+     },
+     {
+      "cell": 8,
+      "t": 5.833
+     }
+    ],
+    "s06": [
+     {
+      "cell": 1,
+      "t": 6.083
+     },
+     {
+      "cell": 2,
+      "t": 6.333
+     },
+     {
+      "cell": 3,
+      "t": 6.583
+     },
+     {
+      "cell": 4,
+      "t": 6.833
+     },
+     {
+      "cell": 5,
+      "t": 7.083
+     },
+     {
+      "cell": 6,
+      "t": 7.333
+     },
+     {
+      "cell": 7,
+      "t": 7.583
+     },
+     {
+      "cell": 8,
+      "t": 7.833
+     }
+    ],
+    "s08": [
+     {
+      "cell": 1,
+      "t": 8.083
+     },
+     {
+      "cell": 2,
+      "t": 8.333
+     },
+     {
+      "cell": 3,
+      "t": 8.583
+     },
+     {
+      "cell": 4,
+      "t": 8.833
+     },
+     {
+      "cell": 5,
+      "t": 9.083
+     },
+     {
+      "cell": 6,
+      "t": 9.333
+     },
+     {
+      "cell": 7,
+      "t": 9.583
+     },
+     {
+      "cell": 8,
+      "t": 9.833
+     }
+    ],
+    "s10": [
+     {
+      "cell": 1,
+      "t": 10.083
+     },
+     {
+      "cell": 2,
+      "t": 10.333
+     },
+     {
+      "cell": 3,
+      "t": 10.583
+     },
+     {
+      "cell": 4,
+      "t": 10.833
+     },
+     {
+      "cell": 5,
+      "t": 11.083
+     },
+     {
+      "cell": 6,
+      "t": 11.333
+     },
+     {
+      "cell": 7,
+      "t": 11.583
+     },
+     {
+      "cell": 8,
+      "t": 11.833
+     }
+    ],
+    "s12": [
+     {
+      "cell": 1,
+      "t": 12.083
+     },
+     {
+      "cell": 2,
+      "t": 12.333
+     },
+     {
+      "cell": 3,
+      "t": 12.583
+     },
+     {
+      "cell": 4,
+      "t": 12.833
+     },
+     {
+      "cell": 5,
+      "t": 13.083
+     },
+     {
+      "cell": 6,
+      "t": 13.333
+     },
+     {
+      "cell": 7,
+      "t": 13.583
+     },
+     {
+      "cell": 8,
+      "t": 13.833
+     }
+    ],
+    "s14": [
+     {
+      "cell": 1,
+      "t": 14.083
+     },
+     {
+      "cell": 2,
+      "t": 14.333
+     },
+     {
+      "cell": 3,
+      "t": 14.583
+     },
+     {
+      "cell": 4,
+      "t": 14.833
+     },
+     {
+      "cell": 5,
+      "t": 15.083
+     },
+     {
+      "cell": 6,
+      "t": 15.333
+     },
+     {
+      "cell": 7,
+      "t": 15.583
+     },
+     {
+      "cell": 8,
+      "t": 15.833
+     }
+    ],
+    "s16": [
+     {
+      "cell": 1,
+      "t": 16.083
+     },
+     {
+      "cell": 2,
+      "t": 16.333
+     },
+     {
+      "cell": 3,
+      "t": 16.583
+     },
+     {
+      "cell": 4,
+      "t": 16.833
+     },
+     {
+      "cell": 5,
+      "t": 17.083
+     },
+     {
+      "cell": 6,
+      "t": 17.333
+     },
+     {
+      "cell": 7,
+      "t": 17.583
+     },
+     {
+      "cell": 8,
+      "t": 17.833
+     }
+    ],
+    "s18": [
+     {
+      "cell": 1,
+      "t": 18.083
+     },
+     {
+      "cell": 2,
+      "t": 18.333
+     },
+     {
+      "cell": 3,
+      "t": 18.583
+     },
+     {
+      "cell": 4,
+      "t": 18.833
+     },
+     {
+      "cell": 5,
+      "t": 19.083
+     },
+     {
+      "cell": 6,
+      "t": 19.333
+     },
+     {
+      "cell": 7,
+      "t": 19.583
+     },
+     {
+      "cell": 8,
+      "t": 19.833
+     }
+    ]
+   }
+  },
+  "v2": {
+   "review": {
+    "version": "1.0",
+    "reviewer": {
+     "id": "blind-v2",
+     "audio_access": false,
+     "authored_video": false,
+     "saw_script_or_code": false
+    },
+    "verdicts": [
+     {
+      "beat_id": "shutter",
+      "observed": "s00 #1 fades in on a red factory with a closed grey slatted shutter. #3 (0.58 s): shutter still closed. #4 (0.83 s): shutter raised halfway, a yellow sun visible under it. #5 (1.08 s): shutter gone, sun fills the dark doorway.",
+      "who_does_what": [
+       {
+        "who": "factory shutter (grey)",
+        "does": "rises and opens"
+       }
+      ],
+      "verdict": "lisible",
+      "evidence": [
+       {
+        "sheet": "s00",
+        "cell": 3
+       },
+       {
+        "sheet": "s00",
+        "cell": 4
+       },
+       {
+        "sheet": "s00",
+        "cell": 5
+       }
+      ]
+     },
+     {
+      "beat_id": "sun_rolled",
+      "observed": "s00 #6-#8 and s02 #1-#8: the big paper sun moves left to right along the conveyor out of the doorway. A small worker in blue overalls is right behind it, hands on it, pushing. Red worker (left, holding a white roller) and green mustached worker (right, waving) stand below watching.",
+      "who_does_what": [
+       {
+        "who": "worker in blue overalls",
+        "does": "pushes the sun along the conveyor"
+       },
+       {
+        "who": "sun",
+        "does": "rolls out of the factory to the right"
+       }
+      ],
+      "verdict": "lisible",
+      "evidence": [
+       {
+        "sheet": "s00",
+        "cell": 7
+       },
+       {
+        "sheet": "s02",
+        "cell": 2
+       },
+       {
+        "sheet": "s02",
+        "cell": 6
+       }
+      ]
+     },
+     {
+      "beat_id": "sky_painted",
+      "observed": "Camera pulls back (s04 #5-#8) revealing a crane. From s04 #6 the red worker extends a very long paint-roller pole and rolls horizontal bands across the sky: orange/yellow (s04 #6-#8), red (s06 #3-#5), pink (s06 #6-#8), purple (s08 #1-#5). By s08 #6 the roller comes back down and the sky is fully striped.",
+      "who_does_what": [
+       {
+        "who": "red worker (left)",
+        "does": "paints the sky band by band with a long roller pole"
+       },
+       {
+        "who": "green worker",
+        "does": "watches, cheers (arms up s08 #8)"
+       }
+      ],
+      "verdict": "lisible",
+      "evidence": [
+       {
+        "sheet": "s04",
+        "cell": 7
+       },
+       {
+        "sheet": "s06",
+        "cell": 4
+       },
+       {
+        "sheet": "s06",
+        "cell": 7
+       },
+       {
+        "sheet": "s08",
+        "cell": 4
+       }
+      ]
+     },
+     {
+      "beat_id": "crane",
+      "observed": "Blue worker is now at the crane's control box to the right of the conveyor (s08 #8, s10). The hook descends on its cable (s10 #4-#6), touches the top of the sun (s10 #6-#8), then the sun rises on the hook into the sky (s12 #1-#6). Green worker raises both arms in joy.",
+      "who_does_what": [
+       {
+        "who": "blue worker at the control box",
+        "does": "operates the crane"
+       },
+       {
+        "who": "crane hook",
+        "does": "comes down, hooks the sun, lifts it high"
+       },
+       {
+        "who": "green worker",
+        "does": "cheers with both arms up"
+       }
+      ],
+      "verdict": "lisible",
+      "evidence": [
+       {
+        "sheet": "s10",
+        "cell": 5
+       },
+       {
+        "sheet": "s10",
+        "cell": 7
+       },
+       {
+        "sheet": "s12",
+        "cell": 2
+       },
+       {
+        "sheet": "s12",
+        "cell": 5
+       }
+      ]
+     },
+     {
+      "beat_id": "admiration",
+      "observed": "Camera tilts up: the sun hangs high in an orange sky, crane hook empty (s12 #8, s14 #1-#4). Red and green workers stand with hands on hips, smiling; blue worker by the controls. Their eyes look forward/at camera rather than clearly up at the sun.",
+      "who_does_what": [
+       {
+        "who": "red and green workers",
+        "does": "stand hands on hips, satisfied"
+       },
+       {
+        "who": "blue worker",
+        "does": "stands by the crane controls"
+       }
+      ],
+      "verdict": "partiel",
+      "evidence": [
+       {
+        "sheet": "s12",
+        "cell": 8
+       },
+       {
+        "sheet": "s14",
+        "cell": 2
+       },
+       {
+        "sheet": "s14",
+        "cell": 4
+       }
+      ],
+      "between_cells_risk": "Gaze direction is small at this scale; 'pleased' reads, 'looking up at the sun' does not clearly."
+     },
+     {
+      "beat_id": "bump_fall",
+      "observed": "s14 #5 (15.08 s): green worker has moved LEFT, toward the crate, standing right against it. #6 (15.33 s): green flings his arms out; the jar tilts to the LEFT. #7-#8: jar leans further left over the crate's left edge. s16 #1 (16.08 s): the jar lies on the ground on the LEFT of the crate, right at the red worker's feet; the red worker, mouth open, reaches toward it with a red object in his hand.",
+      "who_does_what": [
+       {
+        "who": "green worker",
+        "does": "moves toward the crate (not back) and throws his arms out, touching the crate/jar"
+       },
+       {
+        "who": "jar",
+        "does": "tips and falls to the LEFT, landing beside the red worker"
+       },
+       {
+        "who": "red worker",
+        "does": "reaches toward the fallen jar, holding a red item"
+       }
+      ],
+      "verdict": "contradicts",
+      "evidence": [
+       {
+        "sheet": "s14",
+        "cell": 5
+       },
+       {
+        "sheet": "s14",
+        "cell": 6
+       },
+       {
+        "sheet": "s14",
+        "cell": 8
+       },
+       {
+        "sheet": "s16",
+        "cell": 1
+       }
+      ],
+      "between_cells_risk": "The impact itself happens between 15.08 and 15.33; no dense sheet was provided to confirm contact."
+     },
+     {
+      "beat_id": "hands_on_cheeks",
+      "observed": "s14 #7 (15.58 s): green worker has arms bent, mouth open. #8 (15.83 s): green worker's hands are up near his face. The gesture is small at this scale; the red worker beside also shows an open-mouthed surprised face.",
+      "who_does_what": [
+       {
+        "who": "green worker",
+        "does": "brings hands up near his face"
+       },
+       {
+        "who": "red worker",
+        "does": "looks surprised, mouth open"
+       }
+      ],
+      "verdict": "partiel",
+      "evidence": [
+       {
+        "sheet": "s14",
+        "cell": 7
+       },
+       {
+        "sheet": "s14",
+        "cell": 8
+       }
+      ],
+      "between_cells_risk": "Only two cells fall inside the 0.55 s window; no dense sheet available."
+     },
+     {
+      "beat_id": "stars_night",
+      "observed": "s16 #2-#3: a burst of gold stars erupts from the jar on the LEFT, engulfing the RED worker. #4-#5: the star cloud rises into/over the factory doorway. #6-#8: stars stream up across the sky while a dark navy sky comes down from the top. s18 #1: full night, stars everywhere, sun sinking behind the hills.",
+      "who_does_what": [
+       {
+        "who": "jar (at the red worker's feet)",
+        "does": "releases the stars"
+       },
+       {
+        "who": "stars",
+        "does": "burst around the red worker, rise past the factory, scatter in the sky"
+       },
+       {
+        "who": "sky",
+        "does": "turns to night from the top down"
+       }
+      ],
+      "verdict": "contradicts",
+      "evidence": [
+       {
+        "sheet": "s16",
+        "cell": 2
+       },
+       {
+        "sheet": "s16",
+        "cell": 3
+       },
+       {
+        "sheet": "s16",
+        "cell": 7
+       },
+       {
+        "sheet": "s18",
+        "cell": 1
+       }
+      ],
+      "between_cells_risk": "Stars and night are clear; the 'from the green worker's side' part is contradicted: the burst is on the red worker's side."
+     },
+     {
+      "beat_id": "looks",
+      "observed": "s18 #2 (18.33 s): camera moving in; red worker's eyes turned right toward green; green worker's eyes roughly forward. s18 #3-#4: red and green glance sideways toward each other, blue worker looks toward them.",
+      "who_does_what": [
+       {
+        "who": "red worker",
+        "does": "looks right at the green worker"
+       },
+       {
+        "who": "green worker",
+        "does": "glances back sideways"
+       }
+      ],
+      "verdict": "partiel",
+      "evidence": [
+       {
+        "sheet": "s18",
+        "cell": 2
+       },
+       {
+        "sheet": "s18",
+        "cell": 3
+       },
+       {
+        "sheet": "s18",
+        "cell": 4
+       }
+      ],
+      "between_cells_risk": "Single-instant beat; eye direction is subtle and the camera is moving at the same time."
+     },
+     {
+      "beat_id": "shrug",
+      "observed": "s18 #6-#8 (19.33-19.83 s), close-up at night: red, green and blue workers all spread their arms with palms out at shoulder height, slightly bewildered faces.",
+      "who_does_what": [
+       {
+        "who": "red, green and blue workers",
+        "does": "shrug together, arms out, palms up"
+       }
+      ],
+      "verdict": "lisible",
+      "evidence": [
+       {
+        "sheet": "s18",
+        "cell": 6
+       },
+       {
+        "sheet": "s18",
+        "cell": 7
+       }
+      ],
+      "between_cells_risk": "Shrug pose is clearest at 19.33 onward; 19.08 (#5) still mostly neutral."
+     }
+    ],
+    "other_findings": [
+     {
+      "sheet": "s16",
+      "cell": 1,
+      "note": "ATTRIBUTION: the jar ends up on the ground at the red worker's feet, LEFT of the crate, and the red worker is the one reaching toward it with a red object (looks like the jar's red lid or his roller head) in hand. A viewer will likely read the accident as the red worker's doing, not the green one's."
+     },
+     {
+      "sheet": "s16",
+      "cell": 2,
+      "note": "The star burst envelops the red worker, reinforcing the wrong attribution."
+     },
+     {
+      "sheet": "s14",
+      "cell": 5,
+      "note": "Green worker moves TOWARD the crate (leftward), not backward; there is no visible 'stepping back' motion."
+     },
+     {
+      "sheet": "s16",
+      "cell": 4,
+      "note": "Star cloud gathers over the factory doorway/sign before rising; could read as stars going into the factory rather than spilling into the sky."
+     },
+     {
+      "sheet": "s08",
+      "cell": 8,
+      "note": "Blue worker jumps from behind the sun on the conveyor (s08 #7) to the crane controls (s08 #8) within one cell; minor."
+     },
+     {
+      "sheet": "s00",
+      "cell": 3,
+      "note": "Green worker winks at camera at the start; harmless, mentioned for completeness."
+     }
+    ]
+   },
+   "sheet_cells": {
+    "s00": [
+     {
+      "cell": 1,
+      "t": 0.083
+     },
+     {
+      "cell": 2,
+      "t": 0.333
+     },
+     {
+      "cell": 3,
+      "t": 0.583
+     },
+     {
+      "cell": 4,
+      "t": 0.833
+     },
+     {
+      "cell": 5,
+      "t": 1.083
+     },
+     {
+      "cell": 6,
+      "t": 1.333
+     },
+     {
+      "cell": 7,
+      "t": 1.583
+     },
+     {
+      "cell": 8,
+      "t": 1.833
+     }
+    ],
+    "s02": [
+     {
+      "cell": 1,
+      "t": 2.083
+     },
+     {
+      "cell": 2,
+      "t": 2.333
+     },
+     {
+      "cell": 3,
+      "t": 2.583
+     },
+     {
+      "cell": 4,
+      "t": 2.833
+     },
+     {
+      "cell": 5,
+      "t": 3.083
+     },
+     {
+      "cell": 6,
+      "t": 3.333
+     },
+     {
+      "cell": 7,
+      "t": 3.583
+     },
+     {
+      "cell": 8,
+      "t": 3.833
+     }
+    ],
+    "s04": [
+     {
+      "cell": 1,
+      "t": 4.083
+     },
+     {
+      "cell": 2,
+      "t": 4.333
+     },
+     {
+      "cell": 3,
+      "t": 4.583
+     },
+     {
+      "cell": 4,
+      "t": 4.833
+     },
+     {
+      "cell": 5,
+      "t": 5.083
+     },
+     {
+      "cell": 6,
+      "t": 5.333
+     },
+     {
+      "cell": 7,
+      "t": 5.583
+     },
+     {
+      "cell": 8,
+      "t": 5.833
+     }
+    ],
+    "s06": [
+     {
+      "cell": 1,
+      "t": 6.083
+     },
+     {
+      "cell": 2,
+      "t": 6.333
+     },
+     {
+      "cell": 3,
+      "t": 6.583
+     },
+     {
+      "cell": 4,
+      "t": 6.833
+     },
+     {
+      "cell": 5,
+      "t": 7.083
+     },
+     {
+      "cell": 6,
+      "t": 7.333
+     },
+     {
+      "cell": 7,
+      "t": 7.583
+     },
+     {
+      "cell": 8,
+      "t": 7.833
+     }
+    ],
+    "s08": [
+     {
+      "cell": 1,
+      "t": 8.083
+     },
+     {
+      "cell": 2,
+      "t": 8.333
+     },
+     {
+      "cell": 3,
+      "t": 8.583
+     },
+     {
+      "cell": 4,
+      "t": 8.833
+     },
+     {
+      "cell": 5,
+      "t": 9.083
+     },
+     {
+      "cell": 6,
+      "t": 9.333
+     },
+     {
+      "cell": 7,
+      "t": 9.583
+     },
+     {
+      "cell": 8,
+      "t": 9.833
+     }
+    ],
+    "s10": [
+     {
+      "cell": 1,
+      "t": 10.083
+     },
+     {
+      "cell": 2,
+      "t": 10.333
+     },
+     {
+      "cell": 3,
+      "t": 10.583
+     },
+     {
+      "cell": 4,
+      "t": 10.833
+     },
+     {
+      "cell": 5,
+      "t": 11.083
+     },
+     {
+      "cell": 6,
+      "t": 11.333
+     },
+     {
+      "cell": 7,
+      "t": 11.583
+     },
+     {
+      "cell": 8,
+      "t": 11.833
+     }
+    ],
+    "s12": [
+     {
+      "cell": 1,
+      "t": 12.083
+     },
+     {
+      "cell": 2,
+      "t": 12.333
+     },
+     {
+      "cell": 3,
+      "t": 12.583
+     },
+     {
+      "cell": 4,
+      "t": 12.833
+     },
+     {
+      "cell": 5,
+      "t": 13.083
+     },
+     {
+      "cell": 6,
+      "t": 13.333
+     },
+     {
+      "cell": 7,
+      "t": 13.583
+     },
+     {
+      "cell": 8,
+      "t": 13.833
+     }
+    ],
+    "s14": [
+     {
+      "cell": 1,
+      "t": 14.083
+     },
+     {
+      "cell": 2,
+      "t": 14.333
+     },
+     {
+      "cell": 3,
+      "t": 14.583
+     },
+     {
+      "cell": 4,
+      "t": 14.833
+     },
+     {
+      "cell": 5,
+      "t": 15.083
+     },
+     {
+      "cell": 6,
+      "t": 15.333
+     },
+     {
+      "cell": 7,
+      "t": 15.583
+     },
+     {
+      "cell": 8,
+      "t": 15.833
+     }
+    ],
+    "s16": [
+     {
+      "cell": 1,
+      "t": 16.083
+     },
+     {
+      "cell": 2,
+      "t": 16.333
+     },
+     {
+      "cell": 3,
+      "t": 16.583
+     },
+     {
+      "cell": 4,
+      "t": 16.833
+     },
+     {
+      "cell": 5,
+      "t": 17.083
+     },
+     {
+      "cell": 6,
+      "t": 17.333
+     },
+     {
+      "cell": 7,
+      "t": 17.583
+     },
+     {
+      "cell": 8,
+      "t": 17.833
+     }
+    ],
+    "s18": [
+     {
+      "cell": 1,
+      "t": 18.083
+     },
+     {
+      "cell": 2,
+      "t": 18.333
+     },
+     {
+      "cell": 3,
+      "t": 18.583
+     },
+     {
+      "cell": 4,
+      "t": 18.833
+     },
+     {
+      "cell": 5,
+      "t": 19.083
+     },
+     {
+      "cell": 6,
+      "t": 19.333
+     },
+     {
+      "cell": 7,
+      "t": 19.583
+     },
+     {
+      "cell": 8,
+      "t": 19.833
+     }
+    ]
+   }
+  },
+  "v3": {
+   "review": {
+    "version": "1.0",
+    "reviewer": {
+     "id": "blind-v3",
+     "audio_access": false,
+     "authored_video": false,
+     "saw_script_or_code": false
+    },
+    "verdicts": [
+     {
+      "beat_id": "shutter",
+      "observed": "s00 #2-#3 (0.33-0.58 s): the grey slatted shutter of the red factory is fully down. #4 (0.83 s): shutter raised about half-way, the yellow sun visible underneath. #5 (1.08 s): doorway fully open, dark interior, sun filling it. Only one in-between cell shows the motion, but the closed/open contrast is obvious.",
+      "who_does_what": [
+       {
+        "who": "factory shutter (grey, centre-left)",
+        "does": "rises and disappears into the lintel"
+       }
+      ],
+      "verdict": "lisible",
+      "evidence": [
+       {
+        "sheet": "s00",
+        "cell": 3
+       },
+       {
+        "sheet": "s00",
+        "cell": 4
+       },
+       {
+        "sheet": "s00",
+        "cell": 5
+       }
+      ]
+     },
+     {
+      "beat_id": "sun_rolled",
+      "observed": "s00 #5-#8: the big spiral sun sits in the doorway; at #7-#8 a small worker in blue overalls appears behind it on the left. s02 #1-#8 (2.08-3.83 s): the sun travels right along the dark conveyor belt, pushed by the blue worker who walks behind it; by 3.83 s it is clear of the door, right of the factory. Whether it rotates cannot be confirmed from stills (the spiral looks similar each cell), but it clearly moves along the conveyor out of the factory.",
+      "who_does_what": [
+       {
+        "who": "worker in blue overalls (on the conveyor, behind the sun)",
+        "does": "pushes the sun out of the doorway to the right"
+       },
+       {
+        "who": "sun",
+        "does": "moves right along the conveyor"
+       }
+      ],
+      "verdict": "lisible",
+      "evidence": [
+       {
+        "sheet": "s00",
+        "cell": 8
+       },
+       {
+        "sheet": "s02",
+        "cell": 1
+       },
+       {
+        "sheet": "s02",
+        "cell": 6
+       },
+       {
+        "sheet": "s02",
+        "cell": 8
+       }
+      ]
+     },
+     {
+      "beat_id": "sky_painted",
+      "observed": "s04 #4-#8: a crane appears on the right and the red-overalled worker (left) raises a very long pole with a paint roller; a yellow then an orange band appear. s06 #1-#8: the roller sweeps across the sky laying a coral/red band (6.58-7.08 s) then a pink band (7.33-7.83 s). s08 #1-#5: a purple band at the top (8.08-9.08 s). s08 #6: roller lowered, now white/empty. Each band is laid by a visible sweep of the roller, from the horizon up.",
+      "who_does_what": [
+       {
+        "who": "worker in red overalls (left)",
+        "does": "holds the long roller pole and paints each sky band"
+       },
+       {
+        "who": "worker in green overalls (right)",
+        "does": "watches, standing still"
+       }
+      ],
+      "verdict": "lisible",
+      "evidence": [
+       {
+        "sheet": "s04",
+        "cell": 7
+       },
+       {
+        "sheet": "s06",
+        "cell": 4
+       },
+       {
+        "sheet": "s06",
+        "cell": 7
+       },
+       {
+        "sheet": "s08",
+        "cell": 3
+       },
+       {
+        "sheet": "s08",
+        "cell": 5
+       }
+      ]
+     },
+     {
+      "beat_id": "crane",
+      "observed": "s08 #7-#8: the blue worker moves to the right, beside the crane's control box with a lever. s10 #4-#6 (10.83-11.33 s): the crane cable descends, hook reaches the top of the sun. s10 #7-#8: hook on the sun. s12 #1-#6 (12.08-13.33 s): the sun is lifted on the hook up into the sky. s12 #8 (13.83 s): the hook is free above, the sun stays hanging in the sky. Green worker raises both arms cheering throughout.",
+      "who_does_what": [
+       {
+        "who": "worker in blue overalls (at crane controls, right)",
+        "does": "operates the crane lever"
+       },
+       {
+        "who": "crane hook",
+        "does": "comes down, hooks the sun, lifts it into the sky and releases it"
+       },
+       {
+        "who": "worker in green overalls",
+        "does": "cheers with both arms up"
+       }
+      ],
+      "verdict": "lisible",
+      "evidence": [
+       {
+        "sheet": "s10",
+        "cell": 5
+       },
+       {
+        "sheet": "s10",
+        "cell": 7
+       },
+       {
+        "sheet": "s12",
+        "cell": 3
+       },
+       {
+        "sheet": "s12",
+        "cell": 8
+       }
+      ]
+     },
+     {
+      "beat_id": "admiration",
+      "observed": "s12 #7-#8, s14 #1-#5 (13.58-15.08 s): framing pushes in a little, sun high in the orange sky above the workers. Red worker plants the roller upright beside him, waves one hand (14.08-14.33 s), then hands on hips, smiling, eyes closed in contentment at 15.08 s. Green worker stands hands on hips/belt, smiling. Blue worker at the controls. They look pleased; whether their eyes are turned UP to the sun cannot be verified at this scale (eyes are small dots), but the composition (sun directly above them) carries the meaning.",
+      "who_does_what": [
+       {
+        "who": "worker in red overalls",
+        "does": "waves, then hands on hips, smiling"
+       },
+       {
+        "who": "worker in green overalls",
+        "does": "stands proudly, hands at waist"
+       },
+       {
+        "who": "worker in blue overalls",
+        "does": "stands at the crane controls"
+       }
+      ],
+      "verdict": "lisible",
+      "evidence": [
+       {
+        "sheet": "s14",
+        "cell": 2
+       },
+       {
+        "sheet": "s14",
+        "cell": 4
+       },
+       {
+        "sheet": "s14",
+        "cell": 5
+       }
+      ]
+     },
+     {
+      "beat_id": "bump_fall",
+      "observed": "s14 #5 (15.08 s): the green worker has moved LEFT, now standing right against the crate with the jar. s14 #6 (15.33 s): green worker jumps with both arms up in excitement, his body overlapping the right edge of the crate; the jar starts to tilt (a small dark line appears across it). #7 (15.58 s): green worker back to his right; jar on the crate leaning to the RIGHT (toward him). #8 (15.83 s): jar leaning further right, off balance. s16 #1 (16.08 s): jar has fallen off the crate to the right, lying tilted on the grass between the crate and the green worker, lid coming off. Red worker is far left with the roller, never near the crate. Fault reads clearly as the green worker's. Caveat: the movement is a sideways step/jump INTO the crate, not a backward step; the contact itself is visible in one cell only.",
+      "who_does_what": [
+       {
+        "who": "worker in green overalls (mustache, right)",
+        "does": "steps left next to the crate and jumps with arms up, bumping it"
+       },
+       {
+        "who": "jar of stars",
+        "does": "wobbles, leans right and falls off the crate on the green worker's side"
+       },
+       {
+        "who": "worker in red overalls (left)",
+        "does": "stands away from the crate, watches with mouth open"
+       }
+      ],
+      "verdict": "lisible",
+      "evidence": [
+       {
+        "sheet": "s14",
+        "cell": 5
+       },
+       {
+        "sheet": "s14",
+        "cell": 6
+       },
+       {
+        "sheet": "s14",
+        "cell": 7
+       },
+       {
+        "sheet": "s14",
+        "cell": 8
+       }
+      ],
+      "between_cells_risk": "The actual contact crate/worker is visible only at 15.33 s; at 4 fps the bump is a single-cell event. Attribution still holds because the jar falls toward him."
+     },
+     {
+      "beat_id": "hands_on_cheeks",
+      "observed": "s14 #7-#8 (15.58-15.83 s) and s16 #1 (16.08 s): the green worker has both hands raised, closed, at chest/chin level, mouth open in an 'o'. The hands are near the face but do not clearly touch the cheeks; it reads as 'startled / clutching', not unambiguously 'hands on cheeks'.",
+      "who_does_what": [
+       {
+        "who": "worker in green overalls",
+        "does": "brings both fists up to chest/chin, mouth open"
+       }
+      ],
+      "verdict": "partiel",
+      "evidence": [
+       {
+        "sheet": "s14",
+        "cell": 7
+       },
+       {
+        "sheet": "s14",
+        "cell": 8
+       }
+      ],
+      "between_cells_risk": "The gesture may reach the cheeks between 15.83 and 16.08 s; not visible on the available cells."
+     },
+     {
+      "beat_id": "stars_night",
+      "observed": "s16 #2 (16.33 s): a burst of glowing stars erupts from the fallen jar at the green worker's feet, engulfing him; the red lid flies up. #3-#5 (16.58-17.08 s): the star cloud rises up across the sky; the lid lands on the crate; the empty jar remains as a pale glass block on the grass right of the crate. #6 (17.33 s): a dark blue band slides down from the top. #7-#8 (17.58-17.83 s): sky dark blue with stars scattered; the sun sinks. s18 #1-#3: full night, sun setting behind the hills.",
+      "who_does_what": [
+       {
+        "who": "fallen jar (on the green worker's side)",
+        "does": "releases a burst of stars"
+       },
+       {
+        "who": "stars",
+        "does": "rise and scatter across the sky"
+       },
+       {
+        "who": "sky",
+        "does": "turns dark blue from the top down; the sun goes down"
+       }
+      ],
+      "verdict": "lisible",
+      "evidence": [
+       {
+        "sheet": "s16",
+        "cell": 2
+       },
+       {
+        "sheet": "s16",
+        "cell": 4
+       },
+       {
+        "sheet": "s16",
+        "cell": 7
+       },
+       {
+        "sheet": "s16",
+        "cell": 8
+       },
+       {
+        "sheet": "s18",
+        "cell": 1
+       }
+      ]
+     },
+     {
+      "beat_id": "looks",
+      "observed": "s18 #2-#4 (18.33-18.83 s): framing pushes in on the workers. Red worker's eyes turn to the right toward the green worker; green worker's eyes turn left toward red; blue worker glances down-left. Readable but subtle (pupils only, no head turn).",
+      "who_does_what": [
+       {
+        "who": "worker in red overalls",
+        "does": "looks right at the green worker"
+       },
+       {
+        "who": "worker in green overalls",
+        "does": "looks left at the red worker"
+       },
+       {
+        "who": "worker in blue overalls",
+        "does": "looks down toward the two"
+       }
+      ],
+      "verdict": "lisible",
+      "evidence": [
+       {
+        "sheet": "s18",
+        "cell": 2
+       },
+       {
+        "sheet": "s18",
+        "cell": 4
+       }
+      ]
+     },
+     {
+      "beat_id": "shrug",
+      "observed": "s18 #5 (19.08 s): arms down. #6-#8 (19.33-19.83 s): blue and green workers raise both forearms out to the sides, palms up, eyebrows up — a clear shrug; the red worker's hands lift only slightly away from his body.",
+      "who_does_what": [
+       {
+        "who": "worker in green overalls",
+        "does": "shrugs, arms out"
+       },
+       {
+        "who": "worker in blue overalls",
+        "does": "shrugs, arms out"
+       },
+       {
+        "who": "worker in red overalls",
+        "does": "small shrug, hands slightly out"
+       }
+      ],
+      "verdict": "lisible",
+      "evidence": [
+       {
+        "sheet": "s18",
+        "cell": 6
+       },
+       {
+        "sheet": "s18",
+        "cell": 7
+       }
+      ]
+     }
+    ],
+    "other_findings": [
+     {
+      "sheet": "s00",
+      "cell": 1,
+      "note": "Opens on a near-blank cream frame fading in; harmless."
+     },
+     {
+      "sheet": "s14",
+      "cell": 5,
+      "note": "The green worker approaches the crate by stepping sideways/left toward it and then jumping, not by stepping back; viewers will read 'he jumped for joy into the crate' rather than 'he backed into it'. Attribution is unaffected."
+     },
+     {
+      "sheet": "s16",
+      "cell": 8,
+      "note": "The sun visibly sets behind the hills as night falls (s16 #8, s18 #1-#3): the night can read as the ordinary end of the dusk rather than as caused by the stars, though the stars-then-dark-band sequence still links them."
+     },
+     {
+      "sheet": "s16",
+      "cell": 3,
+      "note": "The jar's red lid flies off and lands on the crate (s16 #4), and the empty jar becomes a pale blue block that reads as an ice cube or glass brick rather than a jar."
+     },
+     {
+      "sheet": "s04",
+      "cell": 4,
+      "note": "The crane enters by a camera pan/zoom out at ~4.8 s; the red worker's roller pole is so long it crosses the whole frame, slightly hard to read as a roller at first."
+     }
+    ]
+   },
+   "sheet_cells": {
+    "s00": [
+     {
+      "cell": 1,
+      "t": 0.083
+     },
+     {
+      "cell": 2,
+      "t": 0.333
+     },
+     {
+      "cell": 3,
+      "t": 0.583
+     },
+     {
+      "cell": 4,
+      "t": 0.833
+     },
+     {
+      "cell": 5,
+      "t": 1.083
+     },
+     {
+      "cell": 6,
+      "t": 1.333
+     },
+     {
+      "cell": 7,
+      "t": 1.583
+     },
+     {
+      "cell": 8,
+      "t": 1.833
+     }
+    ],
+    "s02": [
+     {
+      "cell": 1,
+      "t": 2.083
+     },
+     {
+      "cell": 2,
+      "t": 2.333
+     },
+     {
+      "cell": 3,
+      "t": 2.583
+     },
+     {
+      "cell": 4,
+      "t": 2.833
+     },
+     {
+      "cell": 5,
+      "t": 3.083
+     },
+     {
+      "cell": 6,
+      "t": 3.333
+     },
+     {
+      "cell": 7,
+      "t": 3.583
+     },
+     {
+      "cell": 8,
+      "t": 3.833
+     }
+    ],
+    "s04": [
+     {
+      "cell": 1,
+      "t": 4.083
+     },
+     {
+      "cell": 2,
+      "t": 4.333
+     },
+     {
+      "cell": 3,
+      "t": 4.583
+     },
+     {
+      "cell": 4,
+      "t": 4.833
+     },
+     {
+      "cell": 5,
+      "t": 5.083
+     },
+     {
+      "cell": 6,
+      "t": 5.333
+     },
+     {
+      "cell": 7,
+      "t": 5.583
+     },
+     {
+      "cell": 8,
+      "t": 5.833
+     }
+    ],
+    "s06": [
+     {
+      "cell": 1,
+      "t": 6.083
+     },
+     {
+      "cell": 2,
+      "t": 6.333
+     },
+     {
+      "cell": 3,
+      "t": 6.583
+     },
+     {
+      "cell": 4,
+      "t": 6.833
+     },
+     {
+      "cell": 5,
+      "t": 7.083
+     },
+     {
+      "cell": 6,
+      "t": 7.333
+     },
+     {
+      "cell": 7,
+      "t": 7.583
+     },
+     {
+      "cell": 8,
+      "t": 7.833
+     }
+    ],
+    "s08": [
+     {
+      "cell": 1,
+      "t": 8.083
+     },
+     {
+      "cell": 2,
+      "t": 8.333
+     },
+     {
+      "cell": 3,
+      "t": 8.583
+     },
+     {
+      "cell": 4,
+      "t": 8.833
+     },
+     {
+      "cell": 5,
+      "t": 9.083
+     },
+     {
+      "cell": 6,
+      "t": 9.333
+     },
+     {
+      "cell": 7,
+      "t": 9.583
+     },
+     {
+      "cell": 8,
+      "t": 9.833
+     }
+    ],
+    "s10": [
+     {
+      "cell": 1,
+      "t": 10.083
+     },
+     {
+      "cell": 2,
+      "t": 10.333
+     },
+     {
+      "cell": 3,
+      "t": 10.583
+     },
+     {
+      "cell": 4,
+      "t": 10.833
+     },
+     {
+      "cell": 5,
+      "t": 11.083
+     },
+     {
+      "cell": 6,
+      "t": 11.333
+     },
+     {
+      "cell": 7,
+      "t": 11.583
+     },
+     {
+      "cell": 8,
+      "t": 11.833
+     }
+    ],
+    "s12": [
+     {
+      "cell": 1,
+      "t": 12.083
+     },
+     {
+      "cell": 2,
+      "t": 12.333
+     },
+     {
+      "cell": 3,
+      "t": 12.583
+     },
+     {
+      "cell": 4,
+      "t": 12.833
+     },
+     {
+      "cell": 5,
+      "t": 13.083
+     },
+     {
+      "cell": 6,
+      "t": 13.333
+     },
+     {
+      "cell": 7,
+      "t": 13.583
+     },
+     {
+      "cell": 8,
+      "t": 13.833
+     }
+    ],
+    "s14": [
+     {
+      "cell": 1,
+      "t": 14.083
+     },
+     {
+      "cell": 2,
+      "t": 14.333
+     },
+     {
+      "cell": 3,
+      "t": 14.583
+     },
+     {
+      "cell": 4,
+      "t": 14.833
+     },
+     {
+      "cell": 5,
+      "t": 15.083
+     },
+     {
+      "cell": 6,
+      "t": 15.333
+     },
+     {
+      "cell": 7,
+      "t": 15.583
+     },
+     {
+      "cell": 8,
+      "t": 15.833
+     }
+    ],
+    "s16": [
+     {
+      "cell": 1,
+      "t": 16.083
+     },
+     {
+      "cell": 2,
+      "t": 16.333
+     },
+     {
+      "cell": 3,
+      "t": 16.583
+     },
+     {
+      "cell": 4,
+      "t": 16.833
+     },
+     {
+      "cell": 5,
+      "t": 17.083
+     },
+     {
+      "cell": 6,
+      "t": 17.333
+     },
+     {
+      "cell": 7,
+      "t": 17.583
+     },
+     {
+      "cell": 8,
+      "t": 17.833
+     }
+    ],
+    "s18": [
+     {
+      "cell": 1,
+      "t": 18.083
+     },
+     {
+      "cell": 2,
+      "t": 18.333
+     },
+     {
+      "cell": 3,
+      "t": 18.583
+     },
+     {
+      "cell": 4,
+      "t": 18.833
+     },
+     {
+      "cell": 5,
+      "t": 19.083
+     },
+     {
+      "cell": 6,
+      "t": 19.333
+     },
+     {
+      "cell": 7,
+      "t": 19.583
+     },
+     {
+      "cell": 8,
+      "t": 19.833
+     }
+    ]
+   }
+  },
+  "final": {
+   "review": {
+    "version": "1.0",
+    "reviewer": {
+     "id": "blind-final",
+     "audio_access": false,
+     "authored_video": false,
+     "saw_script_or_code": false
+    },
+    "verdicts": [
+     {
+      "beat_id": "shutter",
+      "observed": "Red paper factory with a grey corrugated shutter under a sun-logo sign. Shutter fully closed at 0.375-0.625 s; at 0.75 s its bottom edge lifts and a yellow sun shows underneath; by 1.0 s it is mostly up, by 1.125-1.25 s it is fully open and the big swirl sun fills the doorway. Red worker (left) and green mustached worker (right) stand in front, jar on crate between them.",
+      "who_does_what": [
+       {
+        "who": "factory shutter",
+        "does": "rolls up from the bottom, revealing a sun inside"
+       },
+       {
+        "who": "red worker and green worker",
+        "does": "stand still, green one gestures with an open hand toward the door"
+       }
+      ],
+      "verdict": "lisible",
+      "evidence": [
+       {
+        "sheet": "d_shutter_1",
+        "cell": 3
+       },
+       {
+        "sheet": "d_shutter_1",
+        "cell": 5
+       },
+       {
+        "sheet": "d_shutter_1",
+        "cell": 7
+       }
+      ]
+     },
+     {
+      "beat_id": "sun_rolled",
+      "observed": "From 1.75 s a small worker in blue overalls appears behind the sun on its left side; from 2.0 s to 4.0 s he pushes the sun rightwards along the dark conveyor belt, out of the doorway, until it sits right of the door. A crane jib and hook slide in at the top of frame meanwhile.",
+      "who_does_what": [
+       {
+        "who": "blue worker (behind the belt)",
+        "does": "pushes the sun out of the factory along the conveyor"
+       },
+       {
+        "who": "sun",
+        "does": "moves right along the belt, out of the doorway"
+       }
+      ],
+      "verdict": "lisible",
+      "evidence": [
+       {
+        "sheet": "s00",
+        "cell": 8
+       },
+       {
+        "sheet": "s02",
+        "cell": 1
+       },
+       {
+        "sheet": "s02",
+        "cell": 5
+       },
+       {
+        "sheet": "s02",
+        "cell": 8
+       }
+      ]
+     },
+     {
+      "beat_id": "sky_painted",
+      "observed": "Camera pulls back revealing a tall yellow crane. The red worker raises a paint roller on a long telescoping pole (from 4.75 s) and rolls horizontal bands across the sky: yellow (5.5 s), orange (6.0 s), coral-red (6.5-7.0 s), pink (7.25-7.75 s), purple (8.0-9.0 s) at the top. Each band visibly spreads behind the roller. At 9.25-9.5 s the roller is pulled back down.",
+      "who_does_what": [
+       {
+        "who": "red worker (left)",
+        "does": "paints the sky band by band with a roller on a long pole"
+       },
+       {
+        "who": "green worker (right)",
+        "does": "watches, then raises his arms in joy at 9.75 s"
+       }
+      ],
+      "verdict": "lisible",
+      "evidence": [
+       {
+        "sheet": "s04",
+        "cell": 7
+       },
+       {
+        "sheet": "s06",
+        "cell": 3
+       },
+       {
+        "sheet": "s06",
+        "cell": 7
+       },
+       {
+        "sheet": "s08",
+        "cell": 4
+       }
+      ]
+     },
+     {
+      "beat_id": "crane",
+      "observed": "Blue worker now stands at a small control box with a lever at the foot of the crane (right). Hook descends on its cable from 10.5 s, reaches the top of the sun at 11.25 s, then from 11.75 s the sun rises with the hook through the orange and red bands (12.0-13.25 s) and hangs high in the sky; at 13.75 s the hook is back up and the sun stays there on its own. Green worker cheers with both arms up throughout.",
+      "who_does_what": [
+       {
+        "who": "blue worker (at the control box by the crane)",
+        "does": "operates the crane lever"
+       },
+       {
+        "who": "crane hook",
+        "does": "comes down, hooks the sun, lifts it into the sky"
+       },
+       {
+        "who": "green worker",
+        "does": "cheers, arms raised"
+       }
+      ],
+      "verdict": "lisible",
+      "evidence": [
+       {
+        "sheet": "s10",
+        "cell": 5
+       },
+       {
+        "sheet": "s10",
+        "cell": 6
+       },
+       {
+        "sheet": "s12",
+        "cell": 2
+       },
+       {
+        "sheet": "s12",
+        "cell": 5
+       }
+      ]
+     },
+     {
+      "beat_id": "admiration",
+      "observed": "Camera tilts up so the sun and the workers share the frame. Red worker lifts a hand to his brow (13.75 s) then waves/raises a hand (14.0-14.5 s) and ends hands on hips; green worker stands hands on hips, smiling; blue worker smiles at the controls. Faces are smiling; gaze direction is mostly toward camera, the upward look at the sun is only implied by the brow-shading hand.",
+      "who_does_what": [
+       {
+        "who": "red worker",
+        "does": "shades eyes / waves, then hands on hips"
+       },
+       {
+        "who": "green worker",
+        "does": "hands on hips, smiling"
+       },
+       {
+        "who": "blue worker",
+        "does": "smiles at the crane controls"
+       }
+      ],
+      "verdict": "lisible",
+      "evidence": [
+       {
+        "sheet": "s12",
+        "cell": 8
+       },
+       {
+        "sheet": "s14",
+        "cell": 2
+       },
+       {
+        "sheet": "s14",
+        "cell": 3
+       },
+       {
+        "sheet": "s14",
+        "cell": 4
+       }
+      ]
+     },
+     {
+      "beat_id": "bump_fall",
+      "observed": "At 15.0 s the green worker has moved left so he stands right against the crate. At 15.25-15.375 s he flings both arms wide; his left arm overlaps the jar and the jar tilts. At 15.5 s he has stepped back to the right and small motion lines show between him and the crate; the jar wobbles on the crate (15.5-15.75 s), tips toward the right (15.875-16.0 s), and falls off the crate's right side, landing on its side on the grass right next to the green worker's feet (16.125 s). The red worker stays far left, hands at his sides, mouth open. The crate itself does not visibly shift.",
+      "who_does_what": [
+       {
+        "who": "green worker (mustache, right)",
+        "does": "flings his arms wide next to the crate, his arm hits the jar / he jostles the crate, then steps back"
+       },
+       {
+        "who": "jar of stars",
+        "does": "wobbles, tips right and falls on the green worker's side"
+       },
+       {
+        "who": "red worker (left)",
+        "does": "stands at a distance, gasps; no contact"
+       }
+      ],
+      "verdict": "lisible",
+      "evidence": [
+       {
+        "sheet": "s14",
+        "cell": 6
+       },
+       {
+        "sheet": "d_hands_on_cheeks_1",
+        "cell": 1
+       },
+       {
+        "sheet": "d_hands_on_cheeks_1",
+        "cell": 2
+       },
+       {
+        "sheet": "d_hands_on_cheeks_1",
+        "cell": 6
+       },
+       {
+        "sheet": "d_hands_on_cheeks_1",
+        "cell": 7
+       }
+      ]
+     },
+     {
+      "beat_id": "hands_on_cheeks",
+      "observed": "At 15.625 s the green worker's elbows are bent with hands up near his chest/face, mouth open; at 15.75 s his hands are lower near his waist; by 15.875-16.0 s arms are down at his sides. The hands do not clearly reach the cheeks at this cell size; it reads as a startled flinch rather than a hands-on-cheeks pose.",
+      "who_does_what": [
+       {
+        "who": "green worker",
+        "does": "flinches, hands briefly raised toward the chest/face"
+       },
+       {
+        "who": "red worker",
+        "does": "mouth open in an 'oh', hands at sides"
+       }
+      ],
+      "verdict": "partiel",
+      "evidence": [
+       {
+        "sheet": "d_hands_on_cheeks_1",
+        "cell": 3
+       },
+       {
+        "sheet": "d_hands_on_cheeks_1",
+        "cell": 4
+       }
+      ],
+      "between_cells_risk": "The pose seems held for at most ~0.15-0.25 s and is small on screen; even at 8 fps the hands are only near the face in one cell."
+     },
+     {
+      "beat_id": "stars_night",
+      "observed": "At 16.25 s a sparkling burst of stars erupts from the fallen jar at the green worker's feet; the red lid flies up with them. 16.5-17.25 s the stars stream upward as a column past the blue worker and into the sky. At 17.5 s a dark-blue night band rolls in from the top; by 17.75-18.0 s the sky is night blue, stars scattered across it, the sun sinks behind the hills (18.0-18.5 s) and the factory windows glow. The empty jar remains on the grass, lid on the crate.",
+      "who_does_what": [
+       {
+        "who": "fallen jar (at the green worker's feet)",
+        "does": "releases a burst of stars"
+       },
+       {
+        "who": "stars",
+        "does": "fly upward and scatter across the sky"
+       },
+       {
+        "who": "sky",
+        "does": "turns night blue from the top down while the sun sets behind the hills"
+       }
+      ],
+      "verdict": "lisible",
+      "evidence": [
+       {
+        "sheet": "s16",
+        "cell": 2
+       },
+       {
+        "sheet": "s16",
+        "cell": 3
+       },
+       {
+        "sheet": "s16",
+        "cell": 7
+       },
+       {
+        "sheet": "s18",
+        "cell": 1
+       }
+      ]
+     },
+     {
+      "beat_id": "looks",
+      "observed": "Around 18.25-18.75 s the camera pushes in on the three workers. Red worker's pupils shift toward the right (toward green) at 18.5-18.625 s and his eyes close/turn at 18.75 s; green worker's eyes are small and roughly toward camera; blue worker glances left/down. Heads do not turn. During most of this window the shot is wide and faces are tiny.",
+      "who_does_what": [
+       {
+        "who": "red worker",
+        "does": "eyes slide toward the green worker"
+       },
+       {
+        "who": "green worker",
+        "does": "stands still, gaze unclear"
+       },
+       {
+        "who": "blue worker",
+        "does": "glances down-left"
+       }
+      ],
+      "verdict": "partiel",
+      "evidence": [
+       {
+        "sheet": "d_looks_1",
+        "cell": 5
+       },
+       {
+        "sheet": "d_looks_1",
+        "cell": 6
+       },
+       {
+        "sheet": "d_looks_1",
+        "cell": 7
+       }
+      ],
+      "between_cells_risk": "The exchange of looks is carried only by pupils during a camera move while faces are small; a viewer will likely miss it as a distinct beat."
+     },
+     {
+      "beat_id": "shrug",
+      "observed": "Closer shot at night. From 19.125-19.25 s all three workers lift their forearms with palms out, elbows bent, shoulders up, wavy worried mouths; pose held through 19.75 s.",
+      "who_does_what": [
+       {
+        "who": "red worker",
+        "does": "shrugs, palms out"
+       },
+       {
+        "who": "green worker",
+        "does": "shrugs, palms out"
+       },
+       {
+        "who": "blue worker (background)",
+        "does": "shrugs, palms out"
+       }
+      ],
+      "verdict": "lisible",
+      "evidence": [
+       {
+        "sheet": "d_shrug_1",
+        "cell": 5
+       },
+       {
+        "sheet": "d_shrug_1",
+        "cell": 7
+       },
+       {
+        "sheet": "s18",
+        "cell": 6
+       },
+       {
+        "sheet": "s18",
+        "cell": 7
+       }
+      ]
+     }
+    ],
+    "other_findings": [
+     {
+      "sheet": "s08",
+      "cell": 8,
+      "note": "Between 9.5 s (s08 #7) and 9.75 s (s08 #8) the blue worker jumps from beside the sun at the doorway to the crane control box at the far right, and the red worker's long paint pole vanishes; reads as a pop / position jump rather than a walk."
+     },
+     {
+      "sheet": "d_hands_on_cheeks_1",
+      "cell": 1,
+      "note": "The trigger reads as the green worker's flung arm knocking the jar (his arm overlaps it) more than as 'stepping back and bumping the crate'; he actually moves TOWARD the crate at 15.0 s (s14 #5). Fault still clearly lands on the green worker."
+     },
+     {
+      "sheet": "s16",
+      "cell": 4,
+      "note": "After the burst, the jar's red lid ends up lying on top of the crate while the empty jar is on the grass; small continuity oddity (lid seen flying up at s16 #3)."
+     },
+     {
+      "sheet": "s18",
+      "cell": 2,
+      "note": "The crane-placed sun sinks behind the hills as night falls, so a viewer may read night as a normal dusk rather than caused by the stars; the stars-to-night link is still supported by the star column rising first (s16 #3-#7)."
+     },
+     {
+      "sheet": "s00",
+      "cell": 1,
+      "note": "First frame (0.0 s) is a blank cream card before the fade-in; harmless."
+     }
+    ]
+   },
+   "sheet_cells": {
+    "s00": [
+     {
+      "cell": 1,
+      "t": 0.0
+     },
+     {
+      "cell": 2,
+      "t": 0.25
+     },
+     {
+      "cell": 3,
+      "t": 0.5
+     },
+     {
+      "cell": 4,
+      "t": 0.75
+     },
+     {
+      "cell": 5,
+      "t": 1.0
+     },
+     {
+      "cell": 6,
+      "t": 1.25
+     },
+     {
+      "cell": 7,
+      "t": 1.5
+     },
+     {
+      "cell": 8,
+      "t": 1.75
+     }
+    ],
+    "s02": [
+     {
+      "cell": 1,
+      "t": 2.0
+     },
+     {
+      "cell": 2,
+      "t": 2.25
+     },
+     {
+      "cell": 3,
+      "t": 2.5
+     },
+     {
+      "cell": 4,
+      "t": 2.75
+     },
+     {
+      "cell": 5,
+      "t": 3.0
+     },
+     {
+      "cell": 6,
+      "t": 3.25
+     },
+     {
+      "cell": 7,
+      "t": 3.5
+     },
+     {
+      "cell": 8,
+      "t": 3.75
+     }
+    ],
+    "s04": [
+     {
+      "cell": 1,
+      "t": 4.0
+     },
+     {
+      "cell": 2,
+      "t": 4.25
+     },
+     {
+      "cell": 3,
+      "t": 4.5
+     },
+     {
+      "cell": 4,
+      "t": 4.75
+     },
+     {
+      "cell": 5,
+      "t": 5.0
+     },
+     {
+      "cell": 6,
+      "t": 5.25
+     },
+     {
+      "cell": 7,
+      "t": 5.5
+     },
+     {
+      "cell": 8,
+      "t": 5.75
+     }
+    ],
+    "s06": [
+     {
+      "cell": 1,
+      "t": 6.0
+     },
+     {
+      "cell": 2,
+      "t": 6.25
+     },
+     {
+      "cell": 3,
+      "t": 6.5
+     },
+     {
+      "cell": 4,
+      "t": 6.75
+     },
+     {
+      "cell": 5,
+      "t": 7.0
+     },
+     {
+      "cell": 6,
+      "t": 7.25
+     },
+     {
+      "cell": 7,
+      "t": 7.5
+     },
+     {
+      "cell": 8,
+      "t": 7.75
+     }
+    ],
+    "s08": [
+     {
+      "cell": 1,
+      "t": 8.0
+     },
+     {
+      "cell": 2,
+      "t": 8.25
+     },
+     {
+      "cell": 3,
+      "t": 8.5
+     },
+     {
+      "cell": 4,
+      "t": 8.75
+     },
+     {
+      "cell": 5,
+      "t": 9.0
+     },
+     {
+      "cell": 6,
+      "t": 9.25
+     },
+     {
+      "cell": 7,
+      "t": 9.5
+     },
+     {
+      "cell": 8,
+      "t": 9.75
+     }
+    ],
+    "s10": [
+     {
+      "cell": 1,
+      "t": 10.0
+     },
+     {
+      "cell": 2,
+      "t": 10.25
+     },
+     {
+      "cell": 3,
+      "t": 10.5
+     },
+     {
+      "cell": 4,
+      "t": 10.75
+     },
+     {
+      "cell": 5,
+      "t": 11.0
+     },
+     {
+      "cell": 6,
+      "t": 11.25
+     },
+     {
+      "cell": 7,
+      "t": 11.5
+     },
+     {
+      "cell": 8,
+      "t": 11.75
+     }
+    ],
+    "s12": [
+     {
+      "cell": 1,
+      "t": 12.0
+     },
+     {
+      "cell": 2,
+      "t": 12.25
+     },
+     {
+      "cell": 3,
+      "t": 12.5
+     },
+     {
+      "cell": 4,
+      "t": 12.75
+     },
+     {
+      "cell": 5,
+      "t": 13.0
+     },
+     {
+      "cell": 6,
+      "t": 13.25
+     },
+     {
+      "cell": 7,
+      "t": 13.5
+     },
+     {
+      "cell": 8,
+      "t": 13.75
+     }
+    ],
+    "s14": [
+     {
+      "cell": 1,
+      "t": 14.0
+     },
+     {
+      "cell": 2,
+      "t": 14.25
+     },
+     {
+      "cell": 3,
+      "t": 14.5
+     },
+     {
+      "cell": 4,
+      "t": 14.75
+     },
+     {
+      "cell": 5,
+      "t": 15.0
+     },
+     {
+      "cell": 6,
+      "t": 15.25
+     },
+     {
+      "cell": 7,
+      "t": 15.5
+     },
+     {
+      "cell": 8,
+      "t": 15.75
+     }
+    ],
+    "s16": [
+     {
+      "cell": 1,
+      "t": 16.0
+     },
+     {
+      "cell": 2,
+      "t": 16.25
+     },
+     {
+      "cell": 3,
+      "t": 16.5
+     },
+     {
+      "cell": 4,
+      "t": 16.75
+     },
+     {
+      "cell": 5,
+      "t": 17.0
+     },
+     {
+      "cell": 6,
+      "t": 17.25
+     },
+     {
+      "cell": 7,
+      "t": 17.5
+     },
+     {
+      "cell": 8,
+      "t": 17.75
+     }
+    ],
+    "s18": [
+     {
+      "cell": 1,
+      "t": 18.0
+     },
+     {
+      "cell": 2,
+      "t": 18.25
+     },
+     {
+      "cell": 3,
+      "t": 18.5
+     },
+     {
+      "cell": 4,
+      "t": 18.75
+     },
+     {
+      "cell": 5,
+      "t": 19.0
+     },
+     {
+      "cell": 6,
+      "t": 19.25
+     },
+     {
+      "cell": 7,
+      "t": 19.5
+     },
+     {
+      "cell": 8,
+      "t": 19.75
+     }
+    ],
+    "d_shutter_1": [
+     {
+      "cell": 1,
+      "t": 0.375
+     },
+     {
+      "cell": 2,
+      "t": 0.5
+     },
+     {
+      "cell": 3,
+      "t": 0.625
+     },
+     {
+      "cell": 4,
+      "t": 0.75
+     },
+     {
+      "cell": 5,
+      "t": 0.875
+     },
+     {
+      "cell": 6,
+      "t": 1.0
+     },
+     {
+      "cell": 7,
+      "t": 1.125
+     },
+     {
+      "cell": 8,
+      "t": 1.25
+     }
+    ],
+    "d_hands_on_cheeks_1": [
+     {
+      "cell": 1,
+      "t": 15.375
+     },
+     {
+      "cell": 2,
+      "t": 15.5
+     },
+     {
+      "cell": 3,
+      "t": 15.625
+     },
+     {
+      "cell": 4,
+      "t": 15.75
+     },
+     {
+      "cell": 5,
+      "t": 15.875
+     },
+     {
+      "cell": 6,
+      "t": 16.0
+     },
+     {
+      "cell": 7,
+      "t": 16.125
+     },
+     {
+      "cell": 8,
+      "t": 16.25
+     }
+    ],
+    "d_looks_1": [
+     {
+      "cell": 1,
+      "t": 17.875
+     },
+     {
+      "cell": 2,
+      "t": 18.0
+     },
+     {
+      "cell": 3,
+      "t": 18.125
+     },
+     {
+      "cell": 4,
+      "t": 18.25
+     },
+     {
+      "cell": 5,
+      "t": 18.375
+     },
+     {
+      "cell": 6,
+      "t": 18.5
+     },
+     {
+      "cell": 7,
+      "t": 18.625
+     },
+     {
+      "cell": 8,
+      "t": 18.75
+     }
+    ],
+    "d_shrug_1": [
+     {
+      "cell": 1,
+      "t": 18.75
+     },
+     {
+      "cell": 2,
+      "t": 18.875
+     },
+     {
+      "cell": 3,
+      "t": 19.0
+     },
+     {
+      "cell": 4,
+      "t": 19.125
+     },
+     {
+      "cell": 5,
+      "t": 19.25
+     },
+     {
+      "cell": 6,
+      "t": 19.375
+     },
+     {
+      "cell": 7,
+      "t": 19.5
+     },
+     {
+      "cell": 8,
+      "t": 19.625
+     }
+    ]
+   }
+  }
+ }
+}

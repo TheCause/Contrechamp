@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "contrechamp/artifacts/mute_review",
+  "title": "Mute Review",
+  "description": "What a blind reviewer returns after reading the contact sheets of a render without the sound (skills/meta/mute-review.md). Checked by lib/mute_review.py against the story beats and the sheet index: a beat without a verdict is not_checked, a verdict citing a sheet or cell that does not exist is rejected, an 'absent' beat blocks.",
+  "type": "object",
+  "required": ["version", "reviewer", "verdicts"],
+  "properties": {
+    "version": { "type": "string", "const": "1.0" },
+    "reviewer": {
+      "type": "object",
+      "description": "Independence declaration. All three must be false for the review to count.",
+      "required": ["audio_access", "authored_video", "saw_script_or_code"],
+      "properties": {
+        "id": { "type": "string" },
+        "audio_access": { "type": "boolean" },
+        "authored_video": { "type": "boolean" },
+        "saw_script_or_code": { "type": "boolean" }
+      }
+    },
+    "verdicts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["beat_id", "observed", "who_does_what", "verdict", "evidence"],
+        "properties": {
+          "beat_id": { "type": "string" },
+          "observed": {
+            "type": "string",
+            "minLength": 1,
+            "description": "What is visible in the cited cells, written before the verdict."
+          },
+          "who_does_what": {
+            "type": "array",
+            "description": "Each action attributed to the character (or object) that performs it, as seen.",
+            "items": {
+              "type": "object",
+              "required": ["who", "does"],
+              "properties": {
+                "who": { "type": "string", "minLength": 1 },
+                "does": { "type": "string", "minLength": 1 }
+              }
+            }
+          },
+          "verdict": {
+            "type": "string",
+            "enum": ["lisible", "partiel", "absent", "contradicts"],
+            "description": "lisible: reads as expected. partiel: there but ambiguous, too fast or weak. absent: not visible. contradicts: readable but different from expected (who does it, which side, which direction) -- REQUIRED whenever who_does_what or the side/direction diverges from the beat's expected text."
+          },
+          "evidence": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["sheet", "cell"],
+              "properties": {
+                "sheet": { "type": "string" },
+                "cell": { "type": "integer", "minimum": 1 }
+              }
+            }
+          },
+          "between_cells_risk": {
+            "type": "string",
+            "description": "Set when a gesture may fall between two cells, so 'absent' might be a sampling artefact."
+          }
+        }
+      }
+    },
+    "other_findings": {
+      "type": "array",
+      "description": "Story problems seen outside the listed beats (advisory).",
+      "items": {
+        "type": "object",
+        "properties": {
+          "sheet": { "type": "string" },
+          "cell": { "type": "integer" },
+          "observed": { "type": "string" }
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

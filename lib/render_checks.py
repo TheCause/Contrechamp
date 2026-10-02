@@ -35,6 +35,29 @@ def settings() -> ReviewConfig:
 LEGACY_SAMPLE_POINTS = [0.10, 0.35, 0.65, 0.90]
 
 
+# Issues that call for a new render rather than an edit fix (historical list).
+CRITICAL_ISSUE_KEYWORDS = (
+    "silent downgrade", "delivery promise violation",
+    "effectively silent", "ffprobe failed", "suspiciously short",
+    "tts punctuation leak",  # reading literal punctuation aloud
+)
+
+
+def final_review_status(issues: list[str], valid_container: bool) -> tuple[str, str]:
+    """(status, recommended_action) of a final review from its open issues.
+
+    Any open issue blocks "pass" (before the fork, only six keywords did,
+    and a review listing its own defects still said "pass").
+    """
+    if not valid_container:
+        return "fail", "re_render"
+    if any(kw in i.lower() for i in issues for kw in CRITICAL_ISSUE_KEYWORDS):
+        return "revise", "re_render"
+    if issues:
+        return "revise", "revise_edit"
+    return "pass", "present_to_user"
+
+
 # --- Pure helpers -------------------------------------------------------------
 
 

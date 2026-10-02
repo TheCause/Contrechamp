@@ -1,0 +1,25 @@
+{
+  "brief": "A 20-second paper-cut animation, vertical 1080x1920, no narration, no text: a tiny paper factory that makes evening suns. Three workers in yellow helmets: one in blue overalls (background, by the crane controls), one in red overalls (left), one in green overalls with a mustache (right). A shutter opens and a sun is rolled out along the conveyor; the sky is painted band by band; the crane hooks the sun and lifts it into the sky; the workers admire it. Then the green worker, stepping back in excitement, bumps the crate: the jar of stars standing on it wobbles and falls on HIS side. The stars burst out of the jar, scatter across the sky, and night falls. The workers look at each other, then shrug.",
+  "beats": [
+    {"id": "shutter", "label": "shutter opens", "start": 0.5, "end": 1.2,
+     "expected": "The factory shutter opens."},
+    {"id": "sun_rolled", "label": "sun rolled out", "start": 1.3, "end": 4.0,
+     "expected": "A sun rolls out of the factory along the conveyor."},
+    {"id": "sky_painted", "label": "sky painted", "start": 5.0, "end": 9.3,
+     "expected": "The sky gets painted band by band in evening colours."},
+    {"id": "crane", "label": "crane lifts the sun", "start": 9.8, "end": 13.0,
+     "expected": "The crane hook comes down, takes the sun and lifts it into the sky."},
+    {"id": "admiration", "label": "admiration", "start": 13.6, "end": 15.2,
+     "expected": "The workers look up at the sun in the sky, pleased."},
+    {"id": "bump_fall", "label": "bump and fall", "start": 15.2, "end": 16.15,
+     "expected": "The green worker, stepping back, bumps the crate; the jar on it wobbles and falls on the green worker's side. The fault is the green worker's, not the red one's."},
+    {"id": "hands_on_cheeks", "label": "hands on cheeks", "start": 15.55, "end": 16.1,
+     "expected": "The green worker brings his hands to his cheeks in dismay."},
+    {"id": "stars_night", "label": "stars, then night", "start": 16.15, "end": 18.4,
+     "expected": "Stars burst out of the fallen jar (from the green worker's side), scatter across the sky, and night falls."},
+    {"id": "looks", "label": "looks exchanged", "start": 18.3, "end": 18.3,
+     "expected": "The workers look at each other."},
+    {"id": "shrug", "label": "shrug", "start": 19.0, "end": 19.5,
+     "expected": "The workers shrug."}
+  ]
+}

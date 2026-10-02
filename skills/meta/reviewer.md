@@ -311,6 +311,11 @@ Run at **compose** and **publish** stages. Ensures the agent reviewed the actual
    - `subtitle_check` must report presence/absence
    - Any check with missing data: **SUGGESTION** — "Self-review check [X] has incomplete data"
 4. **Promise preservation**: If `promise_preservation.silent_downgrade_detected` is true: **CRITICAL** — "Self-review detected silent downgrade from motion-led to still-led."
+5. **Story reads without sound** (when `edit_decisions.metadata.story_beats` is declared, `checks.story_check` exists). Looking at ≥ 4 frames is not the same as checking that each beat of the brief reads; that is the mute review (`skills/meta/mute-review.md`, done by a separate blind agent, folded in by the `mute_review` tool):
+   - `story_check.status == "not_checked"`: **CRITICAL** — "Story beats declared but the mute review was not run (or its reviewer was not blind). Run it before presenting."
+   - `fail` (a beat is `absent` or `contradicts` — see `story_check.blocking_beats`): **CRITICAL** — name the beat and what the reviewer saw instead; re-author the scene.
+   - `revise` (a beat is `partiel`, has no verdict, or its verdict was rejected): **CRITICAL** for `partiel` (proposed fix from the reviewer's `observed`); re-run the review for missing or rejected verdicts.
+   - Every `who_does_what` must match the brief's attribution. An action attributed to the wrong character is a **CRITICAL** story defect even when the beat is marked `lisible`.
 
 ### At publish stage:
 1. Verify that `final_review` was passed through as a required artifact
