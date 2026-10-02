@@ -51,7 +51,8 @@ PROP_TYPES: dict[str, dict[str, Any]] = {
               "channels": {"count": 0.0, "flipped": 0.0}},
     # U2 (the staircase of strips, the dashed ghost row)
     "bars": {"params": {"n": REQ, "width": 40, "gap": 14, "unit": 30, "color": "#e98a5d",
-                        "dashed": False, "labels": None, "label_size": 26, "label_color": "#3b2a1e"},
+                        "dashed": False, "fill_alpha": 0.12, "labels": None, "label_size": 26,
+                        "label_color": "#3b2a1e"},
              "channels": {}},  # dynamic: h_i, reveal_i
     # U1 (the sky painted band by band)
     "bands": {"params": {"colors": REQ, "top0": 1330, "band_h": 222, "overlap": 14, "strokes": 9},
@@ -116,6 +117,8 @@ def pose_channels(field: str, value: Any) -> dict[str, Any]:
 VERBS: dict[str, dict[str, Any]] = {
     "pose": {"actor": "character", "target": None, "keys": {"set", "ease"}, "needs": {"set"}},
     "shrug": {"actor": "character", "target": None, "keys": {"turn", "gaze", "ease"}, "needs": set()},
+    # U2: after a push the courier stayed leaning until a pose undid it
+    "settle": {"actor": "character", "target": None, "keys": {"ease"}, "needs": set()},
     "walk_to": {"actor": "character", "target": None, "keys": {"to", "dx", "ease"}, "needs": {"to"}},
     "push": {"actor": "character", "target": "prop", "keys": {"to", "dx", "offset", "lean", "ease", "grip"},
              "needs": {"to"}},

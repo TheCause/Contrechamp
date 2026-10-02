@@ -151,15 +151,15 @@ class Channels:
 def camera_at(keys: list[list[float]], t: float, width: float, height: float) -> tuple[float, float, float]:
     """Centre (world px) and zoom at t; the view never leaves the layout."""
     if t >= keys[-1][0]:
-        cx, cy, z = keys[-1][1:]
+        cx, cy, z = keys[-1][1:4]
     elif t <= keys[0][0]:
-        cx, cy, z = keys[0][1:]
+        cx, cy, z = keys[0][1:4]
     else:
-        cx, cy, z = keys[-1][1:]
+        cx, cy, z = keys[-1][1:4]
         for a, b in zip(keys, keys[1:]):
             if a[0] <= t <= b[0]:
-                u = EASES["io"](prog(t, a[0], b[0]))
-                cx, cy, z = (lerp(p, q, u) for p, q in zip(a[1:], b[1:]))
+                u = EASES[a[4] if len(a) > 4 else "io"](prog(t, a[0], b[0]))
+                cx, cy, z = (lerp(p, q, u) for p, q in zip(a[1:4], b[1:4]))
                 break
     hw, hh = width / (2 * z), height / (2 * z)
     return clamp(cx, hw, width - hw), clamp(cy, hh, height - hh), z

@@ -154,6 +154,7 @@ PARAM_KINDS: dict[str, dict[str, Callable]] = {
                   "glow": _bool, "item_color": _nullable(_color)},
     "stack": {"w": _pos, "sheet": _pos, "color": _color, "line": _color, "max": _int1},
     "bars": {"n": _int1, "width": _pos, "gap": _nonneg, "unit": _pos, "color": _color, "dashed": _bool,
+             "fill_alpha": _nonneg,
              "labels": _labels, "label_size": _pos, "label_color": _color},
     "bands": {"colors": _list_of(_color), "top0": _num, "band_h": _pos, "overlap": _nonneg, "strokes": _int1},
     "pole": {"rest": _point, "bands": _nullable(_str), "head_color": _color},
@@ -338,8 +339,9 @@ def check_values(scene: dict[str, Any], issues) -> dict[str, Any]:
                     issues.add("vocabulary", "center must be [x, y]", w)
                 if "zoom" in k and not (is_num(k["zoom"]) and k["zoom"] >= 1):
                     issues.add("vocabulary", "zoom must be a number >= 1", w)
-                if "target" in k and not isinstance(k["target"], str):
-                    issues.add("vocabulary", "target must be 'id' or 'id.anchor'", w)
+                for x in ("target", "follow"):
+                    if x in k and not isinstance(k[x], str):
+                        issues.add("vocabulary", f"{x} must be 'id' or 'id.anchor'", w)
     return s
 
 

@@ -749,12 +749,12 @@
    {
     "t": 10.7,
     "target": "reader.head",
-    "zoom": 1.5
+    "zoom": 1.1
    },
    {
     "t": "p23.start",
     "target": "reader.head",
-    "zoom": 1.5
+    "zoom": 1.1
    },
    {
     "t": "p23.start+1.3",

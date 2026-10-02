@@ -27,7 +27,7 @@ CHAR_KEYS = {"id", "role", "look", "posture", "scale", "at", "pose", "layouts"}
 BEAT_KEYS = {"id", "label", "start", "end", "expected", "phrase"}
 ACTION_BEAT_KEYS = {"id", "label", "expected", "start", "end"}
 SOUND_TOP_KEYS = {"peak_dbfs", "seed", "reverb_mix", "events"}
-CAMERA_KEYS = {"t", "center", "target", "zoom"}
+CAMERA_KEYS = {"t", "center", "target", "follow", "zoom"}
 
 
 class Issues:

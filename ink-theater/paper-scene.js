@@ -70,7 +70,7 @@
     if (t <= keys[0][0]) c = keys[0].slice(1);
     else if (t < keys[keys.length - 1][0]) {
       for (var i = 0; i < keys.length - 1; i++) if (keys[i][0] <= t && t <= keys[i + 1][0]) {
-        var u = EASES.io(prog(t, keys[i][0], keys[i + 1][0]));
+        var u = EASES[keys[i][4] || "io"](prog(t, keys[i][0], keys[i + 1][0]));
         c = [1, 2, 3].map(function (j) { return lerp(keys[i][j], keys[i + 1][j], u); }); break;
       }
     }
@@ -268,6 +268,16 @@
     };
   };
 
+  // A page being flipped: hinged on the edge AWAY from the one who flips (side = +1 when he
+  // stands right of the pile), its free edge rises on HIS side and never crosses to a third
+  // party's side (U2: a page pointing at the courier made him read as the one flipping).
+  function flipPage(w, sheet, top, u, side) {
+    var th = 50 * Math.PI / 180 * Math.sin(Math.PI * clamp(u)), hx = -side * w / 2;
+    var ex = hx + side * w * Math.cos(th), ey = top - w * Math.sin(th);
+    return { hinge: [hx, top], edge: [ex, ey],
+      pts: [[hx, top], [ex, ey], [ex - side * 2, ey - sheet * 0.6], [hx, top - sheet * 0.6]] };
+  }
+
   DRAW.stack = function (parent, id, P, S) {
     var p = P.params, root_ = g(parent), sheets = [], r = PC.rngFor(id + "stack");
     for (var i = 0; i < p.max; i++) {
@@ -285,11 +295,10 @@
       root_.setAttribute("opacity", f2(S.v(id + ".opacity", t)));
       var n = Math.min(p.max, Math.floor(S.v(id + ".count", t) + 1e-6));
       sheets.forEach(function (s, i) { s.style.display = i < n ? "" : "none"; });
-      var fl = S.v(id + ".flipped", t), u = fl - Math.floor(fl), top = -n * p.sheet;
+      var fl = S.v(id + ".flipped", t), u = fl - Math.floor(fl), top = -n * p.sheet, side = 1;
+      (P.extra.flip_side || []).forEach(function (f) { if (t >= f[0] && t <= f[1]) side = f[2]; });
       if (n > 0 && fl > 0 && u > 0.02 && u < 0.98) {
-        var c = Math.cos(Math.PI * u), wpx = p.w * c, lift = Math.sin(Math.PI * u) * p.w * 0.35;
-        var x0 = c >= 0 ? -p.w / 2 : -p.w / 2, pts = [[-p.w / 2, top], [x0 + p.w + (wpx - p.w), top - lift], [x0 + p.w + (wpx - p.w), top - lift - p.sheet], [-p.w / 2, top - p.sheet]];
-        PC.reshape(pageP, PC.polyD(pts)); page.style.display = "";
+        PC.reshape(pageP, PC.polyD(flipPage(p.w, p.sheet, top, u, side).pts)); page.style.display = "";
       } else page.style.display = "none";
       flights.forEach(function (f) {
         var pts = f[1], on = t >= pts[0][0] && t < pts[pts.length - 1][0];
@@ -307,7 +316,7 @@
     for (var i = 1; i <= p.n; i++) {
       var bx = (i - 1) * (p.width + p.gap), bg = g(root_), piece = null, outline = null;
       if (p.dashed) {
-        outline = el("rect", { x: bx, y: 0, width: p.width, height: 0, fill: p.color, "fill-opacity": 0.12, stroke: PC.shade(p.color, -0.35), "stroke-width": 3, "stroke-dasharray": "10 7" });
+        outline = el("rect", { x: bx, y: 0, width: p.width, height: 0, fill: p.color, "fill-opacity": p.fill_alpha, stroke: PC.shade(p.color, -0.35), "stroke-width": 3, "stroke-dasharray": "10 7" });
         bg.appendChild(outline);
       } else piece = PC.paper(bg, PC.tornRect(id + "b" + i, bx, -1, p.width, 1, 0.8), p.color, { depth: 0.8 });
       var pin = el("circle", { cx: bx + p.width / 2, cy: 0, r: 5, fill: "#c4553b" }); if (!p.dashed) bg.appendChild(pin);
@@ -633,5 +642,5 @@
     return tl;
   }
 
-  root.PaperScene = { mount: mount, Channels: Channels, cameraAt: cameraAt, EASES: EASES, DRAW_TYPES: Object.keys(DRAW) };
+  root.PaperScene = { mount: mount, Channels: Channels, cameraAt: cameraAt, EASES: EASES, flipPage: flipPage, DRAW_TYPES: Object.keys(DRAW) };
 })(typeof window !== "undefined" ? window : globalThis);

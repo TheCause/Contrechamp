@@ -121,6 +121,7 @@ class Build:
             self.measured.setdefault("jump", {})[name] = K.check_jump(c, self.issues)
             K.check_off_frame(c, self.issues, self.duration)
             K.check_static(c, self.issues, self.duration)
+            K.check_drawn(c, self.issues, self.duration)
             self.measured.setdefault("contact", {})[name] = K.check_contact(c, self.issues)
             self.measured.setdefault("zoom_speed", {})[name] = K.check_zoom_speed(c, self.issues)
             K.check_ui_safe_bottom(c, self.issues, self.duration)
@@ -245,10 +246,11 @@ class Build:
                 self.issues.add("references", _known("layout", name, sc["layouts"]), "camera")
             for j, k in enumerate(keys):
                 w = f"camera.{name}[{j}]"
-                if ("center" in k) == ("target" in k):
-                    self.issues.add("references", "a camera key has center or target (one of them)", w)
-                if "target" in k:
-                    self._ref(k["target"], w)
+                if sum(x in k for x in ("center", "target", "follow")) != 1:
+                    self.issues.add("references", "a camera key has one of center, target, follow", w)
+                for x in ("target", "follow"):
+                    if x in k:
+                        self._ref(k[x], w)
                 if not (_num(k.get("zoom", 1.0)) and k.get("zoom", 1.0) >= 1.0):
                     self.issues.add("references", "zoom must be >= 1 (zoom 1 shows the whole layout)", w)
         for a in self._actions_all_layouts():

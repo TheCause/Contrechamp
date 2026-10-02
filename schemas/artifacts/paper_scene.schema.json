@@ -506,6 +506,10 @@
             "zoom": {
               "type": "number",
               "minimum": 1
+            },
+            "follow": {
+              "type": "string",
+              "description": "Centre on this anchor until the next key (blending into it)"
             }
           },
           "additionalProperties": false

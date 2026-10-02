@@ -52,6 +52,7 @@ r = PaperScene().execute({"operation": "render", "scene": "scene.json", "output_
 }
 ```
 
+- **Camera keys** have one of `center: [x, y]`, `target: "id.anchor"` (that point at the key's time) or `follow: "id.anchor"`: from that key to the next, the centre tracks the anchor (a walking character stays in frame) and blends into the next key; compiled into linear samples at 30 Hz, checked by `zoom_speed` like any keys.
 - **Times**: seconds, or a mark reference `"p2"`, `"p2.start"`, `"p2.end"`, `"p2.end-0.3"`. `duration` may be a mark (`"p24.end"`: the insert lasts as long as the voice).
 - **`order`** lists every prop and character once, back to front. `layer` actions change it at a time.
 - **`init`**: initial values of a prop's channels (x and y come from `at`): a crane's trolley, a jar's count, a strip's height 0, a line not drawn yet (`draw: 0`).
@@ -103,7 +104,7 @@ Every prop has *x y rot scale opacity* and the anchors `center top bottom left r
 | `door` | `rect`, `color`, `slat_color`, `slats`, `inside_color`, `box_color` | *open*; `opening`, `sill` |
 | `container` | `item` (`star`/`coin`), `w`, `h`, `capacity`, `glass`, `lid` (colour or null), `glow` | *count empty spill*; `mouth`, `inside`; origin = bottom centre (the tipping corner) |
 | `stack` | `w`, `sheet` (thickness), `color`, `line`, `max` | *count flipped*; `top` follows the count; origin = bottom centre |
-| `bars` | `n`, `width`, `gap`, `unit` (px per height unit), `color`, `dashed`, `labels` (one per bar), `label_size` | *h_i reveal_i* (i = 1..n); `slot_i`, `top_i`; origin = bottom left |
+| `bars` | `n`, `width`, `gap`, `unit` (px per height unit), `color`, `dashed` (+ `fill_alpha`: a filled "ghost" row), `labels` (one per bar), `label_size` | *h_i reveal_i* (i = 1..n); `slot_i`, `top_i`; origin = bottom left |
 | `bands` | `colors` (bottom to top), `top0`, `band_h`, `overlap`, `strokes` | *p_i* (painted fraction) |
 | `pole` | `rest` (tip offset), `head_color` | *base_x base_y tip_dx tip_dy*; `base`, `tip` |
 | `sun` | `r`, `rolls` | *power dim* |
@@ -127,7 +128,7 @@ Every prop has *x y rot scale opacity* and the anchors `center top bottom left r
 | `door` | `rect` **required**, `color` `#9aa3a8`, `slat_color` `#6f787e`, `slats` `14`, `inside_color` `#4c302b`, `box_color` `#7d6a60` | `open` `0.0` |
 | `container` | `item` `star`, `w` `50`, `h` `60`, `capacity` `6`, `glass` `#cfe6f2`, `lid` `#c4553b`, `glow` false, `item_color` none | `count` `0.0`, `empty` `0.0`, `spill` `0.0`, `lid_x` `0.0`, `lid_y` `0.0`, `lid_rot` `0.0`, `lid_free` `0.0` |
 | `stack` | `w` `70`, `sheet` `5.0`, `color` `#f7f1e3`, `line` `#b9ad97`, `max` `12` | `count` `0.0`, `flipped` `0.0` |
-| `bars` | `n` **required**, `width` `40`, `gap` `14`, `unit` `30`, `color` `#e98a5d`, `dashed` false, `labels` none, `label_size` `26`, `label_color` `#3b2a1e` | — |
+| `bars` | `n` **required**, `width` `40`, `gap` `14`, `unit` `30`, `color` `#e98a5d`, `dashed` false, `fill_alpha` `0.12` (fill of dashed bars), `labels` none, `label_size` `26`, `label_color` `#3b2a1e` | — |
 | `bands` | `colors` **required**, `top0` `1330`, `band_h` `222`, `overlap` `14`, `strokes` `9` | — |
 | `pole` | `rest` `[16.0,-40.0]`, `bands` none, `head_color` `#f6ead0` | `base_x` `0.0`, `base_y` `0.0`, `tip_dx` `16.0`, `tip_dy` `-40.0` |
 | `sun` | `r` `95`, `rolls` true | `power` `0.7`, `dim` `0.0` |
@@ -153,6 +154,7 @@ Common fields: `do`, `id` (optional), `actor` (a character), `target` (`"id"` or
 |---|---|---|
 | `pose` | eases body and face values | `set: {arms, lean, turn, gaze, mouth, brow, shrug, open_hands}`, `ease` |
 | `shrug` | arms out, palms up, brows up, wavy mouth | `turn`, `gaze` |
+| `settle` | back to rest: body upright, arms down, shoulders down (after a `push`, which leaves him leaning) | `ease` |
 | `walk_to` | walks to an x | `to` (number or anchor), `dx` |
 | `push` | moves a prop along x, the actor behind with both hands on it (forward or back) | `to`, `dx`, `grip` (anchor), `offset` (actor x − prop x; default: where he stands), `lean` |
 | `reach` | one hand to a target | `hand` `L`/`R` |
@@ -160,7 +162,7 @@ Common fields: `do`, `id` (optional), `actor` (a character), `target` (`"id"` or
 | `look_at` | head and gaze towards a target | — |
 | `wave` | oscillating arm(s) around the current pose | `hand` `L`/`R`/`both` (mirrored), `amp [upper, fore]`, `freq` |
 | `clap` | hands clap | `amp`, `freq` |
-| `flip` | flips N pages of a `stack`, gaze following; counts N items | `hand`, `count`, `amp` |
+| `flip` | flips N pages of a `stack`, gaze following; the page lifts on the flipping actor's side (hinged on the far edge); counts N items | `hand`, `count`, `amp` |
 | `hold` | a `pole`'s base follows the hand | `hand` |
 | `paint` | the held pole paints the `bands` one after the other (no `end`: computed) | `pole`, `step`, `dur`, `extend`, `retract` |
 | `move` | a prop to a point / anchor, or `by: [dx, dy]` | `to`, `by`, `ease` |
@@ -211,7 +213,7 @@ Inside a repeat, `start`/`end` are fractions of the iteration's span (shorter sp
 | `vocabulary`, `references`, `timing` | unknown name, missing id/anchor, a time outside the scene | the message lists the known names |
 | `limb_overlap` | two actions drive the same channel at once (same arm, same position) | sequence them, or use the other hand |
 | `jump` | a value jumps when an action takes over: a push from where the actor is not, a pose with no duration | walk him there first; give the pose a duration |
-| `off_frame` | the place of an action is outside the current camera frame; a character outside the frame at a camera key; a prop outside its layout (a position inherited from another layout) | move the action, the character or the camera; give the prop a position for that layout |
+| `off_frame` | the place of an action is outside the current camera frame; a character outside the frame at a camera key; a prop outside its layout (a position inherited from another layout); something DRAWN that an action touches (a line, strips, a pile, a jar, a label) cut in two by the frame — when its actions start and end and at every camera key after it appears (entirely out of the shot is fine while nothing happens to it) | move the action, the character or the camera; give the prop a position for that layout |
 | `contact` | a hand or hook stays more than 8 px from what it holds, pushes, pins or hooks — from the anchor and from the object's own box | bring the actor closer, lower the target, change the grip (an anchor drawn away from the object does not count) |
 | `zoom_speed` | camera moves that fit in less than 1.2 s add up to a scale change of ×1.25 or more (holds and reversals do not split them) | one move of 1.2 s or more per strong change: otherwise it reads as a cut |
 | `ui_safe_bottom` | an action in the bottom band of a 9:16 frame | raise the set in that layout |

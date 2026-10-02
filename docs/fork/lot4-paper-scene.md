@@ -256,3 +256,21 @@ must stay on target 0.4 s; a seated character's hands sit 4 units lower (seat dr
 18) and a stool appears; coins are drawn at 0.36 × the jar width (unchanged for the default
 50); a beat starting before `fade_in` (default 0.45 s) is an error; counted sheets thinner
 than 6 px or coins under 24 px on screen are errors.
+
+## 9. Last pass — the second version of U2 under two new blind reviews
+
+16:9: 7 readable, 2 partly; 9:16: 5 readable, 4 partly; none absent or contradicted. What was
+left and belonged to the format:
+
+| Addition | U2 finding |
+|---|---|
+| `off_frame` checks what is drawn (path, bars with their labels, stack, container, label) whenever an action touches it and at every later camera key: cut in two by the frame is an error | the 9:16 triangle left the frame with no alert; a check that said pass without looking |
+| `bars.fill_alpha`: the fill of dashed bars | the author laid five grey shapes under the dashed "intuition" row |
+| `settle`: back to rest (upright, arms down) | after a push nothing straightened the courier but a hand-written pose |
+| `flip` lifts the page on the flipping actor's side | both reviewers saw the page point at the courier, who was read as the one flipping |
+| Camera `follow`: the centre tracks an anchor until the next key, blending into it; compiled into 30 Hz linear samples | tight 9:16 reframes cut a character at its starting point; no camera could follow him. Chosen over a documented limit because it is deterministic, needs no new evaluator rule beyond a linear key, and `zoom_speed` measures its samples like any keys |
+
+What changes for an existing scene: a drawn element touched by an action may now fail
+`off_frame` where it is cut by a camera move (the factory and the U2 skeleton passed after the
+skeleton's 9:16 close-up was widened); a `flip` turns its page towards the actor (it always
+turned to the right before).

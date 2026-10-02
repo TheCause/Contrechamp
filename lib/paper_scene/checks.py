@@ -169,6 +169,76 @@ def check_min_size(c: Compiled, issues: Issues) -> list[dict[str, Any]]:
     return measured
 
 
+DRAWN_TYPES = {"path", "bars", "stack", "container", "label"}
+
+
+def drawn_box(c: Compiled, pid: str, t: float) -> tuple[float, float, float, float] | None:
+    """World box of what a prop shows at t (None when nothing of it is visible)."""
+    from lib.paper_scene import library as L
+
+    p = c.props[pid]
+    st = {k: c.ch.value(f"{pid}.{k}", t) for k in L.prop_channels(p["type"], p["params"])}
+    if st["opacity"] <= 0:
+        return None
+    pr = p["params"]
+    if p["type"] == "path":
+        if st["draw"] <= 0 and st["fill"] <= 0:
+            return None
+        box = L.bbox("path", pr, st)
+    elif p["type"] == "bars":
+        shown = [i for i in range(1, int(pr["n"]) + 1) if st[f"h_{i}"] > 0 and st[f"reveal_{i}"] > 0]
+        if not shown:
+            return None
+        wd, gap, unit = pr["width"], pr["gap"], pr["unit"]
+        x0 = min((i - 1) * (wd + gap) for i in shown)
+        x1 = max((i - 1) * (wd + gap) + wd for i in shown)
+        y0 = -max(st[f"h_{i}"] for i in shown) * unit
+        y1 = pr["label_size"] * 1.4 if pr.get("labels") else 0.0
+        box = (x0, y0, x1, y1)
+    elif p["type"] == "stack":
+        if st["count"] <= 0:
+            return None
+        box = L.bbox("stack", pr, st)
+    else:
+        box = L.bbox(p["type"], pr, st)
+    pts = [L.place(st["x"], st["y"], st["rot"], st["scale"], q)
+           for q in ((box[0], box[1]), (box[2], box[1]), (box[2], box[3]), (box[0], box[3]))]
+    return min(q[0] for q in pts), min(q[1] for q in pts), max(q[0] for q in pts), max(q[1] for q in pts)
+
+
+def check_drawn(c: Compiled, issues: Issues, duration: float) -> None:
+    """What the format DRAWS and an action makes happen (a line being drawn, strips growing,
+    a pile, a jar, a label) must not be cut by the frame: checked whenever one of its
+    actions starts or ends and at every camera key after it first appears. Entirely out of
+    the shot is allowed while nothing happens to it; cut in two is not."""
+    W, H = c.layout["width"], c.layout["height"]
+    for pid, p in c.props.items():
+        if p["type"] not in DRAWN_TYPES:
+            continue
+        segs = [o for key, owners in c.owners.items() if key.startswith(pid + ".") for o in owners]
+        if not segs:
+            continue                       # never touched by an action: decor, cropping allowed
+        first = min(o[0] for o in segs)
+        times = sorted({o[0] for o in segs} | {o[1] for o in segs}
+                       | {k[0] for k in c.camera if k[0] >= first} | {min(duration, max(o[1] for o in segs))})
+        for t in times:
+            if t > duration + 1e-9:
+                continue
+            box = drawn_box(c, pid, t)
+            if box is None:
+                continue
+            x0, y0, x1, y1 = M.view_rect(c.camera, t, W, H)
+            inside = x0 - 0.5 <= box[0] and box[2] <= x1 + 0.5 and y0 - 0.5 <= box[1] and box[3] <= y1 + 0.5
+            touching = box[0] < x1 and box[2] > x0 and box[1] < y1 and box[3] > y0
+            acting = any(o[0] - 1e-9 <= t <= o[1] + 1e-9 for o in segs)
+            if (touching and not inside) or (acting and not touching):
+                what = "cut by the frame" if touching else "drawn outside the frame"
+                issues.add("off_frame", f"[{c.layout['name']}] '{pid}' is {what} at {t:.2f}s: it spans x "
+                           f"{box[0]:.0f}..{box[2]:.0f}, y {box[1]:.0f}..{box[3]:.0f}; frame x {x0:.0f}..{x1:.0f}, "
+                           f"y {y0:.0f}..{y1:.0f}", pid)
+                break
+
+
 STATIC_SKIP = {"pole", "burst"}   # placed by what holds or launches them, not by their own position
 
 

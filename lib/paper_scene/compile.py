@@ -234,6 +234,11 @@ def _v_shrug(c: Compiled, a: dict[str, Any], d: float) -> None:
     _v_pose(c, a, d, vals)
 
 
+def _v_settle(c: Compiled, a: dict[str, Any], d: float) -> None:
+    """Back to rest: body upright, arms down, shoulders down, hands closed (U2: after a push)."""
+    _v_pose(c, a, d, {"lean": 0.0, "arms": list(L.POSE_FIELDS["arms"]), "shrug": 0.0, "open_hands": 0.0})
+
+
 def _target_x(c: Compiled, to: Any, t: float) -> float:
     return float(to) if isinstance(to, (int, float)) else ref_point(c, to, t)[0]
 
@@ -403,6 +408,9 @@ def _v_flip(c: Compiled, a: dict[str, Any], _d: float) -> None:
     _from_here(c, f"{cid}.{kf}", ["o", t0, t1, 0.0, float(a.get("amp", 25.0)), freq], a)
     _from_here(c, f"{cid}.gaze_x", ["o", t0, t1, 0.0, 0.6, freq], a)
     c.items[a["id"]] = [t0 + (k - 0.5) * (t1 - t0) / n for k in range(1, n + 1)]
+    # the page lifts on the side of the one who flips it (U2: it pointed at the courier, who was read as flipping)
+    side = 1 if c.ch.value(f"{cid}.x", t0) >= c.ch.value(f"{sid}.x", t0) else -1
+    c.extras.setdefault(sid, {}).setdefault("flip_side", []).append([t0, t1, side])
     c.deferred.append(lambda: _contact(c, a, t0, char_point(c, cid, f"hand_{hand}", t0),
                                        prop_point(c, sid, "top", t0), 2 * CONTACT_TOL,
                                        f"{cid}'s {hand} hand on the pages of {sid}", prop=sid))
@@ -750,7 +758,7 @@ def _v_layer(c: Compiled, a: dict[str, Any], _d: float) -> None:
 
 
 VERB_COMPILERS: dict[str, Callable[[Compiled, dict[str, Any], float], None]] = {
-    "pose": _v_pose, "shrug": _v_shrug, "walk_to": _v_walk_to, "push": _v_push, "reach": _v_reach,
+    "pose": _v_pose, "shrug": _v_shrug, "settle": _v_settle, "walk_to": _v_walk_to, "push": _v_push, "reach": _v_reach,
     "point_at": _v_point_at, "look_at": _v_look_at, "wave": _v_wave, "clap": _v_clap, "flip": _v_flip,
     "hold": _v_hold, "paint": _v_paint, "move": _v_move, "attach": _v_attach, "animate": _v_animate,
     "shake": _v_shake, "tip_over": _v_tip_over, "drop_in": _v_drop_in, "overflow": _v_overflow,
@@ -766,16 +774,44 @@ def action_window(a: dict[str, Any], c: Compiled) -> tuple[float, float]:
     return t0, t1
 
 
-def camera_keys(c: Compiled, keys: list[dict[str, Any]], times) -> list[list[float]]:
-    out = []
+FOLLOW_HZ = 30.0
+
+
+def camera_keys(c: Compiled, keys: list[dict[str, Any]], times) -> list[list[Any]]:
+    """[t, cx, cy, zoom] eased (io) to the next key, or [..., "lin"] for the samples of a follow.
+
+    A `follow` key centres the camera on an anchor from its time to the next key: the centre
+    tracks the anchor and blends (io) into the next key's centre, the zoom eases between the two
+    keys. It is compiled into samples at 30 Hz, linear between them (deterministic; zoom_speed
+    measures them like any keys)."""
+    ks = []
     for i, k in enumerate(keys):
         t = times(k.get("t"), f"camera.{c.layout['name']}[{i}]")
-        if t is None:
-            continue
+        if t is not None:
+            ks.append((t, k))
+    ks.sort(key=lambda x: x[0])
+
+    def centre(k: dict[str, Any], t: float) -> tuple[float, float]:
         if "target" in k:
-            cx, cy = ref_point(c, k["target"], t)
-        else:
-            cx, cy = float(k["center"][0]), float(k["center"][1])
-        out.append([t, cx, cy, float(k.get("zoom", 1.0))])
-    out.sort(key=lambda k: k[0])
+            return ref_point(c, k["target"], t)
+        if "follow" in k:
+            return ref_point(c, k["follow"], t)
+        return float(k["center"][0]), float(k["center"][1])
+
+    out: list[list[Any]] = []
+    for j, (t, k) in enumerate(ks):
+        z = float(k.get("zoom", 1.0))
+        if "follow" not in k or j == len(ks) - 1:
+            cx, cy = centre(k, t)
+            out.append([t, cx, cy, z])
+            continue
+        t1, k1 = ks[j + 1]
+        z1 = float(k1.get("zoom", 1.0))
+        end_off = [a - b for a, b in zip(centre(k1, t1), ref_point(c, k["follow"], t1))]
+        n = max(1, int(math.ceil((t1 - t) * FOLLOW_HZ)))
+        for i in range(n):
+            ti = t + (t1 - t) * i / n
+            u = M.EASES["io"](i / n)
+            fx, fy = ref_point(c, k["follow"], ti)
+            out.append([ti, fx + end_off[0] * u, fy + end_off[1] * u, M.lerp(z, z1, u), "lin"])
     return out
