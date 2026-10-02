@@ -14,7 +14,7 @@ import anyio
 import pytest
 
 from tests.contracts.test_phase0_contracts import sample_artifact
-from tests.mcp_server.conftest import FakePaidTool, FakeReaderTool, FakeSlowTool, call, connect, human, new_project
+from tests.mcp_server.conftest import FakeKeyWriterTool, FakePaidTool, FakeReaderTool, FakeSlowTool, call, connect, human, new_project
 
 pytestmark = pytest.mark.anyio
 
@@ -156,6 +156,33 @@ async def test_a_web_url_cannot_smuggle_a_path(projects):
                                     inputs={"output_path": bad}, project_id=pid)
             assert error and out["code"] == "E_PATH_REFUSED", bad
     assert FakeReaderTool.seen == []
+
+
+async def test_a_dictionary_key_cannot_climb_out_of_the_project(projects):
+    """Regression: only values were confined, so a key the tool joins to its
+    confined output_dir ("../../escaped") wrote outside the project."""
+    async with connect() as client:
+        pid = await new_project(client)
+        error, out = await call(client, "run_tool", name="mcp_fake_key_writer", project_id=pid,
+                                inputs={"output_dir": "renders",
+                                        "layouts": {"vertical": {}, "../../escaped": {}}})
+    assert error and out["code"] == "E_PATH_REFUSED", out
+    assert "../../escaped" in out["message"]
+    assert not (projects / "escaped").exists()
+    assert FakeKeyWriterTool.written == []
+
+
+async def test_plain_dictionary_keys_reach_the_tool(projects):
+    """Silent side."""
+    async with connect() as client:
+        pid = await new_project(client)
+        error, out = await call(client, "run_tool", name="mcp_fake_key_writer", project_id=pid,
+                                inputs={"output_dir": "renders",
+                                        "layouts": {"vertical": {}, "9:16": {}, "take_2.v1": {}}})
+    assert not error, out
+    renders = (projects / pid / "renders").resolve()
+    assert sorted(FakeKeyWriterTool.written) == sorted(
+        str(renders / k / "index.html") for k in ("vertical", "9:16", "take_2.v1"))
 
 
 @pytest.mark.parametrize("target", ["project.json", "cost_log.json", "checkpoint_research.json",

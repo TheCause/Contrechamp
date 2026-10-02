@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 import mcp_types as types
 import pytest
@@ -61,6 +62,25 @@ class FakeSlowTool(BaseTool):
         return ToolResult(success=True, data={"rendered": inputs.get("output_path")})
 
 
+class FakeKeyWriterTool(BaseTool):
+    """Writes one page per key of a mapping, as a scene compiler writes one per layout."""
+
+    name = "mcp_fake_key_writer"
+    capability = "video_post"
+    input_schema = {"type": "object", "properties": {"output_dir": {"type": "string"},
+                                                     "layouts": {"type": "object"}}}
+    written: list[str] = []
+
+    def execute(self, inputs: dict) -> ToolResult:
+        out = Path(inputs["output_dir"])
+        for key in inputs.get("layouts", {}):
+            page = out / key / "index.html"
+            page.parent.mkdir(parents=True, exist_ok=True)
+            page.write_text("page")
+            FakeKeyWriterTool.written.append(str(page.resolve()))
+        return ToolResult(success=True, data={"written": FakeKeyWriterTool.written})
+
+
 class FakePublishTool(BaseTool):
     name = "mcp_fake_publish"
     capability = "publish"
@@ -69,7 +89,7 @@ class FakePublishTool(BaseTool):
         return ToolResult(success=True)
 
 
-FAKES = (FakePaidTool, FakeReaderTool, FakeSlowTool, FakePublishTool)
+FAKES = (FakePaidTool, FakeReaderTool, FakeSlowTool, FakeKeyWriterTool, FakePublishTool)
 
 
 @pytest.fixture
@@ -95,6 +115,7 @@ def projects(monkeypatch, tmp_path):
         registry.register(cls())
     FakePaidTool.calls.clear()
     FakeReaderTool.seen.clear()
+    FakeKeyWriterTool.written.clear()
     from contrechamp_mcp.server import enforce_budget_env
 
     enforce_budget_env()
