@@ -1,0 +1,3801 @@
+{
+ "format": "paper_scene/1",
+ "id": "paper-factory",
+ "title": "The paper factory",
+ "brief": "A 20-second paper-cut animation, vertical 1080x1920, no narration, no text: a tiny paper factory that makes evening suns. Three workers in yellow helmets: one in blue overalls (background, by the crane controls), one in red overalls (left), one in green overalls with a mustache (right). A shutter opens and a sun is rolled out along the conveyor; the sky is painted band by band; the crane hooks the sun and lifts it into the sky; the workers admire it. Then the green worker, stepping back in excitement, bumps the crate: the jar of stars standing on it wobbles and falls on HIS side. The stars burst out of the jar, scatter across the sky, and night falls. The workers look at each other, then shrug.",
+ "duration": 20.0,
+ "layouts": {
+  "portrait": {
+   "aspect": "9:16",
+   "width": 1080,
+   "height": 1920,
+   "ui_safe_bottom": 0
+  }
+ },
+ "style": {
+  "background": "#e8e0cf",
+  "grain": true,
+  "grain_seed": 7,
+  "grain_alpha": 0.55,
+  "vignette": true,
+  "fade_in": 0.45
+ },
+ "order": [
+  "blank_page",
+  "pencil_1",
+  "pencil_2",
+  "pencil_3",
+  "pencil_4",
+  "pencil_5",
+  "pencil_6",
+  "pencil_7",
+  "sky",
+  "night_sky",
+  "hill_far",
+  "hill_near",
+  "back_floor",
+  "lever",
+  "lever_box",
+  "bay",
+  "lamp_light",
+  "lamp",
+  "chimney",
+  "smoke",
+  "w_blue",
+  "sun",
+  "factory",
+  "roof_1",
+  "roof_window_1",
+  "roof_2",
+  "roof_window_2",
+  "roof_3",
+  "roof_window_3",
+  "bricks",
+  "window_glow_1",
+  "window_rim_1",
+  "window_1",
+  "window_glow_2",
+  "window_rim_2",
+  "window_2",
+  "gear",
+  "sign",
+  "shutter",
+  "conveyor",
+  "crane",
+  "grass_1",
+  "grass_2",
+  "flowers",
+  "w_red",
+  "pole",
+  "crate",
+  "jar",
+  "w_green",
+  "night",
+  "stars"
+ ],
+ "props": [
+  {
+   "id": "blank_page",
+   "type": "shape",
+   "params": {
+    "shape": "rect",
+    "rect": [
+     -40,
+     -40,
+     1160,
+     2000
+    ],
+    "color": "#e8e0cf",
+    "shadow": false,
+    "edge": false
+   }
+  },
+  {
+   "id": "pencil_1",
+   "type": "path",
+   "params": {
+    "points": [
+     [
+      70,
+      120
+     ],
+     [
+      1010,
+      123
+     ]
+    ],
+    "color": "#8c8073",
+    "width": 1.2,
+    "line_alpha": 0.1
+   }
+  },
+  {
+   "id": "pencil_2",
+   "type": "path",
+   "params": {
+    "points": [
+     [
+      70,
+      310
+     ],
+     [
+      1010,
+      313
+     ]
+    ],
+    "color": "#8c8073",
+    "width": 1.2,
+    "line_alpha": 0.1
+   }
+  },
+  {
+   "id": "pencil_3",
+   "type": "path",
+   "params": {
+    "points": [
+     [
+      70,
+      500
+     ],
+     [
+      1010,
+      503
+     ]
+    ],
+    "color": "#8c8073",
+    "width": 1.2,
+    "line_alpha": 0.1
+   }
+  },
+  {
+   "id": "pencil_4",
+   "type": "path",
+   "params": {
+    "points": [
+     [
+      70,
+      690
+     ],
+     [
+      1010,
+      693
+     ]
+    ],
+    "color": "#8c8073",
+    "width": 1.2,
+    "line_alpha": 0.1
+   }
+  },
+  {
+   "id": "pencil_5",
+   "type": "path",
+   "params": {
+    "points": [
+     [
+      70,
+      880
+     ],
+     [
+      1010,
+      883
+     ]
+    ],
+    "color": "#8c8073",
+    "width": 1.2,
+    "line_alpha": 0.1
+   }
+  },
+  {
+   "id": "pencil_6",
+   "type": "path",
+   "params": {
+    "points": [
+     [
+      70,
+      1070
+     ],
+     [
+      1010,
+      1073
+     ]
+    ],
+    "color": "#8c8073",
+    "width": 1.2,
+    "line_alpha": 0.1
+   }
+  },
+  {
+   "id": "pencil_7",
+   "type": "path",
+   "params": {
+    "points": [
+     [
+      70,
+      1260
+     ],
+     [
+      1010,
+      1263
+     ]
+    ],
+    "color": "#8c8073",
+    "width": 1.2,
+    "line_alpha": 0.1
+   }
+  },
+  {
+   "id": "sky",
+   "type": "bands",
+   "params": {
+    "colors": [
+     "#f7bd45",
+     "#f39a3c",
+     "#ef7360",
+     "#e7678f",
+     "#c56a9f",
+     "#8f6fb1"
+    ],
+    "top0": 1330,
+    "band_h": 222,
+    "overlap": 14,
+    "strokes": 9
+   }
+  },
+  {
+   "id": "night_sky",
+   "type": "curtain",
+   "params": {
+    "top": "#1d2150",
+    "bottom": "#3b3f7e"
+   }
+  },
+  {
+   "id": "hill_far",
+   "type": "shape",
+   "params": {
+    "shape": "poly",
+    "points": [
+     [
+      -20,
+      1480
+     ],
+     [
+      -20,
+      1271.33
+     ],
+     [
+      40,
+      1243.72
+     ],
+     [
+      100,
+      1223.59
+     ],
+     [
+      160,
+      1216.62
+     ],
+     [
+      220,
+      1224.1
+     ],
+     [
+      280,
+      1242.49
+     ],
+     [
+      340,
+      1265.0
+     ],
+     [
+      400,
+      1284.38
+     ],
+     [
+      460,
+      1295.84
+     ],
+     [
+      520,
+      1298.84
+     ],
+     [
+      580,
+      1296.91
+     ],
+     [
+      640,
+      1295.82
+     ],
+     [
+      700,
+      1300.65
+     ],
+     [
+      760,
+      1313.27
+     ],
+     [
+      820,
+      1331.21
+     ],
+     [
+      880,
+      1348.49
+     ],
+     [
+      940,
+      1358.03
+     ],
+     [
+      1000,
+      1354.65
+     ],
+     [
+      1060,
+      1337.42
+     ],
+     [
+      1120,
+      1310.18
+     ],
+     [
+      1100,
+      1480
+     ]
+    ],
+    "amp": 3,
+    "step": 20,
+    "color": "#a9b98d",
+    "depth": 1.2
+   }
+  },
+  {
+   "id": "hill_near",
+   "type": "shape",
+   "params": {
+    "shape": "poly",
+    "points": [
+     [
+      -20,
+      1480
+     ],
+     [
+      -20,
+      1338.2
+     ],
+     [
+      30,
+      1332.58
+     ],
+     [
+      80,
+      1335.47
+     ],
+     [
+      130,
+      1351.09
+     ],
+     [
+      180,
+      1375.16
+     ],
+     [
+      230,
+      1397.5
+     ],
+     [
+      280,
+      1409.03
+     ],
+     [
+      330,
+      1408.02
+     ],
+     [
+      380,
+      1400.68
+     ],
+     [
+      430,
+      1395.9
+     ],
+     [
+      480,
+      1398.04
+     ],
+     [
+      530,
+      1403.53
+     ],
+     [
+      580,
+      1403.79
+     ],
+     [
+      630,
+      1392.28
+     ],
+     [
+      680,
+      1370.15
+     ],
+     [
+      730,
+      1346.1
+     ],
+     [
+      780,
+      1330.5
+     ],
+     [
+      830,
+      1328.15
+     ],
+     [
+      880,
+      1335.31
+     ],
+     [
+      930,
+      1343.12
+     ],
+     [
+      980,
+      1344.73
+     ],
+     [
+      1030,
+      1340.69
+     ],
+     [
+      1080,
+      1338.34
+     ],
+     [
+      1100,
+      1480
+     ]
+    ],
+    "amp": 3,
+    "step": 20,
+    "color": "#8eab73",
+    "depth": 1.2
+   }
+  },
+  {
+   "id": "back_floor",
+   "type": "shape",
+   "params": {
+    "shape": "rect",
+    "rect": [
+     -20,
+     1476,
+     1120,
+     120
+    ],
+    "amp": 2.5,
+    "color": "#d2b98e",
+    "depth": 1.0
+   }
+  },
+  {
+   "id": "lever",
+   "type": "group",
+   "at": [
+    860,
+    1436
+   ],
+   "params": {
+    "children": [
+     {
+      "shape": "rect",
+      "rect": [
+       -3,
+       -26,
+       6,
+       28
+      ],
+      "amp": 0.4,
+      "color": "#3b3437",
+      "depth": 0.4,
+      "key": "lever_stick"
+     },
+     {
+      "shape": "circle",
+      "r": 6,
+      "color": "#e2553f",
+      "depth": 0.4,
+      "key": "lever_knob"
+     }
+    ]
+   },
+   "anchors": {
+    "handle": [
+     0,
+     -26
+    ]
+   },
+   "init": {
+    "rot": -0.3
+   }
+  },
+  {
+   "id": "lever_box",
+   "type": "shape",
+   "at": [
+    860,
+    1480
+   ],
+   "params": {
+    "shape": "rect",
+    "rect": [
+     -18,
+     -46,
+     36,
+     46
+    ],
+    "amp": 0.8,
+    "color": "#5d5f68",
+    "depth": 0.8
+   }
+  },
+  {
+   "id": "bay",
+   "type": "shape",
+   "params": {
+    "shape": "rect",
+    "rect": [
+     230,
+     1218,
+     222,
+     264
+    ],
+    "color": "#4c302b",
+    "shadow": false
+   }
+  },
+  {
+   "id": "lamp_light",
+   "type": "shape",
+   "params": {
+    "shape": "poly",
+    "points": [
+     [
+      340,
+      1235
+     ],
+     [
+      270,
+      1480
+     ],
+     [
+      420,
+      1480
+     ]
+    ],
+    "color": "#f6c76a",
+    "alpha": 0.25,
+    "edge": false,
+    "shadow": false,
+    "amp": 0
+   }
+  },
+  {
+   "id": "lamp",
+   "type": "shape",
+   "at": [
+    340,
+    1232
+   ],
+   "params": {
+    "shape": "ellipse",
+    "rx": 16,
+    "ry": 8,
+    "color": "#2f2a2a",
+    "depth": 0.5
+   }
+  },
+  {
+   "id": "chimney",
+   "type": "group",
+   "params": {
+    "children": [
+     {
+      "shape": "rect",
+      "rect": [
+       82,
+       960,
+       58,
+       190
+      ],
+      "amp": 1.2,
+      "color": "#b5523c",
+      "depth": 1.0
+     },
+     {
+      "shape": "rect",
+      "rect": [
+       78,
+       980,
+       66,
+       14
+      ],
+      "amp": 1,
+      "color": "#f2e6cf",
+      "depth": 0.4
+     },
+     {
+      "shape": "rect",
+      "rect": [
+       78,
+       1040,
+       66,
+       14
+      ],
+      "amp": 1,
+      "color": "#f2e6cf",
+      "depth": 0.4
+     }
+    ]
+   }
+  },
+  {
+   "id": "smoke",
+   "type": "smoke",
+   "at": [
+    111,
+    940
+   ]
+  },
+  {
+   "id": "sun",
+   "type": "sun",
+   "at": [
+    325,
+    1345
+   ],
+   "params": {
+    "r": 95
+   }
+  },
+  {
+   "id": "factory",
+   "type": "shape",
+   "params": {
+    "shape": "poly",
+    "points": [
+     [
+      30,
+      1120
+     ],
+     [
+      452,
+      1120
+     ],
+     [
+      452,
+      1220
+     ],
+     [
+      230,
+      1220
+     ],
+     [
+      230,
+      1480
+     ],
+     [
+      30,
+      1480
+     ]
+    ],
+    "amp": 1.6,
+    "color": "#d8694b",
+    "depth": 1.3
+   }
+  },
+  {
+   "id": "roof_1",
+   "type": "shape",
+   "params": {
+    "shape": "poly",
+    "points": [
+     [
+      26,
+      1124
+     ],
+     [
+      52,
+      1052
+     ],
+     [
+      175,
+      1124
+     ]
+    ],
+    "amp": 1.5,
+    "color": "#8a4a3d",
+    "depth": 1.0
+   }
+  },
+  {
+   "id": "roof_window_1",
+   "type": "shape",
+   "params": {
+    "shape": "poly",
+    "points": [
+     [
+      36,
+      1118
+     ],
+     [
+      54,
+      1068
+     ],
+     [
+      64,
+      1118
+     ]
+    ],
+    "amp": 0.8,
+    "color": "#c8d7d6",
+    "depth": 0.2
+   }
+  },
+  {
+   "id": "roof_2",
+   "type": "shape",
+   "params": {
+    "shape": "poly",
+    "points": [
+     [
+      167,
+      1124
+     ],
+     [
+      193,
+      1052
+     ],
+     [
+      316,
+      1124
+     ]
+    ],
+    "amp": 1.5,
+    "color": "#8a4a3d",
+    "depth": 1.0
+   }
+  },
+  {
+   "id": "roof_window_2",
+   "type": "shape",
+   "params": {
+    "shape": "poly",
+    "points": [
+     [
+      177,
+      1118
+     ],
+     [
+      195,
+      1068
+     ],
+     [
+      205,
+      1118
+     ]
+    ],
+    "amp": 0.8,
+    "color": "#c8d7d6",
+    "depth": 0.2
+   }
+  },
+  {
+   "id": "roof_3",
+   "type": "shape",
+   "params": {
+    "shape": "poly",
+    "points": [
+     [
+      308,
+      1124
+     ],
+     [
+      334,
+      1052
+     ],
+     [
+      457,
+      1124
+     ]
+    ],
+    "amp": 1.5,
+    "color": "#8a4a3d",
+    "depth": 1.0
+   }
+  },
+  {
+   "id": "roof_window_3",
+   "type": "shape",
+   "params": {
+    "shape": "poly",
+    "points": [
+     [
+      318,
+      1118
+     ],
+     [
+      336,
+      1068
+     ],
+     [
+      346,
+      1118
+     ]
+    ],
+    "amp": 0.8,
+    "color": "#c8d7d6",
+    "depth": 0.2
+   }
+  },
+  {
+   "id": "bricks",
+   "type": "scatter",
+   "params": {
+    "area": [
+     45,
+     1260,
+     200,
+     1460
+    ],
+    "count": 26,
+    "item": "brick",
+    "colors": [
+     "#b1563e"
+    ],
+    "seed": 9
+   }
+  },
+  {
+   "id": "window_glow_1",
+   "type": "glow",
+   "at": [
+    92,
+    1185
+   ],
+   "params": {
+    "r": 60,
+    "color": "#ffd36b"
+   },
+   "init": {
+    "alpha": 0
+   }
+  },
+  {
+   "id": "window_rim_1",
+   "type": "shape",
+   "at": [
+    92,
+    1185
+   ],
+   "params": {
+    "shape": "circle",
+    "r": 25,
+    "color": "#7b3a2e",
+    "depth": 0.6
+   }
+  },
+  {
+   "id": "window_1",
+   "type": "shape",
+   "at": [
+    92,
+    1185
+   ],
+   "params": {
+    "shape": "circle",
+    "r": 18,
+    "color": "#cfe0dc",
+    "depth": 0.2
+   }
+  },
+  {
+   "id": "window_glow_2",
+   "type": "glow",
+   "at": [
+    168,
+    1185
+   ],
+   "params": {
+    "r": 60,
+    "color": "#ffd36b"
+   },
+   "init": {
+    "alpha": 0
+   }
+  },
+  {
+   "id": "window_rim_2",
+   "type": "shape",
+   "at": [
+    168,
+    1185
+   ],
+   "params": {
+    "shape": "circle",
+    "r": 25,
+    "color": "#7b3a2e",
+    "depth": 0.6
+   }
+  },
+  {
+   "id": "window_2",
+   "type": "shape",
+   "at": [
+    168,
+    1185
+   ],
+   "params": {
+    "shape": "circle",
+    "r": 18,
+    "color": "#cfe0dc",
+    "depth": 0.2
+   }
+  },
+  {
+   "id": "gear",
+   "type": "group",
+   "at": [
+    128,
+    1365
+   ],
+   "params": {
+    "spin": 0.5,
+    "children": [
+     {
+      "shape": "gear",
+      "r": 52,
+      "r_in": 40,
+      "teeth": 24,
+      "amp": 0.8,
+      "step": 6,
+      "color": "#e8a33d",
+      "depth": 1.0,
+      "key": "gear_teeth"
+     },
+     {
+      "shape": "circle",
+      "r": 16,
+      "color": "#8a4a3d",
+      "depth": 0.4,
+      "key": "gear_hub"
+     }
+    ]
+   }
+  },
+  {
+   "id": "sign",
+   "type": "group",
+   "at": [
+    340,
+    1170
+   ],
+   "params": {
+    "children": [
+     {
+      "shape": "rect",
+      "rect": [
+       -52,
+       -30,
+       104,
+       60
+      ],
+      "amp": 1.2,
+      "color": "#f6ead0",
+      "depth": 0.9,
+      "key": "sign"
+     },
+     {
+      "shape": "poly",
+      "at": [
+       0,
+       14
+      ],
+      "points": [
+       [
+        -24.0,
+        0.0
+       ],
+       [
+        -22.83,
+        -7.42
+       ],
+       [
+        -19.42,
+        -14.11
+       ],
+       [
+        -14.11,
+        -19.42
+       ],
+       [
+        -7.42,
+        -22.83
+       ],
+       [
+        -0.0,
+        -24.0
+       ],
+       [
+        7.42,
+        -22.83
+       ],
+       [
+        14.11,
+        -19.42
+       ],
+       [
+        19.42,
+        -14.11
+       ],
+       [
+        22.83,
+        -7.42
+       ],
+       [
+        24.0,
+        -0.0
+       ]
+      ],
+      "color": "#f39a3c",
+      "depth": 0.3,
+      "key": "sign_sun"
+     },
+     {
+      "shape": "poly",
+      "points": [
+       [
+        -29.82,
+        2.21
+       ],
+       [
+        -37.42,
+        -0.26
+       ],
+       [
+        -38.66,
+        3.54
+       ],
+       [
+        -31.05,
+        6.01
+       ]
+      ],
+      "color": "#f39a3c",
+      "amp": 0,
+      "depth": 0,
+      "shadow": false,
+      "edge": false,
+      "key": "sign_ray0"
+     },
+     {
+      "shape": "poly",
+      "points": [
+       [
+        -17.19,
+        -13.06
+       ],
+       [
+        -21.89,
+        -19.54
+       ],
+       [
+        -25.13,
+        -17.19
+       ],
+       [
+        -20.43,
+        -10.71
+       ]
+      ],
+      "color": "#f39a3c",
+      "amp": 0,
+      "depth": 0,
+      "shadow": false,
+      "edge": false,
+      "key": "sign_ray1"
+     },
+     {
+      "shape": "poly",
+      "points": [
+       [
+        2.0,
+        -18.0
+       ],
+       [
+        2.0,
+        -26.0
+       ],
+       [
+        -2.0,
+        -26.0
+       ],
+       [
+        -2.0,
+        -18.0
+       ]
+      ],
+      "color": "#f39a3c",
+      "amp": 0,
+      "depth": 0,
+      "shadow": false,
+      "edge": false,
+      "key": "sign_ray2"
+     },
+     {
+      "shape": "poly",
+      "points": [
+       [
+        20.43,
+        -10.71
+       ],
+       [
+        25.13,
+        -17.19
+       ],
+       [
+        21.89,
+        -19.54
+       ],
+       [
+        17.19,
+        -13.06
+       ]
+      ],
+      "color": "#f39a3c",
+      "amp": 0,
+      "depth": 0,
+      "shadow": false,
+      "edge": false,
+      "key": "sign_ray3"
+     },
+     {
+      "shape": "poly",
+      "points": [
+       [
+        31.05,
+        6.01
+       ],
+       [
+        38.66,
+        3.54
+       ],
+       [
+        37.42,
+        -0.26
+       ],
+       [
+        29.82,
+        2.21
+       ]
+      ],
+      "color": "#f39a3c",
+      "amp": 0,
+      "depth": 0,
+      "shadow": false,
+      "edge": false,
+      "key": "sign_ray4"
+     }
+    ]
+   }
+  },
+  {
+   "id": "shutter",
+   "type": "door",
+   "params": {
+    "rect": [
+     230,
+     1218,
+     222,
+     262
+    ],
+    "color": "#9aa3a8",
+    "slat_color": "#6f787e",
+    "slats": 14,
+    "inside_color": null,
+    "box_color": "#7d6a60"
+   }
+  },
+  {
+   "id": "conveyor",
+   "type": "conveyor",
+   "at": [
+    0,
+    1440
+   ],
+   "params": {
+    "x": 222,
+    "w": 590,
+    "legs": [
+     300,
+     520,
+     770
+    ],
+    "floor": 1480
+   }
+  },
+  {
+   "id": "crane",
+   "type": "crane",
+   "params": {
+    "mast_x": 916,
+    "jib_y": 640,
+    "jib_x0": 328,
+    "jib_x1": 1068,
+    "floor": 1480
+   },
+   "init": {
+    "trolley": 860,
+    "hook_y": 710
+   }
+  },
+  {
+   "id": "grass_1",
+   "type": "shape",
+   "params": {
+    "shape": "poly",
+    "points": [
+     [
+      -20,
+      1585
+     ],
+     [
+      -20,
+      1569.18
+     ],
+     [
+      20,
+      1574.82
+     ],
+     [
+      60,
+      1579.56
+     ],
+     [
+      100,
+      1581.9
+     ],
+     [
+      140,
+      1581.09
+     ],
+     [
+      180,
+      1577.4
+     ],
+     [
+      220,
+      1571.99
+     ],
+     [
+      260,
+      1566.58
+     ],
+     [
+      300,
+      1562.9
+     ],
+     [
+      340,
+      1562.1
+     ],
+     [
+      380,
+      1564.46
+     ],
+     [
+      420,
+      1569.21
+     ],
+     [
+      460,
+      1574.84
+     ],
+     [
+      500,
+      1579.58
+     ],
+     [
+      540,
+      1581.9
+     ],
+     [
+      580,
+      1581.08
+     ],
+     [
+      620,
+      1577.38
+     ],
+     [
+      660,
+      1571.96
+     ],
+     [
+      700,
+      1566.56
+     ],
+     [
+      740,
+      1562.89
+     ],
+     [
+      780,
+      1562.11
+     ],
+     [
+      820,
+      1564.47
+     ],
+     [
+      860,
+      1569.23
+     ],
+     [
+      900,
+      1574.87
+     ],
+     [
+      940,
+      1579.59
+     ],
+     [
+      980,
+      1581.91
+     ],
+     [
+      1020,
+      1581.07
+     ],
+     [
+      1060,
+      1577.36
+     ],
+     [
+      1100,
+      1571.94
+     ],
+     [
+      1100,
+      1940
+     ],
+     [
+      -20,
+      1940
+     ]
+    ],
+    "amp": 3.5,
+    "step": 16,
+    "color": "#6f9257",
+    "depth": 1.6
+   }
+  },
+  {
+   "id": "grass_2",
+   "type": "shape",
+   "params": {
+    "shape": "poly",
+    "points": [
+     [
+      -20,
+      1760
+     ],
+     [
+      -20,
+      1756.68
+     ],
+     [
+      20,
+      1759.8
+     ],
+     [
+      60,
+      1760.99
+     ],
+     [
+      100,
+      1760.09
+     ],
+     [
+      140,
+      1757.22
+     ],
+     [
+      180,
+      1752.74
+     ],
+     [
+      220,
+      1747.26
+     ],
+     [
+      260,
+      1741.48
+     ],
+     [
+      300,
+      1736.16
+     ],
+     [
+      340,
+      1731.99
+     ],
+     [
+      380,
+      1729.53
+     ],
+     [
+      420,
+      1729.09
+     ],
+     [
+      460,
+      1730.73
+     ],
+     [
+      500,
+      1734.24
+     ],
+     [
+      540,
+      1739.15
+     ],
+     [
+      580,
+      1744.83
+     ],
+     [
+      620,
+      1750.53
+     ],
+     [
+      660,
+      1755.51
+     ],
+     [
+      700,
+      1759.11
+     ],
+     [
+      740,
+      1760.87
+     ],
+     [
+      780,
+      1760.55
+     ],
+     [
+      820,
+      1758.2
+     ],
+     [
+      860,
+      1754.12
+     ],
+     [
+      900,
+      1748.85
+     ],
+     [
+      940,
+      1743.07
+     ],
+     [
+      980,
+      1737.55
+     ],
+     [
+      1020,
+      1733.0
+     ],
+     [
+      1060,
+      1730.02
+     ],
+     [
+      1100,
+      1729.0
+     ],
+     [
+      1100,
+      1940
+     ],
+     [
+      -20,
+      1940
+     ]
+    ],
+    "amp": 3.5,
+    "step": 16,
+    "color": "#5b7c48",
+    "depth": 1.6
+   }
+  },
+  {
+   "id": "flowers",
+   "type": "scatter",
+   "params": {
+    "area": [
+     30,
+     1790,
+     1050,
+     1890
+    ],
+    "count": 16,
+    "item": "flower",
+    "seed": 3
+   }
+  },
+  {
+   "id": "pole",
+   "type": "pole",
+   "params": {
+    "rest": [
+     16,
+     -40
+    ]
+   }
+  },
+  {
+   "id": "crate",
+   "type": "group",
+   "at": [
+    520,
+    1668
+   ],
+   "params": {
+    "children": [
+     {
+      "shape": "rect",
+      "rect": [
+       -48,
+       -80,
+       96,
+       80
+      ],
+      "amp": 1.5,
+      "color": "#b98351",
+      "depth": 1.4,
+      "key": "crate"
+     },
+     {
+      "shape": "poly",
+      "points": [
+       [
+        -46.0,
+        -52.5
+       ],
+       [
+        46.0,
+        -52.5
+       ],
+       [
+        46.0,
+        -55.5
+       ],
+       [
+        -46.0,
+        -55.5
+       ]
+      ],
+      "color": "#7d5532",
+      "amp": 0,
+      "depth": 0,
+      "shadow": false,
+      "edge": false,
+      "key": "crate_slat0"
+     },
+     {
+      "shape": "poly",
+      "points": [
+       [
+        -46.0,
+        -25.5
+       ],
+       [
+        46.0,
+        -25.5
+       ],
+       [
+        46.0,
+        -28.5
+       ],
+       [
+        -46.0,
+        -28.5
+       ]
+      ],
+      "color": "#7d5532",
+      "amp": 0,
+      "depth": 0,
+      "shadow": false,
+      "edge": false,
+      "key": "crate_slat1"
+     },
+     {
+      "shape": "poly",
+      "points": [
+       [
+        -44.95,
+        -74.84
+       ],
+       [
+        43.05,
+        -2.84
+       ],
+       [
+        44.95,
+        -5.16
+       ],
+       [
+        -43.05,
+        -77.16
+       ]
+      ],
+      "color": "#7d5532",
+      "amp": 0,
+      "depth": 0,
+      "shadow": false,
+      "edge": false,
+      "key": "crate_slat2"
+     }
+    ]
+   }
+  },
+  {
+   "id": "jar",
+   "type": "container",
+   "at": [
+    520,
+    1588
+   ],
+   "params": {
+    "item": "star",
+    "w": 50,
+    "h": 60,
+    "capacity": 6,
+    "glow": true,
+    "lid": "#c4553b",
+    "glass": "#cfe6f2"
+   },
+   "init": {
+    "count": 6
+   }
+  },
+  {
+   "id": "night",
+   "type": "tint",
+   "params": {
+    "color": "#666edb",
+    "alpha": 0.62,
+    "glows": [
+     [
+      92,
+      1185,
+      70,
+      "#ffd36b",
+      0.45
+     ],
+     [
+      168,
+      1185,
+      70,
+      "#ffd36b",
+      0.45
+     ],
+     [
+      340,
+      1350,
+      150,
+      "#ffc96b",
+      0.22
+     ]
+    ]
+   }
+  },
+  {
+   "id": "stars",
+   "type": "burst",
+   "params": {
+    "count": 46,
+    "area": [
+     45,
+     60,
+     1035,
+     1130
+    ],
+    "seed": 42,
+    "spacing": 85,
+    "avoid": [
+     [
+      860,
+      530,
+      975,
+      4000
+     ],
+     [
+      300,
+      530,
+      4000,
+      720
+     ],
+     [
+      -1000,
+      900,
+      480,
+      4000
+     ],
+     [
+      540,
+      826,
+      150
+     ]
+    ],
+    "sizes": [
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     16,
+     18,
+     21
+    ],
+    "column": [
+     [
+      -150,
+      150
+     ],
+     [
+      300,
+      520
+     ]
+    ],
+    "hold": 0.8,
+    "spread": [
+     0.85,
+     1.3
+    ],
+    "sparks": 22
+   }
+  }
+ ],
+ "characters": [
+  {
+   "id": "w_blue",
+   "role": "the worker who pushes the sun out, then runs the crane",
+   "look": {
+    "skin": "#f2c6a0",
+    "overall": "#3f7f9e",
+    "shirt": "#f4e9d8"
+   },
+   "scale": 0.92,
+   "at": [
+    197,
+    1480
+   ],
+   "pose": {
+    "turn": 0.6,
+    "gaze": [
+     1,
+     0
+    ],
+    "arms": [
+     70,
+     85,
+     75,
+     88
+    ],
+    "lean": 8,
+    "mouth": "smile"
+   }
+  },
+  {
+   "id": "w_red",
+   "role": "the worker who paints the sky with a pole roller",
+   "look": {
+    "skin": "#c98d63",
+    "overall": "#d4573f",
+    "shirt": "#f2d7a6",
+    "brow": "#3a2418"
+   },
+   "scale": 1.1,
+   "at": [
+    330,
+    1668
+   ],
+   "pose": {
+    "turn": 0.3,
+    "gaze": [
+     1,
+     -0.2
+    ],
+    "arms": [
+     -12,
+     -6,
+     20,
+     175
+    ],
+    "mouth": "smile"
+   }
+  },
+  {
+   "id": "w_green",
+   "role": "the worker who beckons and signals, then knocks the jar over",
+   "look": {
+    "skin": "#f0b994",
+    "overall": "#5b8a4e",
+    "shirt": "#e9eef2",
+    "mustache": true,
+    "brow": "#6b4430"
+   },
+   "scale": 1.14,
+   "at": [
+    730,
+    1668
+   ],
+   "pose": {
+    "turn": -0.6,
+    "gaze": [
+     -1,
+     0
+    ],
+    "mouth": "smile"
+   }
+  }
+ ],
+ "camera": {
+  "portrait": [
+   {
+    "t": 0.0,
+    "center": [
+     470,
+     1300
+    ],
+    "zoom": 1.5
+   },
+   {
+    "t": 4.1,
+    "center": [
+     500,
+     1300
+    ],
+    "zoom": 1.45
+   },
+   {
+    "t": 5.9,
+    "center": [
+     540,
+     960
+    ],
+    "zoom": 1.0
+   },
+   {
+    "t": 9.4,
+    "center": [
+     540,
+     960
+    ],
+    "zoom": 1.0
+   },
+   {
+    "t": 10.3,
+    "center": [
+     580,
+     1050
+    ],
+    "zoom": 1.15
+   },
+   {
+    "t": 13.4,
+    "center": [
+     560,
+     1000
+    ],
+    "zoom": 1.15
+   },
+   {
+    "t": 14.8,
+    "center": [
+     540,
+     1250
+    ],
+    "zoom": 1.38
+   },
+   {
+    "t": 15.9,
+    "center": [
+     560,
+     1300
+    ],
+    "zoom": 1.45
+   },
+   {
+    "t": 16.6,
+    "center": [
+     580,
+     1180
+    ],
+    "zoom": 1.3
+   },
+   {
+    "t": 17.8,
+    "center": [
+     540,
+     960
+    ],
+    "zoom": 1.0
+   },
+   {
+    "t": 17.9,
+    "center": [
+     540,
+     960
+    ],
+    "zoom": 1.0
+   },
+   {
+    "t": 19.1,
+    "center": [
+     565,
+     1340
+    ],
+    "zoom": 1.62
+   },
+   {
+    "t": 20.0,
+    "center": [
+     565,
+     1340
+    ],
+    "zoom": 1.66
+   }
+  ]
+ },
+ "actions": [
+  {
+   "do": "animate",
+   "start": 0.5,
+   "end": 1.2,
+   "id": "shutter_opens",
+   "target": "shutter",
+   "channel": "open",
+   "to": 1,
+   "sound": [
+    {
+     "kind": "click",
+     "every": 0.04666666666666666,
+     "freq": 2300,
+     "dur": 0.03,
+     "noise": 0.7,
+     "gain": 0.12,
+     "pan": 0.35
+    },
+    {
+     "kind": "thud",
+     "at": 0.72,
+     "freq": 140,
+     "dur": 0.3,
+     "gain": 0.25,
+     "pan": 0.35
+    }
+   ],
+   "beat": {
+    "id": "shutter",
+    "label": "shutter opens",
+    "expected": "The factory shutter opens."
+   }
+  },
+  {
+   "do": "push",
+   "start": 1.3,
+   "end": 4.0,
+   "id": "sun_pushed",
+   "actor": "w_blue",
+   "target": "sun",
+   "to": 610,
+   "offset": -128,
+   "lean": 8,
+   "sound": [
+    {
+     "kind": "click",
+     "every": 0.38,
+     "at": 0.2,
+     "freq": 900,
+     "dur": 0.05,
+     "noise": 0.5,
+     "gain": 0.12,
+     "pan": 0.4
+    },
+    {
+     "kind": "swish",
+     "at": 0,
+     "dur": 2.7,
+     "lo": 40,
+     "hi": 180,
+     "gain": 0.35,
+     "pan": 0.45
+    },
+    {
+     "kind": "thud",
+     "at": 2.68,
+     "freq": 110,
+     "dur": 0.3,
+     "gain": 0.18,
+     "pan": 0.55
+    }
+   ],
+   "beat": {
+    "id": "sun_rolled",
+    "label": "sun rolled out",
+    "expected": "A sun rolls out of the factory along the conveyor."
+   }
+  },
+  {
+   "do": "animate",
+   "start": 1.3,
+   "end": 4.0,
+   "target": "conveyor",
+   "channel": "offset",
+   "to": -285
+  },
+  {
+   "do": "pose",
+   "start": 0.0,
+   "end": 1.3,
+   "actor": "w_green",
+   "set": {
+    "arms": [
+     -70,
+     -160,
+     12,
+     6
+    ],
+    "mouth": "grin"
+   }
+  },
+  {
+   "do": "wave",
+   "start": 1.3,
+   "end": 3.8,
+   "actor": "w_green",
+   "hand": "L",
+   "amp": [
+    6,
+    30
+   ],
+   "freq": 1.6
+  },
+  {
+   "do": "pose",
+   "start": 3.8,
+   "end": 4.1,
+   "actor": "w_green",
+   "set": {
+    "arms": [
+     -60,
+     -168,
+     12,
+     6
+    ]
+   }
+  },
+  {
+   "do": "pose",
+   "start": 4.1,
+   "end": 4.8,
+   "actor": "w_green",
+   "set": {
+    "arms": [
+     -12,
+     -6,
+     12,
+     6
+    ]
+   }
+  },
+  {
+   "do": "pose",
+   "start": 4.8,
+   "end": 5.0,
+   "actor": "w_green",
+   "set": {
+    "mouth": "grin",
+    "brow": 0.4
+   }
+  },
+  {
+   "do": "pose",
+   "start": 4.0,
+   "end": 4.35,
+   "actor": "w_blue",
+   "set": {
+    "arms": [
+     -12,
+     -6,
+     160,
+     -135
+    ],
+    "lean": 0,
+    "turn": 0.2,
+    "gaze": [
+     0,
+     -0.3
+    ],
+    "mouth": "flat"
+   }
+  },
+  {
+   "do": "pose",
+   "start": 4.35,
+   "end": 4.75,
+   "actor": "w_blue",
+   "set": {
+    "arms": [
+     -12,
+     -6,
+     160,
+     -125
+    ]
+   }
+  },
+  {
+   "do": "pose",
+   "start": 4.75,
+   "end": 5.0,
+   "actor": "w_blue",
+   "set": {
+    "arms": [
+     -12,
+     -6,
+     60,
+     165
+    ],
+    "turn": 0.6,
+    "gaze": [
+     1,
+     0
+    ],
+    "mouth": "grin"
+   }
+  },
+  {
+   "do": "pose",
+   "start": 5.0,
+   "end": 5.5,
+   "actor": "w_blue",
+   "set": {
+    "arms": [
+     -12,
+     -6,
+     12,
+     6
+    ],
+    "turn": 0.0,
+    "gaze": [
+     -0.3,
+     -1
+    ],
+    "mouth": "o",
+    "brow": 0.6
+   }
+  },
+  {
+   "do": "pose",
+   "start": 5.5,
+   "end": 7.0,
+   "actor": "w_blue",
+   "set": {
+    "gaze": [
+     0.5,
+     -1
+    ],
+    "mouth": "smile",
+    "brow": 0.2
+   }
+  },
+  {
+   "do": "pose",
+   "start": 7.0,
+   "end": 9.0,
+   "actor": "w_blue",
+   "set": {
+    "turn": 0.8,
+    "gaze": [
+     1,
+     -0.2
+    ]
+   }
+  },
+  {
+   "do": "pose",
+   "start": 9.0,
+   "end": 9.8,
+   "actor": "w_blue",
+   "set": {
+    "turn": -0.4,
+    "gaze": [
+     -0.5,
+     -1
+    ],
+    "arms": [
+     -12,
+     -6,
+     30,
+     70
+    ]
+   }
+  },
+  {
+   "do": "walk_to",
+   "start": 9.0,
+   "end": 9.8,
+   "actor": "w_blue",
+   "to": 820
+  },
+  {
+   "do": "hold",
+   "start": 0.0,
+   "end": 13.6,
+   "actor": "w_red",
+   "target": "pole",
+   "hand": "R"
+  },
+  {
+   "do": "paint",
+   "start": 5.0,
+   "actor": "w_red",
+   "target": "sky",
+   "pole": "pole",
+   "step": 0.72,
+   "dur": 0.62,
+   "extend": 0.45,
+   "retract": 0.5,
+   "sound": [
+    {
+     "kind": "click",
+     "at": 0.0,
+     "freq": 1700,
+     "dur": 0.04,
+     "noise": 0.4,
+     "gain": 0.14,
+     "pan": 0.4
+    },
+    {
+     "kind": "click",
+     "at": 0.12,
+     "freq": 1700,
+     "dur": 0.04,
+     "noise": 0.4,
+     "gain": 0.14,
+     "pan": 0.4
+    },
+    {
+     "kind": "click",
+     "at": 0.24,
+     "freq": 1700,
+     "dur": 0.04,
+     "noise": 0.4,
+     "gain": 0.14,
+     "pan": 0.4
+    },
+    {
+     "kind": "swish",
+     "at": 0.45,
+     "dur": 0.67,
+     "lo": 400,
+     "hi": 2600,
+     "gain": 0.22,
+     "pan": 0.25
+    },
+    {
+     "kind": "swish",
+     "at": 1.17,
+     "dur": 0.67,
+     "lo": 520,
+     "hi": 2900,
+     "gain": 0.22,
+     "pan": 0.75
+    },
+    {
+     "kind": "swish",
+     "at": 1.89,
+     "dur": 0.67,
+     "lo": 640,
+     "hi": 3200,
+     "gain": 0.22,
+     "pan": 0.25
+    },
+    {
+     "kind": "swish",
+     "at": 2.6100000000000003,
+     "dur": 0.67,
+     "lo": 760,
+     "hi": 3500,
+     "gain": 0.22,
+     "pan": 0.75
+    },
+    {
+     "kind": "swish",
+     "at": 3.33,
+     "dur": 0.67,
+     "lo": 880,
+     "hi": 3800,
+     "gain": 0.22,
+     "pan": 0.25
+    },
+    {
+     "kind": "swish",
+     "at": 4.05,
+     "dur": 0.67,
+     "lo": 1000,
+     "hi": 4100,
+     "gain": 0.22,
+     "pan": 0.75
+    },
+    {
+     "kind": "click",
+     "at": 4.77,
+     "freq": 1500,
+     "dur": 0.04,
+     "noise": 0.4,
+     "gain": 0.12,
+     "pan": 0.4
+    },
+    {
+     "kind": "click",
+     "at": 4.89,
+     "freq": 1500,
+     "dur": 0.04,
+     "noise": 0.4,
+     "gain": 0.12,
+     "pan": 0.4
+    },
+    {
+     "kind": "click",
+     "at": 5.01,
+     "freq": 1500,
+     "dur": 0.04,
+     "noise": 0.4,
+     "gain": 0.12,
+     "pan": 0.4
+    }
+   ],
+   "beat": {
+    "id": "sky_painted",
+    "label": "sky painted",
+    "start": 5.0,
+    "end": 9.3,
+    "expected": "The sky gets painted band by band in evening colours."
+   }
+  },
+  {
+   "do": "pose",
+   "start": 9.72,
+   "end": 10.0,
+   "actor": "w_red",
+   "set": {
+    "arms": [
+     -12,
+     -6,
+     20,
+     175
+    ],
+    "turn": 0.4,
+    "gaze": [
+     0.7,
+     -1
+    ],
+    "mouth": "smile",
+    "lean": 0
+   }
+  },
+  {
+   "do": "pose",
+   "start": 9.5,
+   "end": 9.9,
+   "actor": "w_green",
+   "set": {
+    "arms": [
+     -150,
+     -175,
+     150,
+     175
+    ],
+    "gaze": [
+     -0.4,
+     -1
+    ],
+    "turn": -0.3,
+    "mouth": "smile"
+   }
+  },
+  {
+   "do": "wave",
+   "start": 9.9,
+   "end": 13.0,
+   "actor": "w_green",
+   "hand": "both",
+   "amp": [
+    10,
+    22
+   ],
+   "freq": 1.4
+  },
+  {
+   "do": "reach",
+   "start": 9.8,
+   "end": 10.1,
+   "actor": "w_blue",
+   "hand": "R",
+   "target": "lever.handle"
+  },
+  {
+   "do": "animate",
+   "start": 9.8,
+   "end": 10.1,
+   "target": "lever",
+   "channel": "rot",
+   "to": 0.35
+  },
+  {
+   "do": "animate",
+   "start": 9.8,
+   "end": 10.6,
+   "id": "crane_lift",
+   "target": "crane",
+   "channel": "trolley",
+   "to": 610,
+   "sound": [
+    {
+     "kind": "motor",
+     "at": 0,
+     "freq": 85,
+     "freq_end": 95,
+     "dur": 0.8,
+     "wobble": 0.02,
+     "gain": 0.055,
+     "pan": 0.7
+    }
+   ],
+   "beat": {
+    "id": "crane",
+    "label": "crane lifts the sun",
+    "start": 9.8,
+    "end": 13.0,
+    "expected": "The crane hook comes down, takes the sun and lifts it into the sky."
+   }
+  },
+  {
+   "do": "animate",
+   "start": 10.6,
+   "end": 11.3,
+   "target": "crane",
+   "channel": "hook_y",
+   "to": 1227,
+   "sound": [
+    {
+     "kind": "motor",
+     "at": 0,
+     "freq": 130,
+     "freq_end": 105,
+     "dur": 0.7,
+     "wobble": 0.01,
+     "gain": 0.05,
+     "pan": 0.6
+    },
+    {
+     "kind": "click",
+     "every": 0.07,
+     "freq": 3100,
+     "dur": 0.012,
+     "noise": 0.2,
+     "gain": 0.035,
+     "pan": 0.6
+    }
+   ]
+  },
+  {
+   "do": "animate",
+   "start": 11.3,
+   "end": 11.5,
+   "target": "crane",
+   "channel": "hook_open",
+   "to": 0,
+   "sound": [
+    {
+     "kind": "metal",
+     "at": 0,
+     "freq": 1800,
+     "dur": 0.7,
+     "gain": 0.08,
+     "pan": 0.55
+    },
+    {
+     "kind": "click",
+     "at": 0.03,
+     "freq": 4200,
+     "dur": 0.02,
+     "noise": 0.3,
+     "gain": 0.1,
+     "pan": 0.55
+    }
+   ]
+  },
+  {
+   "do": "attach",
+   "start": 11.6,
+   "end": 13.0,
+   "target": "sun",
+   "to": "crane.hook",
+   "by": "top"
+  },
+  {
+   "do": "animate",
+   "start": 11.6,
+   "end": 13.0,
+   "target": "crane",
+   "channel": "trolley",
+   "to": 540,
+   "ease": "io5",
+   "sound": [
+    {
+     "kind": "motor",
+     "at": 0,
+     "freq": 95,
+     "freq_end": 140,
+     "dur": 1.4,
+     "wobble": 0.015,
+     "gain": 0.06,
+     "pan": 0.55
+    },
+    {
+     "kind": "click",
+     "every": 0.09,
+     "freq": 2800,
+     "dur": 0.012,
+     "noise": 0.2,
+     "gain": 0.03,
+     "pan": 0.55
+    }
+   ]
+  },
+  {
+   "do": "animate",
+   "start": 11.6,
+   "end": 13.0,
+   "target": "crane",
+   "channel": "hook_y",
+   "to": 745,
+   "ease": "io5"
+  },
+  {
+   "do": "animate",
+   "start": 13.0,
+   "end": 13.2,
+   "target": "crane",
+   "channel": "hook_open",
+   "to": 1,
+   "sound": [
+    {
+     "kind": "metal",
+     "at": 0,
+     "freq": 2100,
+     "dur": 0.8,
+     "gain": 0.08,
+     "pan": 0.5
+    },
+    {
+     "kind": "bell",
+     "at": 0.15,
+     "freq": 523.25,
+     "dur": 1.8,
+     "gain": 0.07,
+     "pan": 0.5
+    },
+    {
+     "kind": "bell",
+     "at": 0.24,
+     "freq": 659.25,
+     "dur": 1.8,
+     "gain": 0.07,
+     "pan": 0.5
+    },
+    {
+     "kind": "bell",
+     "at": 0.32999999999999996,
+     "freq": 783.99,
+     "dur": 1.8,
+     "gain": 0.07,
+     "pan": 0.5
+    }
+   ]
+  },
+  {
+   "do": "animate",
+   "start": 13.2,
+   "end": 13.6,
+   "target": "crane",
+   "channel": "hook_y",
+   "to": 700
+  },
+  {
+   "do": "animate",
+   "start": 13.4,
+   "end": 14.4,
+   "target": "crane",
+   "channel": "trolley",
+   "to": 860,
+   "sound": [
+    {
+     "kind": "motor",
+     "at": 0,
+     "freq": 90,
+     "freq_end": 85,
+     "dur": 1.0,
+     "wobble": 0.02,
+     "gain": 0.04,
+     "pan": 0.75
+    }
+   ]
+  },
+  {
+   "do": "animate",
+   "start": 13.4,
+   "end": 13.6,
+   "target": "lever",
+   "channel": "rot",
+   "to": -0.3
+  },
+  {
+   "do": "move",
+   "start": 13.0,
+   "end": 13.8,
+   "target": "sun",
+   "by": [
+    0,
+    -34
+   ],
+   "ease": "out"
+  },
+  {
+   "do": "animate",
+   "start": 13.0,
+   "end": 13.5,
+   "target": "sun",
+   "channel": "power",
+   "to": 1.75,
+   "ease": "out"
+  },
+  {
+   "do": "animate",
+   "start": 13.5,
+   "end": 14.0,
+   "target": "sun",
+   "channel": "power",
+   "to": 1.0
+  },
+  {
+   "do": "layer",
+   "start": 13.6,
+   "target": "sun",
+   "behind": "hill_far"
+  },
+  {
+   "do": "pose",
+   "start": 13.4,
+   "end": 13.8,
+   "actor": "w_blue",
+   "set": {
+    "arms": [
+     -45,
+     32,
+     45,
+     -32
+    ],
+    "gaze": [
+     -0.6,
+     -1
+    ],
+    "mouth": "grin",
+    "turn": -0.4
+   },
+   "beat": {
+    "id": "admiration",
+    "label": "admiration",
+    "start": 13.6,
+    "end": 15.2,
+    "expected": "The workers look up at the sun in the sky, pleased."
+   }
+  },
+  {
+   "do": "pose",
+   "start": 13.0,
+   "end": 13.4,
+   "actor": "w_green",
+   "set": {
+    "arms": [
+     -12,
+     -6,
+     12,
+     6
+    ]
+   }
+  },
+  {
+   "do": "pose",
+   "start": 13.4,
+   "end": 13.8,
+   "actor": "w_green",
+   "set": {
+    "arms": [
+     -20,
+     70,
+     20,
+     -70
+    ],
+    "gaze": [
+     0.2,
+     -1
+    ],
+    "turn": 0.4,
+    "mouth": "smile",
+    "brow": 0.3,
+    "lean": 3
+   }
+  },
+  {
+   "do": "pose",
+   "start": 13.6,
+   "end": 14.0,
+   "actor": "w_red",
+   "set": {
+    "arms": [
+     -12,
+     -6,
+     150,
+     168
+    ],
+    "mouth": "grin",
+    "gaze": [
+     0.6,
+     -1
+    ],
+    "turn": 0.5
+   }
+  },
+  {
+   "do": "animate",
+   "start": 13.6,
+   "end": 13.85,
+   "target": "pole",
+   "channel": "base_x",
+   "to": 262
+  },
+  {
+   "do": "animate",
+   "start": 13.6,
+   "end": 13.85,
+   "target": "pole",
+   "channel": "base_y",
+   "to": 1668
+  },
+  {
+   "do": "animate",
+   "start": 13.6,
+   "end": 13.85,
+   "target": "pole",
+   "channel": "tip_dx",
+   "to": 0
+  },
+  {
+   "do": "animate",
+   "start": 13.6,
+   "end": 13.85,
+   "target": "pole",
+   "channel": "tip_dy",
+   "to": -170
+  },
+  {
+   "do": "layer",
+   "start": 13.85,
+   "target": "pole",
+   "behind": "w_red"
+  },
+  {
+   "do": "pose",
+   "start": 14.45,
+   "end": 14.7,
+   "actor": "w_red",
+   "set": {
+    "arms": [
+     -60,
+     60,
+     60,
+     -60
+    ]
+   }
+  },
+  {
+   "do": "clap",
+   "start": 14.7,
+   "end": 15.25,
+   "actor": "w_red",
+   "amp": [
+    8,
+    22
+   ],
+   "freq": 3
+  },
+  {
+   "do": "walk_to",
+   "start": 13.8,
+   "end": 15.2,
+   "actor": "w_green",
+   "to": 612
+  },
+  {
+   "do": "walk_to",
+   "start": 15.2,
+   "end": 15.3,
+   "actor": "w_green",
+   "to": 630
+  },
+  {
+   "do": "pose",
+   "start": 15.2,
+   "end": 15.3,
+   "actor": "w_green",
+   "set": {
+    "mouth": "o",
+    "brow": 1.0,
+    "lean": -7,
+    "arms": [
+     -150,
+     -165,
+     150,
+     165
+    ]
+   }
+  },
+  {
+   "do": "walk_to",
+   "start": 15.3,
+   "end": 15.6,
+   "actor": "w_green",
+   "to": 735
+  },
+  {
+   "do": "pose",
+   "start": 15.3,
+   "end": 15.6,
+   "actor": "w_green",
+   "set": {
+    "turn": -0.9,
+    "gaze": [
+     -1,
+     0.6
+    ],
+    "arms": [
+     -30,
+     159,
+     30,
+     -159
+    ],
+    "lean": 0
+   },
+   "beat": {
+    "id": "hands_on_cheeks",
+    "label": "hands on cheeks",
+    "start": 15.55,
+    "end": 16.1,
+    "expected": "The green worker brings his hands to his cheeks in dismay."
+   }
+  },
+  {
+   "do": "shake",
+   "start": 15.2,
+   "end": 16.0,
+   "target": "crate",
+   "amp": 5,
+   "freq": 6,
+   "decay": 9,
+   "sound": [
+    {
+     "kind": "thud",
+     "at": 0,
+     "freq": 85,
+     "dur": 0.4,
+     "gain": 0.45,
+     "pan": 0.48
+    },
+    {
+     "kind": "click",
+     "at": 0.01,
+     "freq": 900,
+     "dur": 0.12,
+     "noise": 1.0,
+     "gain": 0.25,
+     "pan": 0.48
+    }
+   ]
+  },
+  {
+   "do": "tip_over",
+   "start": 15.85,
+   "end": 16.15,
+   "id": "jar_falls",
+   "target": "jar",
+   "side": 1,
+   "wobble_from": 15.2,
+   "slide": 85,
+   "land": 1642,
+   "lid_to": [
+    526,
+    1581
+   ],
+   "shake": {
+    "amp": 5,
+    "freq": 6,
+    "decay": 9
+   },
+   "sound": [
+    {
+     "kind": "metal",
+     "at": 0.08,
+     "freq": 3200,
+     "dur": 0.25,
+     "gain": 0.03,
+     "pan": 0.45
+    },
+    {
+     "kind": "metal",
+     "at": 0.236,
+     "freq": 3350,
+     "dur": 0.25,
+     "gain": 0.0375,
+     "pan": 0.45
+    },
+    {
+     "kind": "metal",
+     "at": 0.392,
+     "freq": 3200,
+     "dur": 0.25,
+     "gain": 0.045,
+     "pan": 0.45
+    },
+    {
+     "kind": "metal",
+     "at": 0.548,
+     "freq": 3350,
+     "dur": 0.25,
+     "gain": 0.0525,
+     "pan": 0.45
+    },
+    {
+     "kind": "metal",
+     "at": 0.95,
+     "freq": 2600,
+     "dur": 0.6,
+     "gain": 0.1,
+     "pan": 0.35
+    },
+    {
+     "kind": "thud",
+     "at": 0.95,
+     "freq": 170,
+     "dur": 0.25,
+     "gain": 0.22,
+     "pan": 0.35
+    }
+   ],
+   "beat": {
+    "id": "bump_fall",
+    "label": "bump and fall",
+    "start": 15.2,
+    "end": 16.15,
+    "expected": "The green worker, stepping back, bumps the crate; the jar on it wobbles and falls on the green worker's side. The fault is the green worker's, not the red one's."
+   }
+  },
+  {
+   "do": "pose",
+   "start": 15.2,
+   "end": 15.5,
+   "actor": "w_blue",
+   "set": {
+    "turn": -0.7,
+    "gaze": [
+     -1,
+     0.3
+    ],
+    "mouth": "o",
+    "brow": 0.6
+   }
+  },
+  {
+   "do": "pose",
+   "start": 15.5,
+   "end": 16.25,
+   "actor": "w_blue",
+   "set": {
+    "gaze": [
+     -0.6,
+     -1
+    ],
+    "brow": 1.0,
+    "arms": [
+     -30,
+     -20,
+     30,
+     20
+    ]
+   }
+  },
+  {
+   "do": "pose",
+   "start": 15.25,
+   "end": 15.5,
+   "actor": "w_red",
+   "set": {
+    "turn": 0.7,
+    "gaze": [
+     1,
+     0.3
+    ],
+    "mouth": "o",
+    "brow": 0.6,
+    "arms": [
+     -12,
+     -6,
+     12,
+     6
+    ]
+   }
+  },
+  {
+   "do": "pose",
+   "start": 15.5,
+   "end": 16.2,
+   "actor": "w_red",
+   "set": {
+    "gaze": [
+     0.2,
+     -1
+    ],
+    "brow": 1.0,
+    "arms": [
+     -40,
+     -60,
+     40,
+     60
+    ]
+   }
+  },
+  {
+   "do": "pose",
+   "start": 16.1,
+   "end": 16.35,
+   "actor": "w_green",
+   "set": {
+    "turn": -0.3,
+    "gaze": [
+     -0.4,
+     -1
+    ],
+    "arms": [
+     -30,
+     -40,
+     30,
+     40
+    ]
+   }
+  },
+  {
+   "do": "burst",
+   "start": 16.17,
+   "target": "stars",
+   "from": "jar.mouth",
+   "sound": [
+    {
+     "kind": "swish",
+     "at": 0,
+     "dur": 1.0,
+     "lo": 400,
+     "hi": 9000,
+     "gain": 0.1,
+     "pan": 0.4
+    },
+    {
+     "kind": "swish",
+     "at": 0.76,
+     "dur": 1.0,
+     "lo": 900,
+     "hi": 9000,
+     "gain": 0.08,
+     "pan": 0.6
+    },
+    {
+     "kind": "sparkle",
+     "every": 0.045,
+     "freq": 2637,
+     "dur": 0.6,
+     "gain": 0.02,
+     "pan": 0.5
+    },
+    {
+     "kind": "sparkle",
+     "per_item": true,
+     "freq": 3136,
+     "dur": 0.5,
+     "gain": 0.012
+    }
+   ],
+   "beat": {
+    "id": "stars_night",
+    "label": "stars, then night",
+    "start": 16.15,
+    "end": 18.4,
+    "expected": "Stars burst out of the fallen jar (from the green worker's side), scatter across the sky, and night falls."
+   }
+  },
+  {
+   "do": "animate",
+   "start": 16.9,
+   "end": 18.4,
+   "target": "night_sky",
+   "channel": "y",
+   "to": 1420,
+   "sound": [
+    {
+     "kind": "pad",
+     "at": 0,
+     "dur": 3.6,
+     "gain": 0.016,
+     "pan": 0.5
+    }
+   ]
+  },
+  {
+   "do": "animate",
+   "start": 17.1,
+   "end": 18.5,
+   "target": "night",
+   "channel": "night",
+   "to": 1
+  },
+  {
+   "do": "animate",
+   "start": 17.3,
+   "end": 17.9,
+   "target": "window_1",
+   "channel": "color",
+   "to": "#ffdd7a"
+  },
+  {
+   "do": "animate",
+   "start": 17.3,
+   "end": 17.9,
+   "target": "window_glow_1",
+   "channel": "alpha",
+   "to": 0.5
+  },
+  {
+   "do": "animate",
+   "start": 17.3,
+   "end": 17.9,
+   "target": "window_2",
+   "channel": "color",
+   "to": "#ffdd7a"
+  },
+  {
+   "do": "animate",
+   "start": 17.3,
+   "end": 17.9,
+   "target": "window_glow_2",
+   "channel": "alpha",
+   "to": 0.5
+  },
+  {
+   "do": "animate",
+   "start": 17.5,
+   "end": 17.5,
+   "target": "roof_window_1",
+   "channel": "color",
+   "to": "#f3d98a"
+  },
+  {
+   "do": "animate",
+   "start": 17.5,
+   "end": 17.5,
+   "target": "roof_window_2",
+   "channel": "color",
+   "to": "#f3d98a"
+  },
+  {
+   "do": "animate",
+   "start": 17.5,
+   "end": 17.5,
+   "target": "roof_window_3",
+   "channel": "color",
+   "to": "#f3d98a"
+  },
+  {
+   "do": "move",
+   "start": 17.0,
+   "end": 19.0,
+   "target": "sun",
+   "by": [
+    0,
+    604
+   ]
+  },
+  {
+   "do": "animate",
+   "start": 17.0,
+   "end": 19.0,
+   "target": "sun",
+   "channel": "dim",
+   "to": 1
+  },
+  {
+   "do": "animate",
+   "start": 17.0,
+   "end": 19.0,
+   "target": "sun",
+   "channel": "power",
+   "to": 0.4
+  },
+  {
+   "do": "pose",
+   "start": 18.0,
+   "end": 18.4,
+   "actor": "w_blue",
+   "set": {
+    "turn": -0.8,
+    "gaze": [
+     -1,
+     0.5
+    ],
+    "mouth": "flat",
+    "brow": 0.3
+   },
+   "beat": {
+    "id": "looks",
+    "label": "looks exchanged",
+    "start": 18.3,
+    "end": 18.3,
+    "expected": "The workers look at each other."
+   }
+  },
+  {
+   "do": "pose",
+   "start": 18.0,
+   "end": 18.4,
+   "actor": "w_red",
+   "set": {
+    "turn": 0.8,
+    "gaze": [
+     1,
+     0
+    ],
+    "mouth": "flat",
+    "brow": 0.3,
+    "arms": [
+     -12,
+     -6,
+     12,
+     6
+    ]
+   }
+  },
+  {
+   "do": "pose",
+   "start": 18.0,
+   "end": 18.4,
+   "actor": "w_green",
+   "set": {
+    "turn": -0.9,
+    "gaze": [
+     -1,
+     0.1
+    ],
+    "mouth": "flat",
+    "brow": 0.3,
+    "arms": [
+     -12,
+     -6,
+     12,
+     6
+    ]
+   }
+  },
+  {
+   "do": "shrug",
+   "start": 19.0,
+   "end": 19.45,
+   "actor": "w_blue",
+   "turn": -0.4,
+   "gaze": [
+    -0.7,
+    0.3
+   ],
+   "sound": [
+    {
+     "kind": "marimba",
+     "at": 0.12,
+     "freq": 392.0,
+     "gain": 0.22,
+     "pan": 0.5
+    },
+    {
+     "kind": "marimba",
+     "at": 0.38,
+     "freq": 293.66,
+     "gain": 0.22,
+     "pan": 0.5
+    }
+   ],
+   "beat": {
+    "id": "shrug",
+    "label": "shrug",
+    "start": 19.0,
+    "end": 19.5,
+    "expected": "The workers shrug."
+   }
+  },
+  {
+   "do": "shrug",
+   "start": 19.0,
+   "end": 19.45,
+   "actor": "w_red",
+   "turn": 0.5,
+   "gaze": [
+    0.8,
+    0.2
+   ]
+  },
+  {
+   "do": "shrug",
+   "start": 19.0,
+   "end": 19.45,
+   "actor": "w_green",
+   "turn": -0.5,
+   "gaze": [
+    -0.8,
+    0.2
+   ]
+  }
+ ],
+ "sound": {
+  "peak_dbfs": -1.0,
+  "seed": 11,
+  "reverb_mix": 0.18,
+  "events": [
+   {
+    "t": 0.15,
+    "kind": "click",
+    "freq": 1300,
+    "dur": 0.025,
+    "noise": 0.3,
+    "gain": 0.05,
+    "pan": 0.2
+   },
+   {
+    "t": 0.65,
+    "kind": "click",
+    "freq": 1300,
+    "dur": 0.025,
+    "noise": 0.3,
+    "gain": 0.05,
+    "pan": 0.2
+   },
+   {
+    "t": 1.15,
+    "kind": "click",
+    "freq": 1300,
+    "dur": 0.025,
+    "noise": 0.3,
+    "gain": 0.05,
+    "pan": 0.2
+   },
+   {
+    "t": 1.65,
+    "kind": "click",
+    "freq": 1300,
+    "dur": 0.025,
+    "noise": 0.3,
+    "gain": 0.05,
+    "pan": 0.2
+   },
+   {
+    "t": 2.15,
+    "kind": "click",
+    "freq": 1300,
+    "dur": 0.025,
+    "noise": 0.3,
+    "gain": 0.05,
+    "pan": 0.2
+   },
+   {
+    "t": 2.65,
+    "kind": "click",
+    "freq": 1300,
+    "dur": 0.025,
+    "noise": 0.3,
+    "gain": 0.05,
+    "pan": 0.2
+   },
+   {
+    "t": 3.15,
+    "kind": "click",
+    "freq": 1300,
+    "dur": 0.025,
+    "noise": 0.3,
+    "gain": 0.05,
+    "pan": 0.2
+   },
+   {
+    "t": 3.65,
+    "kind": "click",
+    "freq": 1300,
+    "dur": 0.025,
+    "noise": 0.3,
+    "gain": 0.05,
+    "pan": 0.2
+   },
+   {
+    "t": 4.15,
+    "kind": "click",
+    "freq": 1300,
+    "dur": 0.025,
+    "noise": 0.3,
+    "gain": 0.05,
+    "pan": 0.2
+   },
+   {
+    "t": 4.65,
+    "kind": "click",
+    "freq": 1300,
+    "dur": 0.025,
+    "noise": 0.3,
+    "gain": 0.05,
+    "pan": 0.2
+   },
+   {
+    "t": 5.15,
+    "kind": "click",
+    "freq": 1300,
+    "dur": 0.025,
+    "noise": 0.3,
+    "gain": 0.05,
+    "pan": 0.2
+   },
+   {
+    "t": 5.65,
+    "kind": "click",
+    "freq": 1300,
+    "dur": 0.025,
+    "noise": 0.3,
+    "gain": 0.05,
+    "pan": 0.2
+   },
+   {
+    "t": 6.15,
+    "kind": "click",
+    "freq": 1300,
+    "dur": 0.025,
+    "noise": 0.3,
+    "gain": 0.05,
+    "pan": 0.2
+   },
+   {
+    "t": 6.65,
+    "kind": "click",
+    "freq": 1300,
+    "dur": 0.025,
+    "noise": 0.3,
+    "gain": 0.05,
+    "pan": 0.2
+   },
+   {
+    "t": 7.15,
+    "kind": "click",
+    "freq": 1300,
+    "dur": 0.025,
+    "noise": 0.3,
+    "gain": 0.05,
+    "pan": 0.2
+   },
+   {
+    "t": 7.65,
+    "kind": "click",
+    "freq": 1300,
+    "dur": 0.025,
+    "noise": 0.3,
+    "gain": 0.05,
+    "pan": 0.2
+   },
+   {
+    "t": 8.15,
+    "kind": "click",
+    "freq": 1300,
+    "dur": 0.025,
+    "noise": 0.3,
+    "gain": 0.05,
+    "pan": 0.2
+   },
+   {
+    "t": 8.65,
+    "kind": "click",
+    "freq": 1300,
+    "dur": 0.025,
+    "noise": 0.3,
+    "gain": 0.05,
+    "pan": 0.2
+   },
+   {
+    "t": 9.15,
+    "kind": "click",
+    "freq": 1300,
+    "dur": 0.025,
+    "noise": 0.3,
+    "gain": 0.05,
+    "pan": 0.2
+   },
+   {
+    "t": 9.65,
+    "kind": "click",
+    "freq": 1300,
+    "dur": 0.025,
+    "noise": 0.3,
+    "gain": 0.05,
+    "pan": 0.2
+   },
+   {
+    "t": 10.15,
+    "kind": "click",
+    "freq": 1300,
+    "dur": 0.025,
+    "noise": 0.3,
+    "gain": 0.05,
+    "pan": 0.2
+   },
+   {
+    "t": 10.65,
+    "kind": "click",
+    "freq": 1300,
+    "dur": 0.025,
+    "noise": 0.3,
+    "gain": 0.05,
+    "pan": 0.2
+   },
+   {
+    "t": 11.15,
+    "kind": "click",
+    "freq": 1300,
+    "dur": 0.025,
+    "noise": 0.3,
+    "gain": 0.05,
+    "pan": 0.2
+   },
+   {
+    "t": 11.65,
+    "kind": "click",
+    "freq": 1300,
+    "dur": 0.025,
+    "noise": 0.3,
+    "gain": 0.05,
+    "pan": 0.2
+   },
+   {
+    "t": 12.15,
+    "kind": "click",
+    "freq": 1300,
+    "dur": 0.025,
+    "noise": 0.3,
+    "gain": 0.05,
+    "pan": 0.2
+   },
+   {
+    "t": 12.65,
+    "kind": "click",
+    "freq": 1300,
+    "dur": 0.025,
+    "noise": 0.3,
+    "gain": 0.05,
+    "pan": 0.2
+   },
+   {
+    "t": 13.15,
+    "kind": "click",
+    "freq": 1300,
+    "dur": 0.025,
+    "noise": 0.3,
+    "gain": 0.05,
+    "pan": 0.2
+   },
+   {
+    "t": 13.65,
+    "kind": "click",
+    "freq": 1300,
+    "dur": 0.025,
+    "noise": 0.3,
+    "gain": 0.05,
+    "pan": 0.2
+   },
+   {
+    "t": 14.15,
+    "kind": "click",
+    "freq": 1300,
+    "dur": 0.025,
+    "noise": 0.3,
+    "gain": 0.05,
+    "pan": 0.2
+   },
+   {
+    "t": 14.65,
+    "kind": "click",
+    "freq": 1300,
+    "dur": 0.025,
+    "noise": 0.3,
+    "gain": 0.05,
+    "pan": 0.2
+   },
+   {
+    "t": 15.15,
+    "kind": "click",
+    "freq": 1300,
+    "dur": 0.025,
+    "noise": 0.3,
+    "gain": 0.05,
+    "pan": 0.2
+   },
+   {
+    "t": 15.65,
+    "kind": "click",
+    "freq": 1300,
+    "dur": 0.025,
+    "noise": 0.3,
+    "gain": 0.05,
+    "pan": 0.2
+   },
+   {
+    "t": 16.15,
+    "kind": "click",
+    "freq": 1300,
+    "dur": 0.025,
+    "noise": 0.3,
+    "gain": 0.05,
+    "pan": 0.2
+   },
+   {
+    "t": 14.08,
+    "kind": "click",
+    "freq": 2000,
+    "dur": 0.04,
+    "noise": 1.0,
+    "gain": 0.25,
+    "pan": 0.3
+   },
+   {
+    "t": 14.413,
+    "kind": "click",
+    "freq": 2000,
+    "dur": 0.04,
+    "noise": 1.0,
+    "gain": 0.25,
+    "pan": 0.3
+   },
+   {
+    "t": 14.747,
+    "kind": "click",
+    "freq": 2000,
+    "dur": 0.04,
+    "noise": 1.0,
+    "gain": 0.25,
+    "pan": 0.3
+   },
+   {
+    "t": 15.08,
+    "kind": "click",
+    "freq": 2000,
+    "dur": 0.04,
+    "noise": 1.0,
+    "gain": 0.25,
+    "pan": 0.3
+   },
+   {
+    "t": 17.67,
+    "kind": "sparkle",
+    "freq": 2349.3,
+    "dur": 0.8,
+    "gain": 0.015,
+    "pan": 0.15
+   },
+   {
+    "t": 17.9,
+    "kind": "sparkle",
+    "freq": 2631.2160000000003,
+    "dur": 0.8,
+    "gain": 0.015,
+    "pan": 0.22
+   },
+   {
+    "t": 18.13,
+    "kind": "sparkle",
+    "freq": 2913.132,
+    "dur": 0.8,
+    "gain": 0.015,
+    "pan": 0.29
+   },
+   {
+    "t": 18.36,
+    "kind": "sparkle",
+    "freq": 2349.3,
+    "dur": 0.8,
+    "gain": 0.015,
+    "pan": 0.36
+   },
+   {
+    "t": 18.59,
+    "kind": "sparkle",
+    "freq": 2631.2160000000003,
+    "dur": 0.8,
+    "gain": 0.015,
+    "pan": 0.43
+   },
+   {
+    "t": 18.82,
+    "kind": "sparkle",
+    "freq": 2913.132,
+    "dur": 0.8,
+    "gain": 0.015,
+    "pan": 0.5
+   },
+   {
+    "t": 19.05,
+    "kind": "sparkle",
+    "freq": 2349.3,
+    "dur": 0.8,
+    "gain": 0.015,
+    "pan": 0.57
+   },
+   {
+    "t": 19.28,
+    "kind": "sparkle",
+    "freq": 2631.2160000000003,
+    "dur": 0.8,
+    "gain": 0.015,
+    "pan": 0.64
+   },
+   {
+    "t": 19.51,
+    "kind": "sparkle",
+    "freq": 2913.132,
+    "dur": 0.8,
+    "gain": 0.015,
+    "pan": 0.71
+   },
+   {
+    "t": 19.74,
+    "kind": "sparkle",
+    "freq": 2349.3,
+    "dur": 0.8,
+    "gain": 0.015,
+    "pan": 0.78
+   }
+  ]
+ }
+}
