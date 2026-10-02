@@ -1,0 +1,1322 @@
+{
+ "format": "paper_scene/1",
+ "id": "tool-calling-triangle",
+ "title": "The history that is sent again",
+ "brief": "Wordless paper-cut illustration (19.62 s) for a Short or a re-edit of a published explainer on tool calling. A courier (the agent loop) wheels a cart of pages from a tool hatch to a seated reader (the model). Each turn a new page drops from the hatch onto the pile, the whole pile goes back to the reader, who reads every page and pays one coin per page into a cost jar beside him; a strip per turn on a cork board grows 1..5 into a staircase, outlined as a triangle, next to a flat grey dashed row of equal strips (the linear intuition).",
+ "duration": "p24.end",
+ "marks": {
+  "p20": [
+   0.0,
+   4.08
+  ],
+  "p21": [
+   4.08,
+   8.48
+  ],
+  "p22": [
+   8.48,
+   10.86
+  ],
+  "p23": [
+   10.86,
+   15.58
+  ],
+  "p24": [
+   15.58,
+   19.62
+  ]
+ },
+ "layouts": {
+  "landscape": {
+   "aspect": "16:9",
+   "width": 1920,
+   "height": 1080
+  },
+  "portrait": {
+   "aspect": "9:16",
+   "width": 1080,
+   "height": 1920,
+   "ui_safe_bottom": 0.2
+  }
+ },
+ "style": {
+  "background": "#e8e0cf",
+  "grain": true,
+  "grain_seed": 7,
+  "grain_alpha": 0.5,
+  "vignette": true,
+  "fade_in": 0
+ },
+ "text_allowed": [
+  "tour 1",
+  "tour 2",
+  "tour 3",
+  "tour 4",
+  "tour 5"
+ ],
+ "order": [
+  "wall",
+  "floor",
+  "cork",
+  "hatch",
+  "wrench",
+  "strips",
+  "ghost",
+  "tri",
+  "stand",
+  "jar",
+  "reader",
+  "cart",
+  "stack",
+  "courier"
+ ],
+ "props": [
+  {
+   "id": "wall",
+   "type": "shape",
+   "at": [
+    0,
+    0
+   ],
+   "params": {
+    "shape": "rect",
+    "rect": [
+     -40,
+     -40,
+     2000,
+     940
+    ],
+    "color": "#d9cdb6",
+    "depth": 0,
+    "shadow": false
+   },
+   "layouts": {
+    "portrait": {
+     "params": {
+      "rect": [
+       -40,
+       -40,
+       1160,
+       1540
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "floor",
+   "type": "shape",
+   "at": [
+    0,
+    900
+   ],
+   "params": {
+    "shape": "rect",
+    "rect": [
+     -40,
+     0,
+     2000,
+     260
+    ],
+    "color": "#a98b6d",
+    "depth": 0.3
+   },
+   "layouts": {
+    "portrait": {
+     "at": [
+      0,
+      1500
+     ],
+     "params": {
+      "rect": [
+       -40,
+       0,
+       1160,
+       500
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "cork",
+   "type": "shape",
+   "at": [
+    620,
+    540
+   ],
+   "params": {
+    "shape": "rect",
+    "rect": [
+     -50,
+     -250,
+     940,
+     310
+    ],
+    "color": "#c79a64",
+    "depth": 0.8
+   },
+   "layouts": {
+    "portrait": {
+     "at": [
+      120,
+      930
+     ],
+     "params": {
+      "rect": [
+       -60,
+       -360,
+       960,
+       400
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "hatch",
+   "type": "door",
+   "at": [
+    520,
+    700
+   ],
+   "params": {
+    "rect": [
+     -75,
+     -120,
+     150,
+     120
+    ],
+    "color": "#9aa3a8",
+    "slats": 8,
+    "inside_color": "#2b1d1a"
+   },
+   "layouts": {
+    "portrait": {
+     "at": [
+      250,
+      1300
+     ]
+    }
+   }
+  },
+  {
+   "id": "wrench",
+   "type": "group",
+   "at": [
+    520,
+    545
+   ],
+   "params": {
+    "children": [
+     {
+      "shape": "rect",
+      "rect": [
+       -7,
+       -4,
+       14,
+       44
+      ],
+      "color": "#5d6670",
+      "depth": 0.4,
+      "at": [
+       0,
+       0
+      ]
+     },
+     {
+      "shape": "circle",
+      "r": 15,
+      "color": "#5d6670",
+      "depth": 0.4,
+      "at": [
+       0,
+       -8
+      ]
+     },
+     {
+      "shape": "rect",
+      "rect": [
+       -5,
+       -26,
+       10,
+       16
+      ],
+      "color": "#d9cdb6",
+      "depth": 0,
+      "shadow": false,
+      "edge": false,
+      "at": [
+       0,
+       0
+      ]
+     }
+    ]
+   },
+   "layouts": {
+    "portrait": {
+     "at": [
+      250,
+      1145
+     ]
+    }
+   }
+  },
+  {
+   "id": "strips",
+   "type": "bars",
+   "at": [
+    620,
+    540
+   ],
+   "params": {
+    "width": 60,
+    "gap": 30,
+    "unit": 40,
+    "n": 5,
+    "color": "#e98a5d",
+    "labels": [
+     "tour 1",
+     "tour 2",
+     "tour 3",
+     "tour 4",
+     "tour 5"
+    ],
+    "label_size": 30
+   },
+   "layouts": {
+    "portrait": {
+     "at": [
+      120,
+      930
+     ],
+     "params": {
+      "width": 64,
+      "gap": 22,
+      "unit": 60,
+      "label_size": 20
+     }
+    }
+   }
+  },
+  {
+   "id": "ghost",
+   "type": "bars",
+   "at": [
+    1100,
+    540
+   ],
+   "params": {
+    "width": 60,
+    "gap": 30,
+    "unit": 40,
+    "n": 5,
+    "color": "#6b7680",
+    "dashed": true,
+    "fill_alpha": 0.55
+   },
+   "init": {
+    "h_1": 1,
+    "h_2": 1,
+    "h_3": 1,
+    "h_4": 1,
+    "h_5": 1,
+    "reveal_1": 0,
+    "reveal_2": 0,
+    "reveal_3": 0,
+    "reveal_4": 0,
+    "reveal_5": 0
+   },
+   "layouts": {
+    "portrait": {
+     "at": [
+      600,
+      930
+     ],
+     "params": {
+      "width": 64,
+      "gap": 22,
+      "unit": 60
+     }
+    }
+   }
+  },
+  {
+   "id": "tri",
+   "type": "path",
+   "at": [
+    620,
+    540
+   ],
+   "params": {
+    "points": [
+     [
+      -30,
+      0
+     ],
+     [
+      420,
+      -200
+     ],
+     [
+      420,
+      0
+     ]
+    ],
+    "closed": true,
+    "color": "#3b3437",
+    "width": 5,
+    "fill_color": "#f6d36b",
+    "fill_alpha": 0.5
+   },
+   "init": {
+    "draw": 0,
+    "fill": 0
+   },
+   "layouts": {
+    "portrait": {
+     "at": [
+      120,
+      930
+     ],
+     "params": {
+      "points": [
+       [
+        -22,
+        0
+       ],
+       [
+        408,
+        -300
+       ],
+       [
+        408,
+        0
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "stand",
+   "type": "shape",
+   "at": [
+    1490,
+    900
+   ],
+   "params": {
+    "shape": "rect",
+    "rect": [
+     -55,
+     -95,
+     110,
+     95
+    ],
+    "color": "#6f5a4a",
+    "depth": 0.8
+   },
+   "layouts": {
+    "portrait": {
+     "at": [
+      965,
+      1500
+     ]
+    }
+   }
+  },
+  {
+   "id": "jar",
+   "type": "container",
+   "at": [
+    1490,
+    805
+   ],
+   "params": {
+    "item": "coin",
+    "w": 92,
+    "h": 110,
+    "capacity": 15,
+    "lid": null
+   },
+   "layouts": {
+    "portrait": {
+     "at": [
+      925,
+      1405
+     ]
+    }
+   }
+  },
+  {
+   "id": "cart",
+   "type": "group",
+   "at": [
+    520,
+    900
+   ],
+   "params": {
+    "children": [
+     {
+      "shape": "rect",
+      "rect": [
+       -88,
+       -82,
+       176,
+       46
+      ],
+      "color": "#c0623f",
+      "depth": 1
+     },
+     {
+      "shape": "rect",
+      "rect": [
+       -98,
+       -170,
+       12,
+       134
+      ],
+      "color": "#5d4636",
+      "depth": 0.6
+     },
+     {
+      "shape": "circle",
+      "r": 20,
+      "color": "#3b3437",
+      "depth": 0.6,
+      "at": [
+       -52,
+       -20
+      ],
+      "rolls": 20
+     },
+     {
+      "shape": "circle",
+      "r": 20,
+      "color": "#3b3437",
+      "depth": 0.6,
+      "at": [
+       52,
+       -20
+      ],
+      "rolls": 20
+     }
+    ]
+   },
+   "anchors": {
+    "bed": [
+     0,
+     -82
+    ]
+   },
+   "layouts": {
+    "portrait": {
+     "at": [
+      250,
+      1500
+     ]
+    }
+   }
+  },
+  {
+   "id": "stack",
+   "type": "stack",
+   "at": [
+    520,
+    818
+   ],
+   "params": {
+    "w": 130,
+    "sheet": 12,
+    "max": 6,
+    "color": "#fff3c4",
+    "line": "#3b3437"
+   },
+   "layouts": {
+    "portrait": {
+     "at": [
+      250,
+      1418
+     ]
+    }
+   }
+  }
+ ],
+ "characters": [
+  {
+   "id": "courier",
+   "role": "the agent loop",
+   "look": {
+    "overall": "#3f7f9e",
+    "hat": "#f2c230"
+   },
+   "posture": "standing",
+   "scale": 1.7,
+   "at": [
+    392,
+    900
+   ],
+   "pose": {
+    "turn": 0.5
+   },
+   "layouts": {
+    "portrait": {
+     "at": [
+      128,
+      1500
+     ]
+    }
+   }
+  },
+  {
+   "id": "reader",
+   "role": "the model",
+   "look": {
+    "overall": "#7a4f8c",
+    "shirt": "#f4e9d8",
+    "hat": false,
+    "glasses": true
+   },
+   "posture": "seated",
+   "scale": 1.85,
+   "at": [
+    1300,
+    900
+   ],
+   "pose": {
+    "turn": 0.0,
+    "gaze": [
+     0.0,
+     0.35
+    ],
+    "arms": [
+     -15,
+     -30,
+     40,
+     75
+    ],
+    "mouth": "flat"
+   },
+   "layouts": {
+    "portrait": {
+     "at": [
+      790,
+      1500
+     ]
+    }
+   }
+  }
+ ],
+ "camera": {
+  "landscape": [
+   {
+    "t": 0,
+    "center": [
+     960,
+     650
+    ],
+    "zoom": 1.45
+   },
+   {
+    "t": 8.2,
+    "center": [
+     960,
+     650
+    ],
+    "zoom": 1.45
+   },
+   {
+    "t": 9.5,
+    "center": [
+     1440.0,
+     740.0
+    ],
+    "zoom": 2.0
+   },
+   {
+    "t": "p22.end",
+    "center": [
+     1440.0,
+     740.0
+    ],
+    "zoom": 2.0
+   },
+   {
+    "t": 12.3,
+    "center": [
+     1000,
+     600
+    ],
+    "zoom": 1.35
+   },
+   {
+    "t": "p24.end",
+    "center": [
+     1000,
+     600
+    ],
+    "zoom": 1.35
+   }
+  ],
+  "portrait": [
+   {
+    "t": 0,
+    "center": [
+     560,
+     1070
+    ],
+    "zoom": 1.1
+   },
+   {
+    "t": 8.2,
+    "center": [
+     560,
+     1070
+    ],
+    "zoom": 1.1
+   },
+   {
+    "t": 9.5,
+    "center": [
+     565.0,
+     1120.0
+    ],
+    "zoom": 1.2
+   },
+   {
+    "t": "p22.end",
+    "center": [
+     565.0,
+     1120.0
+    ],
+    "zoom": 1.2
+   },
+   {
+    "t": 12.3,
+    "center": [
+     560,
+     1070
+    ],
+    "zoom": 1.1
+   },
+   {
+    "t": "p24.end",
+    "center": [
+     560,
+     1070
+    ],
+    "zoom": 1.1
+   }
+  ]
+ },
+ "actions": [
+  {
+   "id": "stack_on_cart",
+   "do": "attach",
+   "target": "stack",
+   "to": "cart.bed",
+   "by": "origin",
+   "start": 0,
+   "end": "p24.end"
+  },
+  {
+   "id": "hatch_open",
+   "do": "animate",
+   "target": "hatch",
+   "channel": "open",
+   "to": 1,
+   "start": 0.0,
+   "end": 0.45
+  },
+  {
+   "repeat": {
+    "name": "turn",
+    "spans": [
+     [
+      0.6,
+      3.0
+     ],
+     [
+      3.0,
+      5.0
+     ],
+     [
+      5.0,
+      6.6
+     ],
+     [
+      6.6,
+      8.0
+     ]
+    ]
+   },
+   "actions": [
+    {
+     "do": "settle",
+     "actor": "courier",
+     "start": 0.0,
+     "end": 0.15
+    },
+    {
+     "do": "stack_add",
+     "target": "stack",
+     "from": "hatch.opening",
+     "start": 0.0,
+     "end": 0.15,
+     "sound": [
+      {
+       "kind": "swish",
+       "gain": 0.7,
+       "dur": 0.4
+      }
+     ]
+    },
+    {
+     "do": "push",
+     "actor": "courier",
+     "target": "cart",
+     "to": "reader.feet",
+     "lean": "4+3*$n",
+     "start": 0.17,
+     "end": 0.42,
+     "sound": [
+      {
+       "kind": "motor",
+       "gain": 0.5,
+       "dur": "0.6-0.08*$n"
+      }
+     ]
+    },
+    {
+     "do": "settle",
+     "actor": "courier",
+     "start": 0.42,
+     "end": 0.52
+    },
+    {
+     "do": "walk_to",
+     "actor": "courier",
+     "to": "cart.left",
+     "dx": -110,
+     "start": 0.42,
+     "end": 0.52
+    },
+    {
+     "do": "reach",
+     "actor": "reader",
+     "target": "stack.top",
+     "hand": "L",
+     "start": 0.43,
+     "end": 0.5
+    },
+    {
+     "do": "flip",
+     "actor": "reader",
+     "target": "stack",
+     "hand": "L",
+     "count": "$n",
+     "start": 0.5,
+     "end": 0.7,
+     "sound": [
+      {
+       "kind": "click",
+       "per_item": true
+      }
+     ]
+    },
+    {
+     "do": "drop_in",
+     "target": "jar",
+     "count": "$n",
+     "from": "reader.hand_R",
+     "start": 0.52,
+     "end": 0.76,
+     "sound": [
+      {
+       "kind": "marimba",
+       "per_item": true,
+       "freq": "392+20*$n",
+       "pitch_step": 2,
+       "gain": 0.8
+      }
+     ]
+    },
+    {
+     "do": "pose",
+     "actor": "reader",
+     "set": {
+      "arms": [
+       -15,
+       -30,
+       40,
+       75
+      ]
+     },
+     "start": 0.72,
+     "end": 0.8
+    },
+    {
+     "do": "animate",
+     "target": "strips",
+     "channel": "h_$n",
+     "to": "$n",
+     "start": 0.72,
+     "end": 0.82,
+     "sound": [
+      {
+       "kind": "thud",
+       "at": 0.08
+      }
+     ]
+    },
+    {
+     "do": "walk_to",
+     "actor": "courier",
+     "to": "cart.left",
+     "dx": -40,
+     "layouts": {
+      "portrait": {
+       "dx": -24
+      }
+     },
+     "start": 0.74,
+     "end": 0.84
+    },
+    {
+     "do": "push",
+     "actor": "courier",
+     "target": "cart",
+     "to": "hatch.opening",
+     "lean": "4+3*$n",
+     "start": 0.85,
+     "end": 1.0,
+     "sound": [
+      {
+       "kind": "motor",
+       "gain": 0.4,
+       "dur": 0.35
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "turn4_face",
+   "do": "pose",
+   "actor": "courier",
+   "set": {
+    "mouth": "o"
+   },
+   "start": 6.6,
+   "end": 6.9
+  },
+  {
+   "id": "t5_sheet",
+   "do": "stack_add",
+   "target": "stack",
+   "from": "hatch.opening",
+   "start": 8.0,
+   "end": 8.2,
+   "sound": [
+    {
+     "kind": "swish",
+     "gain": 0.7,
+     "dur": 0.4
+    }
+   ]
+  },
+  {
+   "id": "t5_push",
+   "do": "push",
+   "actor": "courier",
+   "target": "cart",
+   "to": "reader.feet",
+   "lean": 20,
+   "start": 8.22,
+   "end": 8.75,
+   "sound": [
+    {
+     "kind": "motor",
+     "gain": 0.5,
+     "dur": 0.6
+    }
+   ]
+  },
+  {
+   "id": "t5_settle",
+   "do": "settle",
+   "actor": "courier",
+   "start": 8.75,
+   "end": 9.05
+  },
+  {
+   "id": "t5_back",
+   "do": "walk_to",
+   "actor": "courier",
+   "to": "cart.left",
+   "dx": -150,
+   "start": 8.75,
+   "end": 9.15
+  },
+  {
+   "id": "t5_face",
+   "do": "pose",
+   "actor": "reader",
+   "set": {
+    "mouth": "o"
+   },
+   "start": 8.6,
+   "end": 8.85
+  },
+  {
+   "id": "t5_reach",
+   "do": "reach",
+   "actor": "reader",
+   "target": "stack.top",
+   "hand": "L",
+   "start": 8.76,
+   "end": 8.92
+  },
+  {
+   "id": "t5_flip",
+   "do": "flip",
+   "actor": "reader",
+   "target": "stack",
+   "hand": "L",
+   "count": 5,
+   "start": 8.95,
+   "end": 10.55,
+   "sound": [
+    {
+     "kind": "click",
+     "per_item": true
+    }
+   ]
+  },
+  {
+   "id": "t5_coins",
+   "do": "drop_in",
+   "target": "jar",
+   "count": 5,
+   "from": "reader.hand_R",
+   "start": 9.0,
+   "end": 10.7,
+   "sound": [
+    {
+     "kind": "marimba",
+     "per_item": true,
+     "freq": 492,
+     "pitch_step": 2,
+     "gain": 0.8
+    }
+   ]
+  },
+  {
+   "id": "t5_rest",
+   "do": "pose",
+   "actor": "reader",
+   "set": {
+    "arms": [
+     -15,
+     -30,
+     40,
+     75
+    ],
+    "mouth": "flat"
+   },
+   "start": 10.6,
+   "end": 10.85
+  },
+  {
+   "id": "t5_strip",
+   "do": "animate",
+   "target": "strips",
+   "channel": "h_5",
+   "to": 5,
+   "start": 12.3,
+   "end": 12.6,
+   "sound": [
+    {
+     "kind": "thud",
+     "at": 0.3
+    }
+   ]
+  },
+  {
+   "id": "c_look_board",
+   "do": "look_at",
+   "actor": "courier",
+   "target": "strips.slot_5",
+   "start": 11.3,
+   "end": 11.6
+  },
+  {
+   "id": "tri_draw",
+   "do": "animate",
+   "target": "tri",
+   "channel": "draw",
+   "to": 1,
+   "start": 12.0,
+   "end": 14.0,
+   "ease": "lin",
+   "sound": [
+    {
+     "kind": "swish",
+     "gain": 0.45,
+     "dur": 2.0,
+     "lo": 300,
+     "hi": 1500
+    }
+   ]
+  },
+  {
+   "id": "tri_fill",
+   "do": "animate",
+   "target": "tri",
+   "channel": "fill",
+   "to": 1,
+   "start": 14.2,
+   "end": 14.8,
+   "sound": [
+    {
+     "kind": "bell",
+     "gain": 0.6
+    }
+   ]
+  },
+  {
+   "id": "c_walk",
+   "do": "walk_to",
+   "actor": "courier",
+   "to": "ghost.left",
+   "dx": -170,
+   "start": 14.0,
+   "end": 15.0,
+   "layouts": {
+    "portrait": {
+     "to": "ghost.left",
+     "dx": -150
+    }
+   }
+  },
+  {
+   "id": "ghost_1",
+   "do": "animate",
+   "target": "ghost",
+   "channel": "reveal_1",
+   "to": 1,
+   "start": 15.62,
+   "end": 15.74,
+   "sound": [
+    {
+     "kind": "click",
+     "gain": 0.6
+    }
+   ]
+  },
+  {
+   "id": "ghost_2",
+   "do": "animate",
+   "target": "ghost",
+   "channel": "reveal_2",
+   "to": 1,
+   "start": 15.78,
+   "end": 15.9,
+   "sound": [
+    {
+     "kind": "click",
+     "gain": 0.6
+    }
+   ]
+  },
+  {
+   "id": "ghost_3",
+   "do": "animate",
+   "target": "ghost",
+   "channel": "reveal_3",
+   "to": 1,
+   "start": 15.94,
+   "end": 16.06,
+   "sound": [
+    {
+     "kind": "click",
+     "gain": 0.6
+    }
+   ]
+  },
+  {
+   "id": "ghost_4",
+   "do": "animate",
+   "target": "ghost",
+   "channel": "reveal_4",
+   "to": 1,
+   "start": 16.1,
+   "end": 16.22,
+   "sound": [
+    {
+     "kind": "click",
+     "gain": 0.6
+    }
+   ]
+  },
+  {
+   "id": "ghost_5",
+   "do": "animate",
+   "target": "ghost",
+   "channel": "reveal_5",
+   "to": 1,
+   "start": 16.26,
+   "end": 16.38,
+   "sound": [
+    {
+     "kind": "click",
+     "gain": 0.6
+    }
+   ]
+  },
+  {
+   "id": "c_point_ghost",
+   "do": "point_at",
+   "actor": "courier",
+   "target": "ghost.center",
+   "hand": "R",
+   "start": 17.8,
+   "end": 18.15
+  },
+  {
+   "id": "c_arm_down",
+   "do": "pose",
+   "actor": "courier",
+   "set": {
+    "arms": [
+     -12,
+     -6,
+     12,
+     6
+    ]
+   },
+   "start": 18.6,
+   "end": 18.85
+  },
+  {
+   "id": "c_shrug",
+   "do": "shrug",
+   "actor": "courier",
+   "turn": 0.0,
+   "gaze": [
+    0,
+    -0.3
+   ],
+   "start": 18.9,
+   "end": 19.35
+  },
+  {
+   "id": "r_look_jar",
+   "do": "look_at",
+   "actor": "reader",
+   "target": "jar.mouth",
+   "start": 18.1,
+   "end": 18.5
+  },
+  {
+   "id": "jar_spill",
+   "do": "overflow",
+   "target": "jar",
+   "count": 4,
+   "start": 18.4,
+   "end": 19.0,
+   "sound": [
+    {
+     "kind": "metal",
+     "gain": 0.5
+    }
+   ]
+  }
+ ],
+ "beats": [
+  {
+   "id": "establish",
+   "label": "Hatch, lane, reader, cost jar, empty cart, empty board",
+   "start": 0.0,
+   "end": 0.6,
+   "phrase": "p20",
+   "expected": "One wide shot: the hatch with a wrench sign (left) opens, an empty cart, a man seated on a stool (right) with a glass jar on a stand beside him, and an empty cork board above"
+  },
+  {
+   "id": "turn1",
+   "label": "Turn 1: one sheet carried, read, paid",
+   "start": 0.6,
+   "end": 3.0,
+   "phrase": "p20",
+   "expected": "A sheet drops from the hatch onto the cart; the courier pushes it to the seated reader, steps back; the reader flips 1 page and drops 1 coin from his hand into the jar beside him; a strip of height 1 appears on the board; the cart goes back"
+  },
+  {
+   "id": "turn2_resend",
+   "label": "Turn 2: old sheet goes back with the new one",
+   "start": 3.0,
+   "end": 5.0,
+   "expected": "A second sheet drops onto the first one, still on the cart: 2 sheets go to the reader, 2 flips, he pays 2 coins, a strip of height 2"
+  },
+  {
+   "id": "turn3",
+   "label": "Turn 3: stack grows, loop speeds up",
+   "start": 5.0,
+   "end": 6.6,
+   "phrase": "p21",
+   "expected": "A 3rd sheet on the pile, 3 flips, 3 coins paid, strip of height 3; the trip is quicker than before"
+  },
+  {
+   "id": "turn4_strain",
+   "label": "Turn 4: courier strains under the stack",
+   "start": 6.6,
+   "end": 8.48,
+   "phrase": "p21",
+   "expected": "4 sheets; the courier leans forward hard with an open mouth; then a 5th sheet drops on the pile and the cart goes to the reader again"
+  },
+  {
+   "id": "reread_all",
+   "label": "Reader rereads the whole stack",
+   "start": 8.48,
+   "end": 10.86,
+   "phrase": "p22",
+   "expected": "The camera moves close on the seated reader, seen from the front: he flips the 5 pages of the pile in front of him fast, mouth open; a run of 5 coins leaves his hand into the jar beside him"
+  },
+  {
+   "id": "triangle",
+   "label": "Strips form a staircase, outlined as a triangle",
+   "start": 10.86,
+   "end": 15.58,
+   "phrase": "p23",
+   "expected": "The camera pulls back to the board: a 5th strip appears, the five strips of heights 1 to 5 form a staircase, a pencil line draws a triangle over their tops, then the triangle fills with yellow"
+  },
+  {
+   "id": "linear_ghost",
+   "label": "Intuition: a flat row of equal grey dashed strips",
+   "start": 15.58,
+   "end": 17.8,
+   "phrase": "p24",
+   "expected": "Five grey dashed strips, all of height 1, appear one by one to the right of the triangle: a flat row, clearly lower"
+  },
+  {
+   "id": "compare_shrug",
+   "label": "Courier points at the flat row, shrugs; jar overflows",
+   "start": 17.8,
+   "end": 19.62,
+   "phrase": "p24",
+   "expected": "The courier points at the flat grey dashed row, then lowers his arm and shrugs; the reader looks at the jar beside him, from which coins spill over"
+  }
+ ],
+ "sound": {
+  "peak_dbfs": -18.0,
+  "seed": 11,
+  "reverb_mix": 0.18,
+  "events": [
+   {
+    "t": 18.8,
+    "kind": "pad",
+    "dur": 0.8,
+    "gain": 0.4
+   }
+  ]
+ }
+}

@@ -639,7 +639,7 @@ Tool rules:
 | `flat-motion-graphics` | Social media, TikTok, startups |
 | `minimalist-diagram` | Technical deep-dives, architecture |
 | `ink-sketch` (Ink Theater) | Hand-drawn ink-on-white doodle animation; a character that draws itself, walks, dances; contraption explainers |
-| `paper-cut` (Ink Theater) | Coloured cut-paper animation (torn edges, paper shadows, grain); wordless illustrative B-roll with small expressive characters — `skills/creative/paper-cut.md` |
+| `paper-cut` (Ink Theater) | Coloured cut-paper animation (torn edges, paper shadows, grain); wordless illustrative B-roll with small expressive characters — `skills/creative/paper-cut.md`; to write a scene from a brief as data (checked before render, sound and story beats derived), `skills/creative/paper-scene.md` (`paper_scene` tool) |
 
 For custom, atelier, brand, launch, or hero work, read `skills/meta/taste-direction.md` before choosing a playbook. Carry its `taste_profile` into the proposal so later stages can preserve the design read, visual variance, motion intensity, information density, reference strategy, and anti-patterns.
 

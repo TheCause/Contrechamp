@@ -358,11 +358,14 @@
   // proportions of the reference worker character; mocap clips (long limbs) also drive it.
   function vec(aDeg, L) { var a = aDeg * Math.PI / 180; return [L * Math.sin(a), L * Math.cos(a)]; }
   function add(p, q) { return [p[0] + q[0], p[1] + q[1]]; }
+  // p.seated: pelvis at seat height (SEAT_DROP lower), thighs horizontal towards where the
+  // worker faces (p.facing 1 = screen right, -1 = left), knees bent, shins down to the floor.
+  var SEAT_DROP = 22;
   function workerPose(p) {
     p = p || {};
     var arms = p.arms || [-12, -6, 12, 6], legs = p.legs || 0, sh = p.shrug || 0, sq = p.squash || 1;
-    var lean = (p.lean || 0) * Math.PI / 180, cl = Math.cos(lean), sl = Math.sin(lean);
-    function up(pt) { return [pt[0] * cl - pt[1] * sl, (pt[0] * sl + pt[1] * cl) * sq]; }   // upper body: lean about the feet
+    var lean = (p.lean || 0) * Math.PI / 180, cl = Math.cos(lean), sl = Math.sin(lean), drop = p.seated ? SEAT_DROP : 0;
+    function up(pt) { var y = pt[1] + drop; return [pt[0] * cl - y * sl, (pt[0] * sl + y * cl) * sq]; }   // upper body: lean about the feet
     function low(pt) { return [pt[0], pt[1] * sq]; }
     var po = { rootY: p.bob || 0, groundY: 0 };
     po.hips = up([0, -42]); po.chest = up([0, -70]); po.neck = up([0, -102]); po.head = up([0, -132 + sh * 3]);
@@ -371,6 +374,11 @@
       po["sh" + a[0]] = up(s); po["el" + a[0]] = up(e); po["ha" + a[0]] = up(h);
     });
     [["L", -1, legs], ["R", 1, -legs]].forEach(function (l) {
+      if (p.seated) {
+        var fc = p.facing === -1 ? -1 : 1, hx = l[1] * 9, ky = -42 + drop;
+        po["hip" + l[0]] = low([hx, ky]); po["kn" + l[0]] = low([hx + fc * 19, ky]); po["ft" + l[0]] = low([hx + fc * 20, 0]);
+        return;
+      }
       var hp = [l[1] * 11, -42], f = add(hp, vec(l[2], 38));
       po["hip" + l[0]] = low(hp); po["kn" + l[0]] = low([(hp[0] + f[0]) / 2, (hp[1] + f[1]) / 2]); po["ft" + l[0]] = low(f);
     });
@@ -388,7 +396,7 @@
 
   // puppet(mount, {cx, ground, scale, look}) — same driving surface as an InkPuppet
   // (setPose / place / outer), so InkPuppet.choreograph(tl, paperPup, [...]) works.
-  // look: {name, skin, shirt, overall, brow, hat, mustache, headR}
+  // look: {name, skin, shirt, overall, brow, hat (colour or false), mustache, glasses, headR}
   function puppet(mount, opts) {
     opts = opts || {};
     var look = opts.look || {}, key = look.name || "pup";
@@ -441,6 +449,14 @@
       brows[sd] = el("path", { stroke: browC, "stroke-width": 3.2, "stroke-linecap": "round", fill: "none" });
       feat.appendChild(brows[sd]);
     });
+    var glassesG = null;
+    if (look.glasses) {             // round glasses (a reader): two rings and a bridge, following the eyes
+      glassesG = el("g", { fill: "none", stroke: look.glasses === true ? "#3a2a22" : look.glasses, "stroke-width": 2.2 });
+      glassesG.appendChild(el("circle", { cx: -10.5, cy: 0, r: 8.6 }));
+      glassesG.appendChild(el("circle", { cx: 10.5, cy: 0, r: 8.6 }));
+      glassesG.appendChild(el("path", { d: "M-2.2 -1Q0 -3 2.2 -1" }));
+      feat.appendChild(glassesG);
+    }
     var nose = el("g", {}); feat.appendChild(nose);
     paper(nose, tornCircle(key + "nose", 4.6, 0.4), shade(skin, -0.1), { depth: 0.3, edge: false });
     var mus = null;
@@ -516,6 +532,7 @@
         var by = -13 - (f.brow || 0) * 5, tl = sd * (f.brow || 0) * 2.5;
         brows[sd].setAttribute("d", "M" + r2(ex - 5.5) + " " + r2(by + tl) + "L" + r2(ex + 5.5) + " " + r2(by - tl));
       });
+      if (glassesG) glassesG.setAttribute("transform", T(fx, -2));
       // cheeks follow the turn
       cheeks[0].setAttribute("cx", r2(fx - 16)); cheeks[1].setAttribute("cx", r2(fx + 16));
       nose.setAttribute("transform", T(fx * 1.35, 5));
@@ -543,7 +560,7 @@
       place: function (groundY, rootY) {
         outer.setAttribute("transform", T(pup.cx, pup.ground + ((rootY || 0) - (groundY || 0)) * pup.scale, 0, pup.scale));
       },
-      // one call for keyed scene data: {x, arms, legs, lean, shrug, bob, squash, turn, gaze, mouth, brow, blink, openHands}
+      // one call for keyed scene data: {x, arms, legs, lean, shrug, bob, squash, seated, facing, turn, gaze, mouth, brow, blink, openHands}
       set: function (p) {
         if (p.x != null) pup.cx = p.x;
         state.face = { turn: p.turn || 0, gaze: p.gaze || [0, 0], mouth: p.mouth || "smile", brow: p.brow || 0, blink: p.blink || 0, openHands: p.openHands || 0 };

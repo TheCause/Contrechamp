@@ -5,6 +5,8 @@
 
 **What it is:** a warm, tactile **cut-paper** world — flat coloured shapes with slightly torn edges, a soft doubled drop shadow, a light rim, paper grain — where small chunky characters act out a little story. Good for illustrative B-roll and wordless explainers. Not realistic footage (use the media bank for that). Runs on the `animation` pipeline in atelier mode; it is NOT its own pipeline.
 
+**Writing a scene from a brief?** Describe it as data with `skills/creative/paper-scene.md` (`paper_scene` tool): the compiler checks it before the render and derives the sound events and the mute-review beats. The cheat-sheet below is for hand-written compositions.
+
 ## Engine cheat-sheet (`PaperCut`)
 
 - **Shapes, stable per key** (seeded with `InkTheater.rng`, never `Math.random`): `tornPoly(key, corners, amp, step)`, `tornRect(key,x,y,w,h,amp)`, `tornCircle(key,r,amp)`, `tornEllipse(key,rx,ry,amp)`, `starPoly(key,r)`. Same key ⇒ same tears on every frame and every render.
