@@ -20,6 +20,7 @@ reset the spend. Tool paths must go through a subdirectory (`assets/`,
 from __future__ import annotations
 
 import re
+import unicodedata
 from pathlib import Path
 from typing import Any
 
@@ -35,6 +36,7 @@ _MAYBE_PATH_KEYS = frozenset({"source", "src"})
 _SCHEME_RE = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:")
 _WEB_URL_RE = re.compile(r"^https?://[^/\s]", re.IGNORECASE)
 _PROTECTED_DIRS = frozenset({"history"})
+_DRIVE_RE = re.compile(r"^[A-Za-z]:")
 
 # Inputs that hand the tool something other than data: an ffmpeg filter graph
 # (can open any file: movie=, amovie=, sendcmd=), code to execute, raw command
@@ -136,6 +138,32 @@ def _check_forbidden(key: str, value: Any) -> None:
         raise ConfinementError(f"input {key!r} cannot be switched off through MCP")
 
 
+def check_key(key: Any, parent: str = "") -> None:
+    """Refuse a dictionary key a tool could turn into a path.
+
+    A key is an identifier (a layout name, a pose, a speaker), yet a tool may
+    write `out_dir / key`: confining the values alone let `"../../x"` as a key
+    leave the project. A key holding a path separator, a name made only of
+    dots, a drive letter, or a control character (NUL included) is
+    refused, not rewritten: renaming it would change what the tool means.
+    """
+    text = str(key)
+    where = f" under {parent!r}" if parent else ""
+    reason = None
+    if "/" in text or "\\" in text:
+        reason = "contains a path separator"
+    elif text and set(text) == {"."}:
+        reason = "is a relative directory name"
+    elif any(unicodedata.category(c) == "Cc" for c in text):
+        reason = "contains a control character"
+    elif _DRIVE_RE.match(text):
+        reason = "starts with a drive letter"  # "C:x" leaves the directory on Windows
+    if reason:
+        raise ConfinementError(
+            f"input key {text!r}{where} {reason}; keys are names, not paths"
+        )
+
+
 def confine_inputs(project_id: str, inputs: Any, _key: str = "") -> Any:
     """Return a copy of the inputs with every path confined to the project.
 
@@ -145,11 +173,13 @@ def confine_inputs(project_id: str, inputs: Any, _key: str = "") -> Any:
     slash or a leading dot, and whenever it names something that exists on
     disk. Confined paths come back absolute, so the tool cannot re-resolve
     them against another directory. Inputs that smuggle code, filters or a
-    waived approval are refused.
+    waived approval are refused. Every dictionary key, at any depth, must be
+    a plain name (see `check_key`).
     """
     if isinstance(inputs, dict):
         out = {}
         for k, v in inputs.items():
+            check_key(k, _key)
             _check_forbidden(str(k).lower(), v)
             out[k] = confine_inputs(project_id, v, str(k))
         return out

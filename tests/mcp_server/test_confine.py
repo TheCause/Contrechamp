@@ -63,3 +63,28 @@ def test_healthy_inputs_are_kept_or_anchored_in_the_project(projects):
     assert out["video_url"] == "https://example.com/v.mp4"
     assert out["prompt"] == "a cat, 16/9 framing"
     assert out["nested"]["file"] == str(root.resolve() / "assets" / "b.png")
+
+
+@pytest.mark.parametrize("key", ["..", ".", "../x", "a/b", "a\\b", "/abs", "C:x", "nul\x00", "tab\t", "del\x7f"])
+@pytest.mark.parametrize("wrap", [
+    lambda k: {k: 1},
+    lambda k: {"scene": {"layouts": {k: {"width": 1080}}}},
+    lambda k: {"cuts": [{"id": "c1"}, {k: "x"}]},
+    lambda k: [[{"deep": [{k: None}]}]],
+])
+def test_a_key_that_could_be_a_path_is_refused_at_any_depth(projects, key, wrap):
+    (projects / "p").mkdir()
+    with pytest.raises(ConfinementError) as caught:
+        confine_inputs("p", wrap(key))
+    assert repr(key) in str(caught.value)
+
+
+def test_plain_keys_are_kept_as_they_are(projects):
+    """Silent side: names, dots inside a word, spaces, colons, accents."""
+    (projects / "p").mkdir()
+    inputs = {
+        "layouts": {"vertical": {}, "9:16": {}, "take_2.v1": {}, "Speaker 1": {}, "scène-é": {}},
+        "cuts": [{"id": "c1", "in_seconds": 0.5}],
+        "": 0,
+    }
+    assert confine_inputs("p", inputs) == inputs
