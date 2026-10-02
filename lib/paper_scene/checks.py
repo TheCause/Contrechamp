@@ -108,6 +108,14 @@ def check_pointing(c: Compiled, issues: Issues, duration: float) -> list[dict[st
 
     measured = []
     for p in c.pointings:
+        if p["target"].partition(".")[0] == p["actor"]:
+            issues.add("pointing", f"[{c.layout['name']}] '{p['actor']}' points at {p['target']}, his own body: a "
+                       "point designates something else", p["action"])
+            continue
+        if p["t"] + POINT_HOLD > duration + 1e-9:
+            issues.add("pointing", f"[{c.layout['name']}] '{p['actor']}' points at {p['target']} until {p['t']:.2f}s: "
+                       f"the point must be held {POINT_HOLD:g} s inside the scene (it ends at {duration:g}s)",
+                       p["action"])
         worst, worst_t, first = 0.0, p["t"], None
         t, end = p["t"], min(p["t"] + POINT_HOLD, duration)
         while t <= end + 1e-9:
@@ -123,8 +131,9 @@ def check_pointing(c: Compiled, issues: Issues, duration: float) -> list[dict[st
         sx, sy = shoulder_world(c, p["actor"], p["side"], p["t"])
         tx, ty = ref_point(c, p["target"], p["t"])
         from_up = abs(math.degrees(math.atan2(tx - sx, -(ty - sy))))      # 0 = straight up
-        measured.append({"action": p["action"], "t": round(p["t"], 3), "error_deg": round(first or 0.0, 2),
-                         "worst_deg_while_held": round(worst, 2), "from_vertical_deg": round(from_up, 1)})
+        # (no "arrival error": the arm is solved onto the target, it would be 0 by construction)
+        measured.append({"action": p["action"], "t": round(p["t"], 3), "worst_deg_while_held": round(worst, 2),
+                         "from_vertical_deg": round(from_up, 1)})
         if from_up < POINT_MIN_FROM_VERTICAL:
             issues.add("pointing", f"[{c.layout['name']}] '{p['actor']}' points almost straight up at {p['target']} "
                        f"({from_up:.0f} deg from vertical, '{p['action']}'): an arm that high reads as a raised hand or "
@@ -138,38 +147,106 @@ def check_pointing(c: Compiled, issues: Issues, duration: float) -> list[dict[st
 
 
 MIN_ITEM_PX, MIN_THICK_PX = 24.0, 6.0
+SPILL_DRAWN = 6        # coins the player draws spilling over a rim (ink-theater/paper-scene.js)
+SAMPLE_DT = 0.1        # 10 Hz: what happens between camera keys is checked too
+
+
+def _times(t0: float, t1: float, dt: float = SAMPLE_DT) -> list[float]:
+    n = max(1, int(math.ceil((t1 - t0) / dt)))
+    return [t0 + (t1 - t0) * i / n for i in range(n + 1)]
+
+
+def check_counts(c: Compiled, issues: Issues, duration: float) -> list[dict[str, Any]]:
+    """What is counted (and heard, one sound per item) must be drawn: a jar shows at most
+    `capacity` items, a pile at most `max` sheets, a spill at most SPILL_DRAWN coins."""
+    measured = []
+    for pid, p in c.props.items():
+        if p["type"] not in ("container", "stack"):
+            continue
+        cap = p["params"]["capacity"] if p["type"] == "container" else p["params"]["max"]
+        most = max(c.ch.value(f"{pid}.count", t) for t in _times(0.0, duration))
+        measured.append({"prop": pid, "max_count": round(most, 2), "drawn": cap})
+        if most > cap + 1e-6:
+            what = "capacity" if p["type"] == "container" else "max"
+            issues.add("counts", f"[{c.layout['name']}] '{pid}' counts up to {most:g} items but draws at most "
+                       f"{cap} ({what}): raise {what}, or count fewer", pid)
+        if p["type"] == "container":
+            spill = max(c.ch.value(f"{pid}.spill", t) for t in _times(0.0, duration))
+            if spill > SPILL_DRAWN + 1e-6:
+                issues.add("counts", f"[{c.layout['name']}] '{pid}' overflows {spill:g} items but at most "
+                           f"{SPILL_DRAWN} are drawn spilling: overflow count <= {SPILL_DRAWN}", pid)
+    return measured
+
+
+def _item_size(c: Compiled, pid: str, t: float) -> tuple[float, float, str]:
+    p = c.props[pid]
+    z = M.camera_at(c.camera, t, c.layout["width"], c.layout["height"])[2]
+    sc = c.ch.value(f"{pid}.scale", t) * z
+    if p["type"] == "stack":
+        return p["params"]["w"] * sc, p["params"]["sheet"] * sc, "sheet"
+    if p["type"] == "burst":          # a spray is read as a whole: its largest particle
+        r = 2 * max(p["params"]["sizes"]) * z
+        return r, r, "star"
+    if p["params"].get("item") == "coin":
+        return 0.36 * p["params"]["w"] * sc, 0.2 * p["params"]["w"] * sc, "coin"
+    return 16 * sc, 16 * sc, "star"
 
 
 def check_min_size(c: Compiled, issues: Issues) -> list[dict[str, Any]]:
-    """Objects that carry a count (sheets of a pile, coins in a jar) must be big enough on
-    screen to be counted: largest side >= 24 px, thickness >= 6 px, at mid-action."""
+    """Objects that carry a count (sheets of a pile, coins in a jar, the stars of a burst) must
+    be big enough on screen to be counted — largest side >= 24 px, thickness >= 6 px — and
+    visible, all along the action that counts them (sampled at 10 Hz)."""
     measured = []
     for a in c.actions:
         verb = a.get("do")
-        if verb not in ("stack_add", "flip", "drop_in", "overflow"):
+        if verb not in ("stack_add", "flip", "drop_in", "overflow", "burst"):
             continue
         pid = a["target"]
-        p = c.props[pid]
         t0 = a["start"]
         t1 = c.ends.get(a["id"], a.get("end", t0))
-        tm = (t0 + t1) / 2
-        z = M.camera_at(c.camera, tm, c.layout["width"], c.layout["height"])[2]
-        sc = c.ch.value(f"{pid}.scale", tm) * z
-        if p["type"] == "stack":
-            big, thick, what = p["params"]["w"] * sc, p["params"]["sheet"] * sc, "sheet"
-        elif p["params"].get("item") == "coin":
-            big, thick, what = 0.36 * p["params"]["w"] * sc, 0.2 * p["params"]["w"] * sc, "coin"
-        else:
-            big, thick, what = 16 * sc, 16 * sc, "star"
-        measured.append({"action": a["id"], "prop": pid, "item": what, "px": round(big, 1), "thick_px": round(thick, 1)})
+        worst = None
+        for t in _times(t0, t1):
+            if c.props[pid]["type"] != "burst" and c.ch.value(f"{pid}.opacity", t) <= 0:
+                issues.add("min_size", f"[{c.layout['name']}] '{pid}' is counted by '{a['id']}' at {t:.2f}s while "
+                           "invisible (opacity 0): what is counted must be seen", a["id"])
+                worst = None
+                break
+            big, thick, what = _item_size(c, pid, t)
+            if worst is None or min(big / MIN_ITEM_PX, thick / MIN_THICK_PX) < worst[0]:
+                worst = (min(big / MIN_ITEM_PX, thick / MIN_THICK_PX), t, big, thick, what)
+        if worst is None:
+            continue
+        _, t, big, thick, what = worst
+        measured.append({"action": a["id"], "prop": pid, "item": what, "worst_at": round(t, 2),
+                         "px": round(big, 1), "thick_px": round(thick, 1)})
         if big < MIN_ITEM_PX or thick < MIN_THICK_PX:
             issues.add("min_size", f"[{c.layout['name']}] each {what} of '{pid}' is {big:.0f} x {thick:.0f} px on screen "
-                       f"at {tm:.2f}s ('{a['id']}'): a counted object needs >= {MIN_ITEM_PX:g} px and >= "
-                       f"{MIN_THICK_PX:g} px thick to be counted (enlarge it, or frame it closer)", a["id"])
+                       f"at {t:.2f}s ('{a['id']}'): a counted object needs >= {MIN_ITEM_PX:g} px and >= "
+                       f"{MIN_THICK_PX:g} px thick all along its action (enlarge it, or frame it closer)", a["id"])
     return measured
 
 
 DRAWN_TYPES = {"path", "bars", "stack", "container", "label"}
+
+
+def _spill_points(c: Compiled, pid: str, t: float) -> list[tuple[float, float]]:
+    """Where the spilled coins are (the same formula as the player)."""
+    p = c.props[pid]
+    sp = c.ch.value(f"{pid}.spill", t)
+    if sp <= 0:
+        return []
+    w, h = p["params"]["w"], p["params"]["h"]
+    x, y, rot = (c.ch.value(f"{pid}.{k}", t) for k in ("x", "y", "rot"))
+    mx, my = x + h * math.sin(rot), y - h * math.cos(rot)
+    pts = []
+    for k in range(SPILL_DRAWN):
+        u = max(0.0, min(1.0, sp - k))
+        if u <= 0:
+            continue
+        side = 1 if k % 2 else -1
+        ex, ey = mx + side * (w * 0.75 + 6 * k), y - 4
+        pts.append((M.lerp(mx + side * w * 0.3, ex, u), M.lerp(my - 6, ey, M.EASES["in"](u))))
+    return pts
 
 
 def drawn_box(c: Compiled, pid: str, t: float) -> tuple[float, float, float, float] | None:
@@ -203,15 +280,30 @@ def drawn_box(c: Compiled, pid: str, t: float) -> tuple[float, float, float, flo
         box = L.bbox(p["type"], pr, st)
     pts = [L.place(st["x"], st["y"], st["rot"], st["scale"], q)
            for q in ((box[0], box[1]), (box[2], box[1]), (box[2], box[3]), (box[0], box[3]))]
+    if p["type"] == "container":   # spilled coins are part of what the jar shows
+        r = 0.18 * pr["w"]
+        for (sx, sy) in _spill_points(c, pid, t):
+            pts += [(sx - r, sy - r), (sx + r, sy + r)]
     return min(q[0] for q in pts), min(q[1] for q in pts), max(q[0] for q in pts), max(q[1] for q in pts)
 
 
+def _state(box, view) -> str:
+    x0, y0, x1, y1 = view
+    if x0 - 0.5 <= box[0] and box[2] <= x1 + 0.5 and y0 - 0.5 <= box[1] and box[3] <= y1 + 0.5:
+        return "in"
+    if box[0] < x1 and box[2] > x0 and box[1] < y1 and box[3] > y0:
+        return "cut"
+    return "out"
+
+
 def check_drawn(c: Compiled, issues: Issues, duration: float) -> None:
-    """What the format DRAWS and an action makes happen (a line being drawn, strips growing,
-    a pile, a jar, a label) must not be cut by the frame: checked whenever one of its
-    actions starts or ends and at every camera key after it first appears. Entirely out of
-    the shot is allowed while nothing happens to it; cut in two is not."""
+    """What the format DRAWS and an action makes happen (a line being drawn, strips growing, a
+    pile, a jar and its spilled coins, a label) must not be cut by the frame, sampled at 10 Hz
+    from its first action to the end (camera moves included). Allowed: entirely out of the
+    shot while nothing happens to it, and the frames where a camera move carries it across the
+    edge from inside to outside (or back) without coming back the same way."""
     W, H = c.layout["width"], c.layout["height"]
+    keys = [k[0] for k in c.camera]
     for pid, p in c.props.items():
         if p["type"] not in DRAWN_TYPES:
             continue
@@ -219,24 +311,35 @@ def check_drawn(c: Compiled, issues: Issues, duration: float) -> None:
         if not segs:
             continue                       # never touched by an action: decor, cropping allowed
         first = min(o[0] for o in segs)
-        times = sorted({o[0] for o in segs} | {o[1] for o in segs}
-                       | {k[0] for k in c.camera if k[0] >= first} | {min(duration, max(o[1] for o in segs))})
-        for t in times:
-            if t > duration + 1e-9:
-                continue
+        seq = []
+        for t in _times(first, duration):
             box = drawn_box(c, pid, t)
-            if box is None:
-                continue
-            x0, y0, x1, y1 = M.view_rect(c.camera, t, W, H)
-            inside = x0 - 0.5 <= box[0] and box[2] <= x1 + 0.5 and y0 - 0.5 <= box[1] and box[3] <= y1 + 0.5
-            touching = box[0] < x1 and box[2] > x0 and box[1] < y1 and box[3] > y0
             acting = any(o[0] - 1e-9 <= t <= o[1] + 1e-9 for o in segs)
-            if (touching and not inside) or (acting and not touching):
-                what = "cut by the frame" if touching else "drawn outside the frame"
-                issues.add("off_frame", f"[{c.layout['name']}] '{pid}' is {what} at {t:.2f}s: it spans x "
+            seq.append((t, None if box is None else _state(box, M.view_rect(c.camera, t, W, H)), acting, box))
+        i = 0
+        while i < len(seq):
+            t, st, acting, box = seq[i]
+            if st == "out" and acting:
+                issues.add("off_frame", f"[{c.layout['name']}] '{pid}' is drawn outside the frame at {t:.2f}s "
+                           "while an action changes it", pid)
+                break
+            if st != "cut":
+                i += 1
+                continue
+            j = i
+            while j < len(seq) and seq[j][1] == "cut":
+                j += 1
+            before = seq[i - 1][1] if i > 0 else None
+            after = seq[j][1] if j < len(seq) else None
+            crossing = {before, after} == {"in", "out"}
+            key_inside = any(seq[i][0] - 1e-9 <= k <= seq[j - 1][0] + 1e-9 for k in keys)
+            if not crossing or key_inside or any(s[2] for s in seq[i:j]):
+                x0, y0, x1, y1 = M.view_rect(c.camera, t, W, H)
+                issues.add("off_frame", f"[{c.layout['name']}] '{pid}' is cut by the frame at {t:.2f}s: it spans x "
                            f"{box[0]:.0f}..{box[2]:.0f}, y {box[1]:.0f}..{box[3]:.0f}; frame x {x0:.0f}..{x1:.0f}, "
                            f"y {y0:.0f}..{y1:.0f}", pid)
                 break
+            i = j
 
 
 STATIC_SKIP = {"pole", "burst"}   # placed by what holds or launches them, not by their own position
@@ -246,21 +349,31 @@ def key_times(c: Compiled, duration: float) -> list[float]:
     return sorted({min(max(k[0], 0.0), duration) for k in c.camera} | {0.0, duration})
 
 
+def char_box(c: Compiled, cid: str, t: float) -> tuple[float, float, float, float]:
+    """The character's body on screen: feet to hat, shoulders' width (scaled)."""
+    ch = c.chars[cid]
+    x = c.ch.value(f"{cid}.x", t)
+    s, g = ch["scale"], ch["at"][1]
+    top = 172.0 - (M.SEAT_DROP if ch["posture"] == "seated" else 0.0)
+    return x - 32 * s, g - top * s, x + 32 * s, g
+
+
 def check_static(c: Compiled, issues: Issues, duration: float) -> None:
-    """Without any action: every character inside the camera frame at every camera key,
-    every prop inside its layout (a position inherited from another layout lands outside)."""
+    """Without any action: every character's body wholly inside the camera frame all along
+    (10 Hz, camera moves included), every prop inside its layout (a position inherited from
+    another layout lands outside)."""
     from lib.paper_scene import library as L
-    from lib.paper_scene.compile import char_point, prop_point
+    from lib.paper_scene.compile import prop_point
 
     W, H = c.layout["width"], c.layout["height"]
     for cid in c.chars:
-        for t in key_times(c, duration):
-            x, y = char_point(c, cid, "center", t)
-            x0, y0, x1, y1 = M.view_rect(c.camera, t, W, H)
-            if not (x0 <= x <= x1 and y0 <= y <= y1):
-                issues.add("off_frame", f"[{c.layout['name']}] character '{cid}' stands outside the camera frame at "
-                           f"{t:.2f}s (camera key): point ({x:.0f}, {y:.0f}), frame x {x0:.0f}..{x1:.0f}, "
-                           f"y {y0:.0f}..{y1:.0f}", cid)
+        for t in _times(0.0, duration):
+            box = char_box(c, cid, t)
+            if _state(box, M.view_rect(c.camera, t, W, H)) != "in":
+                x0, y0, x1, y1 = M.view_rect(c.camera, t, W, H)
+                issues.add("off_frame", f"[{c.layout['name']}] character '{cid}' is not wholly in the frame at "
+                           f"{t:.2f}s: body x {box[0]:.0f}..{box[2]:.0f}, y {box[1]:.0f}..{box[3]:.0f}; frame x "
+                           f"{x0:.0f}..{x1:.0f}, y {y0:.0f}..{y1:.0f}", cid)
                 break
     for pid, p in c.props.items():
         if p["type"] in L.FULL_FRAME_TYPES or p["type"] in STATIC_SKIP:
@@ -286,8 +399,8 @@ def check_ui_safe_bottom(c: Compiled, issues: Issues, duration: float) -> None:
     limit = H * (1 - f)
     from lib.paper_scene.compile import char_point
 
-    for cid in c.chars:     # a character standing there, even without an action
-        for t in key_times(c, duration):
+    for cid in c.chars:     # a character standing there, even without an action (10 Hz)
+        for t in _times(0.0, duration):
             sx, sy = M.to_screen(c.camera, t, W, H, *char_point(c, cid, "center", t))
             if sy > limit and 0 <= sx <= W and sy <= H:
                 issues.add("ui_safe_bottom", f"[{lay['name']}] character '{cid}' stands {sy - limit:.0f} px inside "

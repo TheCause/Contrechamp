@@ -52,13 +52,13 @@ r = PaperScene().execute({"operation": "render", "scene": "scene.json", "output_
 }
 ```
 
-- **Camera keys** have one of `center: [x, y]`, `target: "id.anchor"` (that point at the key's time) or `follow: "id.anchor"`: from that key to the next, the centre tracks the anchor (a walking character stays in frame) and blends into the next key; compiled into linear samples at 30 Hz, checked by `zoom_speed` like any keys.
+- **Camera keys** have one of `center: [x, y]`, `target: "id.anchor"` (that point at the key's time) or `follow: "id.anchor"`: from that key to the next, the centre tracks the anchor (a walking character stays in frame) and blends into the next key; compiled into linear samples at 30 Hz, checked by `zoom_speed` like any keys. A `follow` on the LAST key has no next key to blend into: it acts as a fixed centre (the anchor's point at that key's time).
 - **Times**: seconds, or a mark reference `"p2"`, `"p2.start"`, `"p2.end"`, `"p2.end-0.3"`. `duration` may be a mark (`"p24.end"`: the insert lasts as long as the voice).
 - **`order`** lists every prop and character once, back to front. `layer` actions change it at a time.
 - **`init`**: initial values of a prop's channels (x and y come from `at`): a crane's trolley, a jar's count, a strip's height 0, a line not drawn yet (`draw: 0`).
 - **`sound.peak_dbfs`** is the level of the whole sound layer (−1 for a standalone short, about −18 for a layer ducked under a voice).
 - **9:16 layouts must declare `ui_safe_bottom`**: 0.2 for Reels / Shorts / TikTok (the app covers the bottom fifth), 0 when nothing covers the frame.
-- **A layout moves things, it does not change what happens or when**: one sound and one beat list serve every layout. Override positions per layout, never counts, durations or particle numbers (a `timing` error says which action differs).
+- **A layout moves things, it does not change what happens or when**: one sound and one beat list serve every layout. A layout override changes GEOMETRY only — positions, sizes, points, anchors, `rot`, `scale` (the whitelist below); never counts, capacities, colours, labels, durations or particle numbers (a `vocabulary` error names the refused key; a `timing` error says which action differs).
 - **Names and colours**: ids, layout names, marks, anchors, channels are plain names (`^[A-Za-z0-9_-]+$`); colours are `#rrggbb` or `#rgb`; numbers are finite. Anything else is refused before compilation.
 - **`insert` is optional**: only for a scene that sits inside a longer video (its offset is carried to the outputs).
 - **Opening fade**: `style.fade_in` (default 0.45 s) fades in from the blank page and hides whatever happens under it; a beat that starts during it is an error. Set `"fade_in": 0` when the first frame matters (an insert, a Short whose first frame is the thumbnail).
@@ -68,7 +68,7 @@ r = PaperScene().execute({"operation": "render", "scene": "scene.json", "output_
 
 A layout moves things, it never changes what happens or when.
 
-- A **prop** overrides per layout: `layouts.<name>.at`, `.params` (sizes, points), `.anchors` (an anchor declared once, moved here), `.init`.
+- A **prop** overrides per layout: `layouts.<name>.at`, `.anchors` (an anchor declared once, moved here), `.init` (only `rot` and `scale`), `.params` — only its geometric parameters: `shape` rect r rx ry points r_in at; `label` size; `path` points width; `glow` r; `door` rect; `container` w h; `stack` w sheet; `bars` width gap unit label_size; `bands` top0 band_h overlap; `pole` rest; `sun` r; `conveyor` x w legs floor; `crane` mast_x jib_y jib_x0 jib_x1 floor; `burst` area avoid column; `smoke` rise r0 r1; `scatter` area size. Anything else (a `capacity`, a `count`, a colour, `labels`, an `init` count) is refused.
 - A **character** overrides `at` and `scale`.
 - An **action** overrides only where it aims: `"layouts": {"portrait": {"target": "board.top", "to": "desk.left", "from": "hatch.opening", "dx": -40, "grip": "handle"}}`. Its `start`, `end`, counts and sounds are the same everywhere (any other key is an error).
 
@@ -85,8 +85,9 @@ A layout moves things, it never changes what happens or when.
 | container | `w` 50, `h` 60; a coin is 0.36 w × 0.2 w (18 × 10 for w 50); 6 stars by default |
 | label | `size` 40, centred on `at` |
 | contact tolerance | 8 px (16 for a hand on the pages of a pile) |
-| pointing | aimed within 10°, held 0.4 s, at least 30° from vertical |
-| counted object (`min_size`) | ≥ 24 px long side and ≥ 6 px thick on screen |
+| pointing | aimed within 10°, held 0.4 s inside the scene, at least 30° from vertical, never at the actor's own body |
+| counted object (`min_size`) | ≥ 24 px long side and ≥ 6 px thick on screen, and visible (opacity), over the whole counting action |
+| counted items (`counts`) | a count never exceeds what is drawn: a container's `capacity`, a stack's `max`; an `overflow` spills at most 6 items (the ones drawn) |
 | zoom | ×1.25 at most over 1.2 s |
 | opening fade | 0.45 s |
 
@@ -213,14 +214,15 @@ Inside a repeat, `start`/`end` are fractions of the iteration's span (shorter sp
 | `vocabulary`, `references`, `timing` | unknown name, missing id/anchor, a time outside the scene | the message lists the known names |
 | `limb_overlap` | two actions drive the same channel at once (same arm, same position) | sequence them, or use the other hand |
 | `jump` | a value jumps when an action takes over: a push from where the actor is not, a pose with no duration | walk him there first; give the pose a duration |
-| `off_frame` | the place of an action is outside the current camera frame; a character outside the frame at a camera key; a prop outside its layout (a position inherited from another layout); something DRAWN that an action touches (a line, strips, a pile, a jar, a label) cut in two by the frame — when its actions start and end and at every camera key after it appears (entirely out of the shot is fine while nothing happens to it) | move the action, the character or the camera; give the prop a position for that layout |
+| `off_frame` | the place of an action is outside the current camera frame; a character's BODY (not just its feet) not wholly in the frame, sampled at 10 Hz over the whole scene; a prop outside its layout (a position inherited from another layout); something DRAWN that an action touches (a line, strips, a pile, a jar with its spilled coins, a label) cut by the frame, sampled at 10 Hz from its first action to the end — only a camera move carrying it straight in or out of the shot, with nothing happening to it, may cut it on the way; out of the shot while an action changes it is an error | move the action, the character or the camera; give the prop a position for that layout |
+| `counts` | an action counts more items than the prop draws (`capacity`, `max`), or an `overflow` spills more than 6 | lower the count, raise `capacity`/`max`, or show the rest otherwise |
 | `contact` | a hand or hook stays more than 8 px from what it holds, pushes, pins or hooks — from the anchor and from the object's own box | bring the actor closer, lower the target, change the grip (an anchor drawn away from the object does not count) |
 | `zoom_speed` | camera moves that fit in less than 1.2 s add up to a scale change of ×1.25 or more (holds and reversals do not split them) | one move of 1.2 s or more per strong change: otherwise it reads as a cut |
 | `ui_safe_bottom` | an action in the bottom band of a 9:16 frame | raise the set in that layout |
 | `beat_in_phrase` | a beat not inside the phrase it illustrates | the picture follows the voice, not the reverse |
 | `text_policy` | an on-screen text not in `text_allowed` | counts are shown by objects, not figures |
-| `pointing` | a `point_at` arm is more than 10° off its target when it arrives or during the 0.4 s after; or it aims less than 30° from straight up (read as a raised hand, a hand on the head) | hold the point 0.4 s (no walk, lean or other gesture of that arm); step aside from under a high target (`layouts.<name>.to` on a `walk_to`), or aim lower; lower the first arm before pointing with the other, two raised arms read as joy |
-| `min_size` | a counted object (sheet of a pile, coin, star) is under 24 px, or under 6 px thick, on screen during the action that counts it | thicker sheets (`sheet` ≥ 6 at zoom 1), a wider jar (coins scale with `w`), or a closer camera |
+| `pointing` | a `point_at` arm drifts more than 10° off its target during the 0.4 s after it arrives; the 0.4 s does not fit before the end of the scene; it aims less than 30° from straight up (read as a raised hand, a hand on the head); it aims at the actor's own body | hold the point 0.4 s (no walk, lean or other gesture of that arm); step aside from under a high target (`layouts.<name>.to` on a `walk_to`), or aim lower; lower the first arm before pointing with the other, two raised arms read as joy |
+| `min_size` | a counted object (sheet of a pile, coin, star, burst particle by its largest size) is under 24 px, or under 6 px thick, on screen at any moment of the action that counts it (10 Hz); or invisible (opacity 0) while counted | thicker sheets (`sheet` ≥ 6 at zoom 1), a wider jar (coins scale with `w`), or a closer camera |
 | `timing` (fade) | a beat starts during the opening fade | `style.fade_in: 0`, or start the beat later |
 
 ## Traps only the image shows (mute review)

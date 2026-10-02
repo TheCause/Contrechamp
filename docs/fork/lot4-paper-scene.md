@@ -274,3 +274,27 @@ What changes for an existing scene: a drawn element touched by an action may now
 `off_frame` where it is cut by a camera move (the factory and the U2 skeleton passed after the
 skeleton's 9:16 close-up was widened); a `flip` turns its page towards the actor (it always
 turned to the right before).
+
+## 10. Final adversarial review — the checks must hold where nobody aimed them
+
+A review wrote scenes designed to pass while being wrong. Each point below ships with a test
+that failed on the previous commit (28 of 30 failed; the 2 that passed guard healthy cases).
+
+- **A layout override is geometry, by whitelist.** `params` keys per prop type and `init`
+  limited to `rot`/`scale`; a capacity, colour, label list or initial count differs nowhere.
+- **`counts`.** A count beyond `capacity`/`max`, or an overflow of more than the 6 coins drawn,
+  is an error before the render: a counted item must be drawn.
+- **`off_frame` samples at 10 Hz** over the whole scene and measures the character's body box,
+  not a point; the jar's box includes its spilled coins. Cut by the frame is allowed only for a
+  camera move carrying an untouched element straight in or out of the shot.
+- **`min_size`** measures over the whole counting action, takes opacity into account (an
+  invisible counted object is an error) and measures a burst by its largest particle.
+- **`pointing`** refuses the actor's own body and a hold that does not fit in the scene; the
+  "arrival error" field was removed — the arm is solved onto the target, it was 0 by construction.
+- **Expressions** are capped (200 characters, nesting 32) with a plain error.
+- A `follow` on the last camera key acts as a fixed centre (documented, unchanged).
+
+The tool_calling example needed three minimal changes: the portrait strips keep their labels
+(smaller, `label_size` 20) instead of dropping them; courier and jar move 6 and 40 px in portrait
+(their bodies were a few pixels out of the frame); the courier's walk back is 16 px shorter in
+portrait. A `settle` of the courier now follows each push.

@@ -115,8 +115,11 @@ def test_a_layout_cannot_change_what_is_heard_or_when():
     s["order"] += ["jar", "stars"]
     s["actions"] = [{"do": "burst", "id": "boom", "start": 0.5, "target": "stars", "from": "jar.mouth",
                      "sound": [{"kind": "sparkle", "per_item": True}]}]
-    msg = _fails(s, "timing")
-    assert "boom" in msg and "wide" in msg
+    # refused first as a non-geometric layout override (count); were it allowed, the
+    # same-story comparison would refuse it as a timing error naming the action
+    rep = validate(s)
+    msg = " ".join(issues(rep, "vocabulary") + issues(rep, "timing"))
+    assert rep["status"] == "fail" and "count" in msg
 
 
 # ------------------------------------------------------- 4. zoom speed by sliding window

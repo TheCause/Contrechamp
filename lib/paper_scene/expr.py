@@ -43,8 +43,14 @@ def _tokens(text: str) -> list[tuple[str, str]]:
     return out
 
 
+MAX_LEN, MAX_DEPTH = 200, 32
+
+
 def evaluate(text: str, n: int) -> float:
+    if len(text) > MAX_LEN:
+        raise ExprError(f"expression of {len(text)} characters: at most {MAX_LEN}")
     toks = _tokens(text)
+    depth = 0
     i = 0
 
     def peek():
@@ -77,6 +83,16 @@ def evaluate(text: str, n: int) -> float:
         return v
 
     def factor():
+        nonlocal depth
+        depth += 1
+        if depth > MAX_DEPTH:
+            raise ExprError(f"expression nested deeper than {MAX_DEPTH}")
+        try:
+            return _factor()
+        finally:
+            depth -= 1
+
+    def _factor():
         kind, val = peek()
         if (kind, val) == ("op", "-"):
             take()

@@ -30,7 +30,7 @@ INK = ROOT / "ink-theater"
 GSAP = ROOT / ".agents" / "skills" / "music-to-video" / "references" / "motion-primitives" / "assets" / "gsap.min.js"
 FONT = INK / "assets" / "patrickhand.ttf"
 CHECKS = ("vocabulary", "references", "timing", "limb_overlap", "jump", "off_frame", "contact", "zoom_speed",
-          "ui_safe_bottom", "beat_in_phrase", "text_policy", "pointing", "min_size")
+          "ui_safe_bottom", "beat_in_phrase", "text_policy", "pointing", "min_size", "counts")
 def for_layout(a: dict[str, Any], name: str) -> dict[str, Any]:
     """The action as this layout plays it (its per-layout target / position merged)."""
     out = dict(a)
@@ -127,6 +127,7 @@ class Build:
             K.check_ui_safe_bottom(c, self.issues, self.duration)
             self.measured.setdefault("pointing", {})[name] = K.check_pointing(c, self.issues, self.duration)
             self.measured.setdefault("min_size", {})[name] = K.check_min_size(c, self.issues)
+            self.measured.setdefault("counts", {})[name] = K.check_counts(c, self.issues, self.duration)
         K.check_beat_in_phrase(self.beats, self.marks, self.issues)
         self.measured["text_policy"] = K.check_text_policy(sc, self.issues)
         self.ran.update(CHECKS)

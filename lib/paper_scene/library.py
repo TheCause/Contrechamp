@@ -83,6 +83,30 @@ PROP_TYPES: dict[str, dict[str, Any]] = {
     "scatter": {"params": {"area": REQ, "count": REQ, "item": REQ, "seed": 3, "colors": None, "size": 1.0},
                 "channels": {}},
 }
+# What a layout may override on a prop: its GEOMETRY only (position, size, shape, where it
+# draws), never what it shows, counts or draws (state, counts, colours, texts, capacity).
+GEOMETRY_PARAMS: dict[str, set[str]] = {
+    "shape": {"rect", "r", "rx", "ry", "points", "r_in", "at"},
+    "group": set(),
+    "label": {"size"},
+    "path": {"points", "width"},
+    "glow": {"r"},
+    "door": {"rect"},
+    "container": {"w", "h"},
+    "stack": {"w", "sheet"},
+    "bars": {"width", "gap", "unit", "label_size"},
+    "bands": {"top0", "band_h", "overlap"},
+    "pole": {"rest"},
+    "sun": {"r"},
+    "conveyor": {"x", "w", "legs", "floor"},
+    "crane": {"mast_x", "jib_y", "jib_x0", "jib_x1", "floor"},
+    "burst": {"area", "avoid", "column"},
+    "curtain": set(),
+    "tint": set(),
+    "smoke": {"rise", "r0", "r1"},
+    "scatter": {"area", "size"},
+}
+GEOMETRY_INIT = {"rot", "scale"}
 SCATTER_ITEMS = ("flower", "brick")
 FULL_FRAME_TYPES = {"bands", "curtain", "tint", "scatter", "path", "smoke", "glow"}
 CONTAINER_ITEMS = ("star", "coin")

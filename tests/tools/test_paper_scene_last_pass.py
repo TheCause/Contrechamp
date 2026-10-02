@@ -45,7 +45,7 @@ def test_bars_cut_by_the_frame_once_shown_fail():
     s["actions"] = [{"do": "animate", "target": "bars", "channel": f"h_{i}", "to": i, "start": 0.2 * i, "end": 0.2 * i + 0.2}
                     for i in (1, 2, 3)]
     msg = " ".join(issues(validate(s), "off_frame"))
-    assert "bars" in msg and "cut" in msg and "3.30" in msg
+    assert "bars" in msg and "cut" in msg
 
 
 # ------------------------------------------------------- 2. filled ghost bars

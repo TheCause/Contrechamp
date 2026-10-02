@@ -59,9 +59,9 @@ def _two_layouts():
                         "wide": [{"t": 0, "center": [960, 540], "zoom": 1}]},
                 props=[{"id": "box", "type": "shape", "at": [560, 1500], "params": {"shape": "rect", "rect": [-40, -80, 80, 80]},
                         "anchors": {"grip": [-40, -70]},
-                        "layouts": {"wide": {"at": [560, 900], "anchors": {"grip": [-40, -76]}, "init": {"opacity": 0.5}}}},
+                        "layouts": {"wide": {"at": [560, 900], "anchors": {"grip": [-40, -76]}}}},
                        {"id": "board", "type": "shape", "at": [800, 1200], "params": {"shape": "rect", "rect": [0, 0, 200, 100]},
-                        "layouts": {"wide": {"at": [1500, 200]}}}],
+                        "layouts": {"wide": {"at": [1500, 200], "init": {"rot": 0.1}}}}],
                 characters=[{"id": "w", "at": [460, 1500], "layouts": {"wide": {"at": [460, 900]}}}],
                 order=["box", "board", "w"])
 
@@ -76,7 +76,7 @@ def test_an_action_can_aim_at_another_point_in_another_layout():
     p, w = b.layouts["portrait"], b.layouts["wide"]
     assert p.ch.value("w.armR_u", 1.5) != pytest.approx(w.ch.value("w.armR_u", 1.5), abs=5)
     assert ref_point(w, "box.grip", 2.4) == pytest.approx((520, 824))     # the anchor of that layout
-    assert w.ch.value("box.opacity", 0) == 0.5 and p.ch.value("box.opacity", 0) == 1.0
+    assert w.ch.value("board.rot", 0) == 0.1 and p.ch.value("board.rot", 0) == 0.0
 
 
 @pytest.mark.parametrize("key", ["start", "end", "count", "do", "sound"])
@@ -110,7 +110,7 @@ def test_pointing_stretches_the_arm_turns_the_head_and_straightens_the_body():
     sx, sy = char_point(c, "w", "hand_R", 1.4)
     hx, hy = char_point(c, "w", "head", 1.4)
     tx, ty = ref_point(c, "board.center", 1.4)
-    assert b.measured["pointing"]["portrait"][0]["error_deg"] < 3
+    assert b.measured["pointing"]["portrait"][0]["worst_deg_while_held"] < 3
 
 
 def test_pointing_almost_straight_up_fails():

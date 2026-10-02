@@ -196,6 +196,18 @@ def check_vocabulary(scene: Any, issues: Issues) -> bool:
                     issues.add("vocabulary", f"layout override moves anchor {an!r}, which the prop does not declare "
                                "(declare it once, then move it per layout)", where)
             _check_params(p["type"], ov.get("params") or {}, issues, f"{where}.layouts.{lname}", partial=True)
+            # one sound, one beat list, one story: a layout changes geometry, never what happens
+            geo = L.GEOMETRY_PARAMS[p["type"]]
+            for k in (ov.get("params") or {}):
+                if k in L.PROP_TYPES[p["type"]]["params"] and k not in geo:
+                    issues.add("vocabulary", f"layout override of {p['type']} parameter {k!r}: a layout changes "
+                               f"geometry only ({', '.join(sorted(geo)) or 'nothing for this type'}), not what is "
+                               "shown, counted or drawn", f"{where}.layouts.{lname}")
+            for k in (ov.get("init") or {}):
+                if k not in L.GEOMETRY_INIT:
+                    issues.add("vocabulary", f"layout override of init {k!r}: a layout changes geometry only "
+                               f"({', '.join(sorted(L.GEOMETRY_INIT))}), not a state, a count, an opacity or a "
+                               "drawing", f"{where}.layouts.{lname}")
     for i, c in enumerate(scene.get("characters") or []):
         where = f"characters[{i}]"
         if not isinstance(c, dict):
