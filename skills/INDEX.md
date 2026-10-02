@@ -288,6 +288,7 @@ Cross-cutting skills that apply to all pipelines:
 |-------|------|---------|
 | Onboarding | `meta/onboarding.md` | First-interaction greeting, capability discovery, starter prompts |
 | Reviewer | `meta/reviewer.md` | Self-review protocol after every stage |
+| Mute Review | `meta/mute-review.md` | Blind, sound-off review of the story beats on contact sheets (`mute_review` tool), folded into `final_review.checks.story_check` |
 | Checkpoint Protocol | `meta/checkpoint-protocol.md` | When/how to checkpoint and request human approval |
 | Skill Creator | `meta/skill-creator.md` | Dynamically create new skills during pipeline runs |
 | Animation Runtime Selector | `meta/animation-runtime-selector.md` | Choose render runtime + animation library per scene |

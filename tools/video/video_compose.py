@@ -42,7 +42,7 @@ from pathlib import Path
 from typing import Any, Optional
 from urllib.parse import unquote, urlsplit
 
-from lib import ffmpeg_caps, render_checks
+from lib import ffmpeg_caps, mute_review, render_checks
 from tools.base_tool import (
     BaseTool,
     Determinism,
@@ -1177,6 +1177,9 @@ class VideoCompose(BaseTool):
         if atelier_checks.get("stock_reuse_detected"):
             final_review["status"] = "fail"
             final_review["recommended_action"] = "re_author"
+            before_story = (final_review.get("metadata") or {}).get("status_before_story")
+            if isinstance(before_story, dict):  # a later mute review must not lift it
+                before_story.update(status="fail", recommended_action="re_author")
 
         data: dict[str, Any] = {
             "operation": "render",
@@ -2972,31 +2975,32 @@ class VideoCompose(BaseTool):
             transcript_comparison["not_checked"] = {"transcript_matches_script": "; ".join(skipped)}
         issues.extend(transcript_comparison.get("issues", []))
 
-        # --- 7. Determine overall status ---
-        # Any open issue blocks "pass" (before the fork, only six keywords did,
-        # and a review listing its own defects still said "pass").
-        critical_issues = [
-            i for i in issues
-            if any(kw in i.lower() for kw in [
-                "silent downgrade", "delivery promise violation",
-                "effectively silent", "ffprobe failed", "suspiciously short",
-                "tts punctuation leak",  # reading literal punctuation aloud
-            ])
-        ]
+        # --- 7. Mute story review ---
+        # Beats declared in edit_decisions.metadata.story_beats are read by a
+        # separate, blind reviewer after the render (skills/meta/mute-review.md).
+        # It cannot have run yet: the check is recorded as not run, which
+        # blocks "pass" until the review is folded in (tools/analysis/mute_review.py).
+        story_check = None
+        metadata = ed.get("metadata")
+        story_beats = metadata.get("story_beats") if isinstance(metadata, dict) else None
+        if story_beats:
+            try:
+                story_check = mute_review.verify(story_beats, None, None)
+            except mute_review.MuteReviewError as e:
+                story_check = {"status": "not_checked", "review_ran": False, "beats": [],
+                               "not_checked": {"story_beats": f"malformed story_beats: {e}"},
+                               "issues": [f"{mute_review.STORY_PREFIX}malformed story_beats: {e}"]}
 
-        if critical_issues:
-            status = "revise"
-            recommended_action = "re_render"
-        elif issues:
-            status = "revise"
-            recommended_action = "revise_edit"
-        else:
-            status = "pass"
-            recommended_action = "present_to_user"
-
-        if not technical_probe.get("valid_container"):
-            status = "fail"
-            recommended_action = "re_render"
+        # --- 8. Determine overall status ---
+        # Story issues stay out of the keyword rule (a beat label must not
+        # read as "suspiciously short"); the story check can only tighten.
+        base_status = render_checks.final_review_status(
+            issues, bool(technical_probe.get("valid_container"))
+        )
+        status, recommended_action = base_status
+        if story_check is not None:
+            issues.extend(story_check["issues"])
+            status, recommended_action = mute_review.fold_status(base_status, story_check["status"])
 
         final_review = {
             "version": "1.0",
@@ -3015,6 +3019,10 @@ class VideoCompose(BaseTool):
             "issues_found": issues,
             "recommended_action": recommended_action,
         }
+        if story_check is not None:
+            final_review["checks"]["story_check"] = story_check
+            final_review["metadata"] = {"status_before_story": {
+                "status": base_status[0], "recommended_action": base_status[1]}}
 
         log.info(
             "Final review: status=%s, issues=%d, action=%s",
