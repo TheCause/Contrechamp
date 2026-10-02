@@ -267,6 +267,21 @@ def check_values(scene: dict[str, Any], issues) -> dict[str, Any]:
                         issues.add("vocabulary", "at must be [x, y]", f"{where}.layouts.{ln}")
                     if "params" in ov:
                         ov["params"] = _params(kinds, ov["params"], issues, f"{where}.layouts.{ln}")
+                    for an, pt in (ov.get("anchors") or {}).items() if isinstance(ov.get("anchors"), dict) else []:
+                        _name(issues, "anchor name", an, where)
+                        if not _point(pt)[0]:
+                            issues.add("vocabulary", f"anchor {an!r} must be [dx, dy]", where)
+                    oi = ov.get("init")
+                    if oi is not None:
+                        if not isinstance(oi, dict):
+                            issues.add("vocabulary", "init must be an object", where)
+                        else:
+                            for k, v in oi.items():
+                                _name(issues, "channel", k, where)
+                                if not (is_num(v) or _color(v)[0]):
+                                    issues.add("vocabulary", f"init {k}={v!r} must be a number or a colour", where)
+                                elif isinstance(v, str):
+                                    oi[k] = expand(v)
     for c in s.get("characters") or []:
         if not isinstance(c, dict):
             continue
@@ -376,6 +391,8 @@ def check_action_values(a: dict[str, Any], issues) -> None:
             issues.add("vocabulary", "tip_over: shake must be {amp, freq, decay}", w)
     if verb == "tip_over" and "wobble_from" in a and not (is_num(a["wobble_from"]) or isinstance(a["wobble_from"], str)):
         issues.add("vocabulary", "tip_over: wobble_from must be a time", w)
+    for ln in (a.get("layouts") or {}) if isinstance(a.get("layouts"), dict) else []:
+        _name(issues, "layout name", ln, w)
     b = a.get("beat")
     if isinstance(b, dict) and "id" in b and not (isinstance(b["id"], str) and NAME.match(b["id"])):
         issues.add("vocabulary", f"beat id {b['id']!r}: letters, digits, '_' or '-' only", w)

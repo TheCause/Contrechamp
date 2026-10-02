@@ -97,6 +97,69 @@ def check_off_frame(c: Compiled, issues: Issues, duration: float) -> None:
                 break
 
 
+POINT_TOL_DEG = 10.0
+
+
+def check_pointing(c: Compiled, issues: Issues, duration: float) -> list[dict[str, Any]]:
+    """A pointing arm must aim at its target (shoulder -> hand vs shoulder -> target) when
+    it arrives and for the POINT_HOLD seconds a viewer needs to read it."""
+    from lib.paper_scene.compile import POINT_HOLD, char_point, ref_point, shoulder_world
+
+    measured = []
+    for p in c.pointings:
+        worst, worst_t, first = 0.0, p["t"], None
+        t, end = p["t"], min(p["t"] + POINT_HOLD, duration)
+        while t <= end + 1e-9:
+            sx, sy = shoulder_world(c, p["actor"], p["side"], t)
+            hx, hy = char_point(c, p["actor"], "hand_L" if p["side"] < 0 else "hand_R", t)
+            tx, ty = ref_point(c, p["target"], t)
+            a = math.degrees(math.atan2(hy - sy, hx - sx) - math.atan2(ty - sy, tx - sx))
+            a = abs((a + 180) % 360 - 180)
+            first = a if first is None else first
+            if a > worst:
+                worst, worst_t = a, t
+            t += 0.05
+        measured.append({"action": p["action"], "t": round(p["t"], 3), "error_deg": round(first or 0.0, 2),
+                         "worst_deg_while_held": round(worst, 2)})
+        if worst > POINT_TOL_DEG:
+            issues.add("pointing", f"[{c.layout['name']}] '{p['actor']}' points {worst:.0f} deg off {p['target']} at "
+                       f"{worst_t:.2f}s ('{p['action']}'): hold the point {POINT_HOLD:g}s on its target, without "
+                       "walking, leaning or re-posing that arm", p["action"])
+    return measured
+
+
+MIN_ITEM_PX, MIN_THICK_PX = 24.0, 6.0
+
+
+def check_min_size(c: Compiled, issues: Issues) -> list[dict[str, Any]]:
+    """Objects that carry a count (sheets of a pile, coins in a jar) must be big enough on
+    screen to be counted: largest side >= 24 px, thickness >= 6 px, at mid-action."""
+    measured = []
+    for a in c.actions:
+        verb = a.get("do")
+        if verb not in ("stack_add", "flip", "drop_in", "overflow"):
+            continue
+        pid = a["target"]
+        p = c.props[pid]
+        t0 = a["start"]
+        t1 = c.ends.get(a["id"], a.get("end", t0))
+        tm = (t0 + t1) / 2
+        z = M.camera_at(c.camera, tm, c.layout["width"], c.layout["height"])[2]
+        sc = c.ch.value(f"{pid}.scale", tm) * z
+        if p["type"] == "stack":
+            big, thick, what = p["params"]["w"] * sc, p["params"]["sheet"] * sc, "sheet"
+        elif p["params"].get("item") == "coin":
+            big, thick, what = 0.36 * p["params"]["w"] * sc, 0.2 * p["params"]["w"] * sc, "coin"
+        else:
+            big, thick, what = 16 * sc, 16 * sc, "star"
+        measured.append({"action": a["id"], "prop": pid, "item": what, "px": round(big, 1), "thick_px": round(thick, 1)})
+        if big < MIN_ITEM_PX or thick < MIN_THICK_PX:
+            issues.add("min_size", f"[{c.layout['name']}] each {what} of '{pid}' is {big:.0f} x {thick:.0f} px on screen "
+                       f"at {tm:.2f}s ('{a['id']}'): a counted object needs >= {MIN_ITEM_PX:g} px and >= "
+                       f"{MIN_THICK_PX:g} px thick to be counted (enlarge it, or frame it closer)", a["id"])
+    return measured
+
+
 STATIC_SKIP = {"pole", "burst"}   # placed by what holds or launches them, not by their own position
 
 

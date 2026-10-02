@@ -36,6 +36,8 @@ class Compiled:
     n_samplers: int = 0
     resolvers: list[Callable[[], None]] = field(default_factory=list)
     relative: list[tuple[str, list[Any]]] = field(default_factory=list)
+    pointings: list[dict[str, Any]] = field(default_factory=list)
+    actions: list[dict[str, Any]] = field(default_factory=list)
 
 
 class CompileError(ValueError):
@@ -320,10 +322,24 @@ def _v_reach(c: Compiled, a: dict[str, Any], _d: float) -> None:
     _place(c, a, t0, t1, lambda t: ref_point(c, a["target"], t), f"{a['target']} (reached)")
 
 
+POINT_HOLD = 0.4   # s: a pointing gesture reads only if it stays on its target this long
+
+
+def shoulder_world(c: Compiled, cid: str, side: int, t: float) -> tuple[float, float]:
+    ch = c.chars[cid]
+    st = char_state(c, cid, t)
+    loc = M._lean(M.shoulder(side, st["shrug"], ch["posture"] == "seated"), st["lean"])
+    return M.to_world(st["x"], ch["at"][1], ch["scale"], loc)
+
+
 def _v_point_at(c: Compiled, a: dict[str, Any], _d: float) -> None:
+    """Designate (use case 2: the blind readers saw a wave or a hand on the head): the
+    body stands up, the WHOLE arm (upper arm and forearm in one line) aims at the
+    target, head and eyes turn to it. The `pointing` check then measures the aim."""
     cid, t0, t1, hand = a["actor"], a["start"], a["end"], a.get("hand", "R")
     ch = c.chars[cid]
     ku, kf, side = _arm(hand)
+    _ease(c, f"{cid}.lean", t0, t1, 0.0, a.get("ease", "io"), a)
 
     def solve() -> list[float]:
         st = char_state(c, cid, t1)
@@ -333,8 +349,13 @@ def _v_point_at(c: Compiled, a: dict[str, Any], _d: float) -> None:
         ang = math.degrees(math.atan2(lx - sx, ly - sy))
         cur = c.ch.value(f"{cid}.{ku}", t0)
         ang = cur + ((ang - cur + 180) % 360 - 180)
-        return [ang, ang]
-    _target_ease(c, a, [ku, kf], solve)
+        hx, hy = char_point(c, cid, "head", t1)
+        dx, dy = tx - hx, ty - hy
+        m = max(abs(dx), abs(dy), 1e-6)
+        return [ang, ang, M.clamp(dx / 300.0, -1, 1), dx / m, dy / m]
+    _target_ease(c, a, [ku, kf, "turn", "gaze_x", "gaze_y"], solve)
+    c.pointings.append({"action": a["id"], "actor": cid, "side": side, "target": a["target"], "t": t1,
+                        "where": a.get("_where", a["id"])})
     _place(c, a, t0, t1, lambda t: ref_point(c, a["target"], t), f"{a['target']} (pointed at)")
 
 

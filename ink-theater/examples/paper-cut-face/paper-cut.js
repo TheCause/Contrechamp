@@ -358,8 +358,9 @@
   // proportions of the reference worker character; mocap clips (long limbs) also drive it.
   function vec(aDeg, L) { var a = aDeg * Math.PI / 180; return [L * Math.sin(a), L * Math.cos(a)]; }
   function add(p, q) { return [p[0] + q[0], p[1] + q[1]]; }
-  // p.seated: the upper body sits SEAT_DROP lower, thighs short (seen from the front), shins down.
-  var SEAT_DROP = 18;
+  // p.seated: pelvis at seat height (SEAT_DROP lower), thighs horizontal towards where the
+  // worker faces (p.facing 1 = screen right, -1 = left), knees bent, shins down to the floor.
+  var SEAT_DROP = 22;
   function workerPose(p) {
     p = p || {};
     var arms = p.arms || [-12, -6, 12, 6], legs = p.legs || 0, sh = p.shrug || 0, sq = p.squash || 1;
@@ -374,7 +375,8 @@
     });
     [["L", -1, legs], ["R", 1, -legs]].forEach(function (l) {
       if (p.seated) {
-        po["hip" + l[0]] = low([l[1] * 11, -42 + drop]); po["kn" + l[0]] = low([l[1] * 17, -36 + drop]); po["ft" + l[0]] = low([l[1] * 17, 0]);
+        var fc = p.facing === -1 ? -1 : 1, hx = l[1] * 9, ky = -42 + drop;
+        po["hip" + l[0]] = low([hx, ky]); po["kn" + l[0]] = low([hx + fc * 19, ky]); po["ft" + l[0]] = low([hx + fc * 20, 0]);
         return;
       }
       var hp = [l[1] * 11, -42], f = add(hp, vec(l[2], 38));
@@ -558,7 +560,7 @@
       place: function (groundY, rootY) {
         outer.setAttribute("transform", T(pup.cx, pup.ground + ((rootY || 0) - (groundY || 0)) * pup.scale, 0, pup.scale));
       },
-      // one call for keyed scene data: {x, arms, legs, lean, shrug, bob, squash, seated, turn, gaze, mouth, brow, blink, openHands}
+      // one call for keyed scene data: {x, arms, legs, lean, shrug, bob, squash, seated, facing, turn, gaze, mouth, brow, blink, openHands}
       set: function (p) {
         if (p.x != null) pup.cx = p.x;
         state.face = { turn: p.turn || 0, gaze: p.gaze || [0, 0], mouth: p.mouth || "smile", brow: p.brow || 0, blink: p.blink || 0, openHands: p.openHands || 0 };

@@ -234,3 +234,25 @@ JavaScript evaluator on the compiled factory and compares it with Python's value
 `render` (render machine) runs `hyperframes render` per layout, then `sfx_synth` on
 `sfx_events.json` and muxes the WAV under each video. The mute review is not optional: the
 compiler's beats go to `mute_review sheets`, then to a blind reviewer.
+
+## 8. Second pass — what the first real author of U2 could not express or make read
+
+A separate agent wrote U2 with the skill alone, rendered it in both layouts, and two blind
+reviewers read it (0 absent, 0 contradicted, but the idea came through only halfway). Each
+addition below answers one of their findings, and nothing more.
+
+| Addition | U2 finding |
+|---|---|
+| Arithmetic on `$n` in a repeat: numbers, `$n`, `+ - * /`, `()`, `min`, `max` — a closed parser, no `eval`, no names, calls, attributes or powers | the lean, the loop duration and the pitch grow with the turn; the author had to write turn 4 out in full |
+| An action's `layouts.<name>` may change `target`, `to`, `from`, `dx`, `grip` only; a prop's `layouts.<name>` may also move a declared anchor and set `init` | the 9:16 needs another point (the board is above, not beside); timing and counts stay shared, so the same-story check still holds |
+| `point_at` straightens the body, aims the whole arm, turns head and eyes; check `pointing` (≤ 10° off, held 0.4 s) | both reviewers read the final designation as a wave or a hand on the head, aimed at the hatch or the cart |
+| `seated`: pelvis at seat height, thighs horizontal towards the first facing, knees bent, a stool | the reader looked standing and small, a leg sticking out from behind the desk |
+| Check `min_size`: a counted object ≥ 24 px and ≥ 6 px thick on screen; coins scale with the jar width | sheets and coins were a few pixels in the wide shots: the counts, the core of the idea, did not read |
+| Check: no beat starts during the opening fade (`style.fade_in`, 0 allowed) | the 0.2 s fade ate a third of the first beat |
+
+**What changes for an existing scene:** a `point_at` now drives `lean`, `turn` and the gaze
+(a `look_at` or `pose` on those during the point is a `limb_overlap` error); the pointing arm
+must stay on target 0.4 s; a seated character's hands sit 4 units lower (seat drop 22, was
+18) and a stool appears; coins are drawn at 0.36 × the jar width (unchanged for the default
+50); a beat starting before `fade_in` (default 0.45 s) is an error; counted sheets thinner
+than 6 px or coins under 24 px on screen are errors.

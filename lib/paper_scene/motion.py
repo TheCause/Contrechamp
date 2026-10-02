@@ -182,7 +182,7 @@ def to_screen(keys, t, width, height, x, y) -> tuple[float, float]:
 # positive = towards screen right. Upper arm 25, forearm 24.
 
 UPPER, FORE = 25.0, 24.0
-SEAT_DROP = 18.0  # a seated worker's upper body sits this much lower
+SEAT_DROP = 22.0  # a seated worker's pelvis is at seat height: upper body this much lower
 
 
 def vec(a_deg: float, length: float) -> tuple[float, float]:

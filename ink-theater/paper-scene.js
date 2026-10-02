@@ -212,14 +212,15 @@
   };
 
   var JAR_STARS = [[-12, -14, 7, 0.2], [8, -22, 8, 1.1], [-3, -36, 6, 2.0], [12, -44, 6, 0.7], [-13, -46, 7, 1.6], [2, -10, 6, 2.6]];
-  function coinPiece(parent, key) { return PC.paper(parent, PC.tornEllipse(key, 9, 5, 0.4), "#e6b43c", { depth: 0.4, edge: true }); }
+  // a coin is 0.36 x 0.2 of the jar width (9 x 5 radii for the default 50): min_size measures the same
+  function coinPiece(parent, key, w) { return PC.paper(parent, PC.tornEllipse(key, 0.18 * w, 0.1 * w, 0.4), "#e6b43c", { depth: 0.4, edge: true }); }
   DRAW.container = function (parent, id, P, S) {
     var p = P.params, w = p.w, h = p.h, root_ = g(parent), body = g(root_), items = [], glowEl = null;
     if (p.glow) glowEl = PC.glow(body, 0, -h / 2, h * 1.15, "#fff3b0", 0.3);
     var sx = w / 50, sy = h / 60;
     for (var i = 0; i < p.capacity; i++) {
       var ig = g(body);
-      if (p.item === "coin") { coinPiece(ig, id + "c" + i); items.push([ig, [0, -6 - i * 7 * Math.min(1, 50 / (p.capacity * 7 + 1) * 1.0)], 0]); }
+      if (p.item === "coin") { coinPiece(ig, id + "c" + i, w); items.push([ig, [0, -6 - i * 7 * Math.min(1, 50 / (p.capacity * 7 + 1) * 1.0)], 0]); }
       else { var s = JAR_STARS[i % JAR_STARS.length]; PC.paper(ig, PC.starPoly(id + "s" + i, s[2]), p.item_color || "#fff0a8", { depth: 0.2, edge: false }); items.push([ig, [s[0] * sx, s[1] * sy], s[3]]); }
     }
     if (p.item === "coin") items.forEach(function (it, i) { var row = Math.floor(i / 3), col = i % 3; it[1] = [(col - 1) * w * 0.28 + (row % 2 ? w * 0.08 : 0), -7 - row * 8]; });
@@ -233,9 +234,9 @@
       lidOn = g(body, { transform: T(0, -h) }); PC.paper(lidOn, PC.tornRect(id + "lid", -w * 0.54, -12, w * 1.08, 14, 0.8), p.lid, { depth: 0.6 });
       lidFree = g(parent); PC.paper(lidFree, PC.tornRect(id + "lidf", -w * 0.54, -7, w * 1.08, 14, 0.8), p.lid, { depth: 0.6 });
     }
-    var fx = g(parent), drops = (P.extra.drops || []).map(function (d, i) { var cg = g(fx); coinPiece(cg, id + "d" + i); return [cg, d]; });
+    var fx = g(parent), drops = (P.extra.drops || []).map(function (d, i) { var cg = g(fx); coinPiece(cg, id + "d" + i, w); return [cg, d]; });
     var spills = [];
-    for (var k = 0; k < 6; k++) { var spg = g(fx); coinPiece(spg, id + "sp" + k); spills.push(spg); }
+    for (var k = 0; k < 6; k++) { var spg = g(fx); coinPiece(spg, id + "sp" + k, w); spills.push(spg); }
     return function (t) {
       var x = S.v(id + ".x", t), y = S.v(id + ".y", t), rot = S.v(id + ".rot", t);
       root_.setAttribute("transform", T(x, y, rot / D2R, S.v(id + ".scale", t)));
@@ -556,8 +557,18 @@
   function character(parent, id, C, S, index) {
     var look = {}; for (var k in C.look) look[k] = C.look[k];
     look.name = id;
+    var seated = C.posture === "seated", stool = null;
+    // seated: a paper stool under the pelvis (drawn behind him), thighs towards where he first faces
+    var facing = S.v(id + ".turn", 0) < 0 ? -1 : 1;
+    if (seated) {
+      stool = g(parent);
+      var sx0 = facing > 0 ? -4 : -28;   // seat spans the thighs: pelvis to knees
+      PC.paper(stool, PC.tornRect(id + "stool", sx0, -21, 32, 7, 0.6), "#8a5a3b", { depth: 0.8 });
+      PC.paper(stool, PC.tornRect(id + "stoolL", sx0 + 2, -15, 5, 15, 0.4), "#6b4430", { depth: 0.5 });
+      PC.paper(stool, PC.tornRect(id + "stoolR", sx0 + 25, -15, 5, 15, 0.4), "#6b4430", { depth: 0.5 });
+    }
     var pup = PC.puppet(g(parent), { look: look, cx: S.v(id + ".x", 0), ground: C.ground, scale: C.scale });
-    var off = 0.3 + 1.3 * index, seated = C.posture === "seated";
+    var off = 0.3 + 1.3 * index;
     return function (t) {
       var x = S.v(id + ".x", t), v = (S.v(id + ".x", t + 0.03) - S.v(id + ".x", t - 0.03)) / 0.06;
       var walk = seated ? 0 : clamp(Math.abs(v) / 60);
@@ -566,8 +577,9 @@
         lean: S.v(id + ".lean", t), shrug: S.v(id + ".shrug", t), turn: S.v(id + ".turn", t),
         gaze: [S.v(id + ".gaze_x", t), S.v(id + ".gaze_y", t)], mouth: S.v(id + ".mouth", t), brow: S.v(id + ".brow", t),
         openHands: S.v(id + ".open_hands", t), legs: 22 * Math.sin(x / 15) * walk, bob: -Math.abs(Math.sin(x / 15)) * 5 * walk,
-        blink: blink(t, off), squash: 1 + 0.012 * Math.sin(t * 2.4 + off), seated: seated
+        blink: blink(t, off), squash: 1 + 0.012 * Math.sin(t * 2.4 + off), seated: seated, facing: facing
       });
+      if (stool) stool.setAttribute("transform", T(x, C.ground, 0, C.scale));
     };
   }
 

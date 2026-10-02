@@ -59,6 +59,35 @@ r = PaperScene().execute({"operation": "render", "scene": "scene.json", "output_
 - **9:16 layouts must declare `ui_safe_bottom`**: 0.2 for Reels / Shorts / TikTok (the app covers the bottom fifth), 0 when nothing covers the frame.
 - **A layout moves things, it does not change what happens or when**: one sound and one beat list serve every layout. Override positions per layout, never counts, durations or particle numbers (a `timing` error says which action differs).
 - **Names and colours**: ids, layout names, marks, anchors, channels are plain names (`^[A-Za-z0-9_-]+$`); colours are `#rrggbb` or `#rgb`; numbers are finite. Anything else is refused before compilation.
+- **`insert` is optional**: only for a scene that sits inside a longer video (its offset is carried to the outputs).
+- **Opening fade**: `style.fade_in` (default 0.45 s) fades in from the blank page and hides whatever happens under it; a beat that starts during it is an error. Set `"fade_in": 0` when the first frame matters (an insert, a Short whose first frame is the thumbnail).
+- **Where to keep a scene**: `examples/paper-scene/<name>/scene.json` in the repository (the scene is the source); compile into a folder outside it (`output_dir`), never commit the compiled projects.
+
+### Per-layout differences
+
+A layout moves things, it never changes what happens or when.
+
+- A **prop** overrides per layout: `layouts.<name>.at`, `.params` (sizes, points), `.anchors` (an anchor declared once, moved here), `.init`.
+- A **character** overrides `at` and `scale`.
+- An **action** overrides only where it aims: `"layouts": {"portrait": {"target": "board.top", "to": "desk.left", "from": "hatch.opening", "dx": -40, "grip": "handle"}}`. Its `start`, `end`, counts and sounds are the same everywhere (any other key is an error).
+
+### Sizes and defaults (layout pixels; a character's sizes are multiplied by its `scale`)
+
+| what | value |
+|---|---|
+| worker, feet to hat top | ~170 (head centre −132, head radius 30, `center` anchor −70, hips −42) |
+| shoulder height | −94 (shoulders ±26 apart from the body axis) |
+| arm | upper 25 + forearm 24: a hand reaches **49** from its shoulder (73 px at scale 1.5) |
+| seated | pelvis at −20 (seat height), thighs horizontal 19 towards where he first faces (initial `turn` sign), a stool is drawn under him |
+| stack sheet | `sheet` 5 px thick, `w` 70 wide — below the readable size (see `min_size`) |
+| bars | `unit` 30 px per height unit, `width` 40, `gap` 14, labels `label_size` 26 under the bar |
+| container | `w` 50, `h` 60; a coin is 0.36 w × 0.2 w (18 × 10 for w 50); 6 stars by default |
+| label | `size` 40, centred on `at` |
+| contact tolerance | 8 px (16 for a hand on the pages of a pile) |
+| pointing | aimed within 10°, held 0.4 s |
+| counted object (`min_size`) | ≥ 24 px long side and ≥ 6 px thick on screen |
+| zoom | ×1.25 at most over 1.2 s |
+| opening fade | 0.45 s |
 
 ## Props (`type` → what it draws; channels in *italics*; own anchors)
 
@@ -86,9 +115,35 @@ Every prop has *x y rot scale opacity* and the anchors `center top bottom left r
 | `smoke` | `rise`, `r0`, `r1`, `color` (four idle puffs rising from `at`) | — |
 | `scatter` | `area`, `count`, `item` (`flower`/`brick`), `seed`, `colors`, `size` | — |
 
+**Every parameter, with its default** (and the type's own channels):
+
+| type | parameters (default) | channels (initial) |
+|---|---|---|
+| `shape` | `shape` **required**, `rect` none, `r` none, `rx` none, `ry` none, `points` none, `teeth` `24`, `r_in` none, `color` `#d8694b`, `depth` `1.0`, `amp` none, `step` `13`, `alpha` `1.0`, `edge` true, `shadow` true, `key` none, `rolls` none, `spin` `0.0`, `at` none | — |
+| `group` | `children` **required**, `spin` `0.0` | — |
+| `label` | `text` **required**, `size` `40`, `color` `#3b2a1e` | — |
+| `path` | `points` **required**, `closed` false, `color` `#3b3437`, `width` `3.0`, `dashed` false, `line_alpha` `1.0`, `fill_color` none, `fill_alpha` `0.35` | `draw` `1.0`, `fill` `0.0` |
+| `glow` | `r` **required**, `color` `#ffd36b` | `alpha` `0.5` |
+| `door` | `rect` **required**, `color` `#9aa3a8`, `slat_color` `#6f787e`, `slats` `14`, `inside_color` `#4c302b`, `box_color` `#7d6a60` | `open` `0.0` |
+| `container` | `item` `star`, `w` `50`, `h` `60`, `capacity` `6`, `glass` `#cfe6f2`, `lid` `#c4553b`, `glow` false, `item_color` none | `count` `0.0`, `empty` `0.0`, `spill` `0.0`, `lid_x` `0.0`, `lid_y` `0.0`, `lid_rot` `0.0`, `lid_free` `0.0` |
+| `stack` | `w` `70`, `sheet` `5.0`, `color` `#f7f1e3`, `line` `#b9ad97`, `max` `12` | `count` `0.0`, `flipped` `0.0` |
+| `bars` | `n` **required**, `width` `40`, `gap` `14`, `unit` `30`, `color` `#e98a5d`, `dashed` false, `labels` none, `label_size` `26`, `label_color` `#3b2a1e` | — |
+| `bands` | `colors` **required**, `top0` `1330`, `band_h` `222`, `overlap` `14`, `strokes` `9` | — |
+| `pole` | `rest` `[16.0,-40.0]`, `bands` none, `head_color` `#f6ead0` | `base_x` `0.0`, `base_y` `0.0`, `tip_dx` `16.0`, `tip_dy` `-40.0` |
+| `sun` | `r` `95`, `rolls` true | `power` `0.7`, `dim` `0.0` |
+| `conveyor` | `x` **required**, `w` **required**, `legs` `[]`, `floor` **required** | `offset` `0.0` |
+| `crane` | `mast_x` **required**, `jib_y` **required**, `jib_x0` **required**, `jib_x1` **required**, `floor` **required**, `color` `#f1b237` | `trolley` `0.0`, `hook_y` `0.0`, `hook_open` `1.0` |
+| `burst` | `count` `40`, `area` **required**, `avoid` `[]`, `sizes` `[9,10,11,12,13,14,16,18,21]`, `seed` `42`, `spacing` `85`, `column` `[[-150,150],[300,520]]`, `hold` `0.8`, `spread` `[0.85,1.3]`, `sparks` `22` | — |
+| `curtain` | `top` `#1d2150`, `bottom` `#3b3f7e` | `y` `-60.0` |
+| `tint` | `color` `#666edb`, `alpha` `0.62`, `glows` `[]` | `night` `0.0` |
+| `smoke` | `rise` `260`, `r0` `14`, `r1` `48`, `color` `#fbf6ec` | — |
+| `scatter` | `area` **required**, `count` **required**, `item` **required**, `seed` `3`, `colors` none, `size` `1.0` | — |
+
+Shape `rect` is `[x, y, w, h]` in the prop's local coordinates; group children take the shape parameters (plus their own `at`). `container.item_color` colours the stars; `bars.label_color` the labels.
+
 ## Characters
 
-The paper worker (`PaperCut.puppet`): `look` = `skin shirt overall brow hat (colour or false) mustache glasses`; `posture` = `standing` | `seated` (legs bent, upper body lower: put a desk in front); `role` (who it stands for — carried into `story_beats.json`); `scale`; `at: [x, ground_y]`; `pose`: `arms [upL, foreL, upR, foreR]` (degrees, 0 = hanging, + = towards screen right), `lean`, `turn` (−1..1), `gaze [x, y]` (y < 0 looks up: the whole face rises), `mouth` (`smile grin o flat wavy`), `brow`, `shrug`, `open_hands`. Anchors: `hand_L hand_R head center feet`. Walking legs, blinks and breathing are automatic.
+The paper worker (`PaperCut.puppet`): `look` = `skin shirt overall brow hat (colour or false) mustache glasses`; `posture` = `standing` | `seated` (pelvis at seat height on a stool, thighs horizontal towards where he first faces, knees bent; a desk in front hides the legs); `role` (who it stands for — carried into `story_beats.json`); `scale`; `at: [x, ground_y]`; `pose`: `arms [upL, foreL, upR, foreR]` (degrees, 0 = hanging, + = towards screen right), `lean`, `turn` (−1..1), `gaze [x, y]` (y < 0 looks up: the whole face rises), `mouth` (`smile grin o flat wavy`), `brow`, `shrug`, `open_hands`. Anchors: `hand_L hand_R head center feet`. Walking legs, blinks and breathing are automatic.
 
 ## Actions
 
@@ -101,7 +156,7 @@ Common fields: `do`, `id` (optional), `actor` (a character), `target` (`"id"` or
 | `walk_to` | walks to an x | `to` (number or anchor), `dx` |
 | `push` | moves a prop along x, the actor behind with both hands on it (forward or back) | `to`, `dx`, `grip` (anchor), `offset` (actor x − prop x; default: where he stands), `lean` |
 | `reach` | one hand to a target | `hand` `L`/`R` |
-| `point_at` | arm stretched towards a target | `hand` |
+| `point_at` | designates: the body straightens, the whole arm (upper arm and forearm in one line) aims at the target, head and eyes turn to it; checked by `pointing` | `hand` |
 | `look_at` | head and gaze towards a target | — |
 | `wave` | oscillating arm(s) around the current pose | `hand` `L`/`R`/`both` (mirrored), `amp [upper, fore]`, `freq` |
 | `clap` | hands clap | `amp`, `freq` |
@@ -131,9 +186,21 @@ Common fields: `do`, `id` (optional), `actor` (a character), `target` (`"id"` or
    {"do": "drop_in", "target": "jar", "count": "$n", "from": "jar.above", "start": 0.55, "end": 0.75,
     "sound": [{"kind": "marimba", "per_item": true, "freq": 392, "pitch_step": 2}]}]}
 ```
-Inside a repeat, `start`/`end` are fractions of the iteration's span (shorter spans = faster turns); `"$n"` is the iteration number, also inside strings (`"channel": "h_$n"`). Ids get `_n`. When one iteration must differ (the camera is elsewhere, the last turn stays), write that turn out after the repeat.
+Inside a repeat, `start`/`end` are fractions of the iteration's span (shorter spans = faster turns); `"$n"` is the iteration number, also inside strings (`"channel": "h_$n"`). Ids get `_n`. A number may be **computed from the turn**: `"2*$n+1"`, `"0.2*$n+0.3"`, `"392+$n*20"`, `"min($n, 3)/3"` — numbers, `$n`, `+ - * /`, parentheses, `min`, `max`, nothing else (a closed parser: no names, calls, attributes or powers). When one iteration must differ in kind (the camera is elsewhere, the last turn stays), write that turn out after the repeat.
 
-**Sound on an action.** `{"kind", "gain", "pan", ...sfx_synth parameters}` plus one placement: `at` (s after the start of the action's window), `every` (a period over the window, phase `at`), or `per_item` (one per counted item; `pitch_step` semitones up for each next one). Kinds: `click thud metal bell marimba motor swish sparkle pad`.
+**Sound on an action.** `{"kind", "gain", "pan", ...sfx_synth parameters}` plus one placement: `at` (s after the start of the action's window), `every` (a period over the window, phase `at`), or `per_item` (one per counted item; `pitch_step` semitones up for each next one). `gain` > 0 (relative; the whole layer is normalized to `sound.peak_dbfs`), `pan` 0 left .. 1 right. Parameters per kind, with defaults:
+
+| kind | parameters (default) |
+|---|---|
+| `click` | `freq` `2600.0`, `dur` `0.03`, `noise` `0.6` |
+| `thud` | `freq` `95.0`, `dur` `0.35` |
+| `metal` | `freq` `1900.0`, `dur` `0.8` |
+| `bell` | `freq` `523.25`, `dur` `1.6` |
+| `marimba` | `freq` `392.0`, `dur` `0.6` |
+| `motor` | `freq` `90.0`, `freq_end` `90.0`, `dur` `1.0`, `wobble` `0.0` |
+| `swish` | `dur` `0.6`, `lo` `500.0`, `hi` `3000.0` |
+| `sparkle` | `freq` `2093.0`, `dur` `0.7` |
+| `pad` | `dur` `3.0`, `freqs` `[220.0,261.63,329.63,392.0,493.88]` |
 
 **Beat on an action.** `"beat": {"id", "label", "expected"}` takes the action's window (or give `start`/`end`). Scene-level `beats` are for beats that are not one action (and carry `phrase`).
 
@@ -150,6 +217,9 @@ Inside a repeat, `start`/`end` are fractions of the iteration's span (shorter sp
 | `ui_safe_bottom` | an action in the bottom band of a 9:16 frame | raise the set in that layout |
 | `beat_in_phrase` | a beat not inside the phrase it illustrates | the picture follows the voice, not the reverse |
 | `text_policy` | an on-screen text not in `text_allowed` | counts are shown by objects, not figures |
+| `pointing` | a `point_at` arm is more than 10° off its target when it arrives or during the 0.4 s after | hold the point: no walk, lean or other gesture of that arm for 0.4 s |
+| `min_size` | a counted object (sheet of a pile, coin, star) is under 24 px, or under 6 px thick, on screen during the action that counts it | thicker sheets (`sheet` ≥ 6 at zoom 1), a wider jar (coins scale with `w`), or a closer camera |
+| `timing` (fade) | a beat starts during the opening fade | `style.fade_in: 0`, or start the beat later |
 
 ## Traps only the image shows (mute review)
 
@@ -159,6 +229,12 @@ These cannot be checked from the description; look for them on the sheets and as
 - **An arm stretched towards an object reads as "he pushes it"**, whatever the story says. The one at fault stands with his back to the object, and it falls on his side (`tip_over` `side`).
 - **An eased-out path puts the object far away on the second frame** (it seems to appear there). Show the source, a held beat, then the spread (the `burst` does: column, hold, dispersion).
 - **Cause and effect must be on screen together** (new sheet → taller pile → more flips → more coins → taller strip): the camera must frame both ends of the chain.
+- **Small objects vanish in a wide shot.** Piles, coins and pages a few pixels big are not counted by anyone; `min_size` catches the counted ones, the rest (a label, a small prop that carries a beat) needs your eye at phone size.
+- **A white page on a white or cream ground disappears.** Give sheets a contrasting colour or a dark `line`, and a dark backdrop where they travel.
+- **Raised brows read as anger or alarm**, not as effort or surprise, on these faces. For strain, prefer `lean` and the `o` mouth.
+- **The direction of money tells who pays.** Coins falling INTO the reader's jar read as "he is paid". If the reader pays, coins must leave him (out of his jar, towards a till), not arrive.
+- **A gesture of designation is read from far away**: `point_at` straightens the body and turns the head, but a target high above the character still gives an arm almost vertical, read as "hand on the head" — bring the character closer and lower, or the target nearer to shoulder height.
+- **Anchors you name yourself** (`"anchors": {"above": [0, -170]}`) are local to the prop: `jar.above` exists only if the jar declares it. A pile that is not `attach`ed to a cart stays where it is. Bar labels show only when their bar is visible (height > 0 and `reveal` > 0).
 
 ## Determinism and limits
 

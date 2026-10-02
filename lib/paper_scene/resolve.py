@@ -12,6 +12,7 @@ import re
 from typing import Any
 
 from lib.paper_scene import library as L
+from lib.paper_scene.expr import ExprError, evaluate, is_arithmetic
 
 ID = re.compile(r"^[A-Za-z0-9_-]+$")
 TIME_REF = re.compile(r"^([A-Za-z_][A-Za-z0-9_-]*)(?:\.(start|end))?\s*(?:([+-])\s*(\d+(?:\.\d+)?))?$")
@@ -34,7 +35,9 @@ class Issues:
         self.items: list[dict[str, str]] = []
 
     def add(self, check: str, message: str, where: str = "") -> None:
-        self.items.append({"check": check, "where": where, "message": message})
+        item = {"check": check, "where": where, "message": message}
+        if item not in self.items:      # an action checked in several layouts reports once
+            self.items.append(item)
 
     def of(self, check: str) -> list[dict[str, str]]:
         return [i for i in self.items if i["check"] == check]
@@ -186,8 +189,12 @@ def check_vocabulary(scene: Any, issues: Issues) -> bool:
             if lname not in layouts:
                 issues.add("references", _known("layout", lname, layouts), where)
             for k in ov:
-                if k not in ("at", "params"):
-                    issues.add("vocabulary", _known("layout override", k, ("at", "params")), where)
+                if k not in ("at", "params", "anchors", "init"):
+                    issues.add("vocabulary", _known("layout override", k, ("at", "params", "anchors", "init")), where)
+            for an in (ov.get("anchors") or {}):
+                if an not in (p.get("anchors") or {}):
+                    issues.add("vocabulary", f"layout override moves anchor {an!r}, which the prop does not declare "
+                               "(declare it once, then move it per layout)", where)
             _check_params(p["type"], ov.get("params") or {}, issues, f"{where}.layouts.{lname}", partial=True)
     for i, c in enumerate(scene.get("characters") or []):
         where = f"characters[{i}]"
@@ -236,17 +243,24 @@ def check_vocabulary(scene: Any, issues: Issues) -> bool:
     return not issues.of("vocabulary")
 
 
-def _check_pose(pose: dict[str, Any], issues: Issues, where: str) -> None:
+def _check_pose(pose: Any, issues: Issues, where: str, in_repeat: bool = False) -> None:
+    """In a repeat, a number may still be an expression of $n (checked again once expanded)."""
+    def num(x: Any) -> bool:
+        return _num(x) or (in_repeat and isinstance(x, str) and is_arithmetic(x))
+
+    if not isinstance(pose, dict):
+        issues.add("vocabulary", "a pose is an object of pose fields", where)
+        return
     for k, v in pose.items():
         if k not in L.POSE_FIELDS:
             issues.add("vocabulary", _known("pose field", k, L.POSE_FIELDS), where)
         elif k == "mouth" and v not in L.MOUTHS:
             issues.add("vocabulary", _known("mouth", v, L.MOUTHS), where)
-        elif k == "arms" and not (isinstance(v, list) and len(v) == 4 and all(_num(x) for x in v)):
+        elif k == "arms" and not (isinstance(v, list) and len(v) == 4 and all(num(x) for x in v)):
             issues.add("vocabulary", "arms must be [upper_L, fore_L, upper_R, fore_R] in degrees", where)
-        elif k == "gaze" and not (isinstance(v, list) and len(v) == 2 and all(_num(x) for x in v)):
+        elif k == "gaze" and not (isinstance(v, list) and len(v) == 2 and all(num(x) for x in v)):
             issues.add("vocabulary", "gaze must be [x, y]", where)
-        elif k not in ("mouth", "arms", "gaze") and not _num(v):
+        elif k not in ("mouth", "arms", "gaze") and not num(v):
             issues.add("vocabulary", f"{k} must be a number", where)
 
 
@@ -273,7 +287,8 @@ def _check_sound(e: Any, issues: Issues, where: str, free: bool = False, verb: s
     if "per_item" in e and verb not in L.ITEM_VERBS:
         issues.add("vocabulary", f"per_item needs a verb that counts items ({', '.join(sorted(L.ITEM_VERBS))})",
                    where)
-    if "every" in e and not (_num(e["every"]) and e["every"] > 0):
+    if "every" in e and not ((_num(e["every"]) and e["every"] > 0)
+                             or (isinstance(e["every"], str) and is_arithmetic(e["every"]))):
         issues.add("vocabulary", "every must be a period in seconds > 0", where)
 
 
@@ -326,7 +341,7 @@ def _check_action_vocab(a: Any, issues: Issues, where: str, in_repeat: bool) -> 
         if not isinstance(a.get("set"), dict) or not a.get("set"):
             issues.add("vocabulary", "pose: set must be a non-empty object of pose fields", where)
         else:
-            _check_pose(a["set"], issues, where)
+            _check_pose(a["set"], issues, where, in_repeat)
     hands = ("L", "R", "both") if verb == "wave" else ("L", "R")
     if "hand" in a and a["hand"] not in hands:
         issues.add("vocabulary", _known("hand", a["hand"], hands), where)
@@ -334,6 +349,19 @@ def _check_action_vocab(a: Any, issues: Issues, where: str, in_repeat: bool) -> 
         issues.add("vocabulary", "layer: give behind or in_front_of", where)
     if verb == "tip_over" and a.get("side") not in (-1, 1):
         issues.add("vocabulary", "tip_over: side must be -1 (left) or 1 (right)", where)
+    lays = a.get("layouts")
+    if lays is not None:
+        if not isinstance(lays, dict):
+            issues.add("vocabulary", "layouts must be an object {layout: {target, to, from, dx, grip}}", where)
+        else:
+            for lname, ov in lays.items():
+                if not isinstance(ov, dict):
+                    issues.add("vocabulary", "a layout override is an object", where)
+                    continue
+                for k in ov:
+                    if k not in L.LAYOUT_ACTION_KEYS:
+                        issues.add("vocabulary", _known("layout override", k, L.LAYOUT_ACTION_KEYS)
+                                   + ": a layout changes where an action aims, not when nor how much", where)
     for i, s in enumerate(a.get("sound") or []):
         _check_sound(s, issues, f"{where}.sound[{i}]", verb=verb)
     b = a.get("beat")
@@ -352,8 +380,11 @@ def _check_action_vocab(a: Any, issues: Issues, where: str, in_repeat: bool) -> 
 # --------------------------------------------------------------- expansion
 
 def _subst(v: Any, n: int) -> Any:
+    """``$n`` in a repeat: arithmetic strings ("2*$n+1") become numbers, others text ("h_$n")."""
     if isinstance(v, str):
-        return n if v == "$n" else v.replace("$n", str(n))
+        if is_arithmetic(v):
+            return evaluate(v, n)     # raises ExprError on anything beyond the arithmetic
+        return v.replace("$n", str(n))
     if isinstance(v, list):
         return [_subst(x, n) for x in v]
     if isinstance(v, dict):
@@ -381,7 +412,13 @@ def expand_actions(scene: dict[str, Any], times: Times, issues: Issues) -> list[
                     continue
                 for j, sub in enumerate(a.get("actions") or []):
                     w = f"actions[{i}].actions[{j}] (n={n})"
-                    act = _subst(copy.deepcopy(sub), n)
+                    try:
+                        act = _subst(copy.deepcopy(sub), n)
+                    except ExprError as e:
+                        issues.add("vocabulary", f"expression: {e} (only numbers, $n, + - * /, (), min, max)", w)
+                        continue
+                    if not isinstance(act.get("id", ""), str):
+                        act["id"] = str(act["id"])
                     act["id"] = f"{act.get('id', f'{name}_a{j}')}_{n}" if "$n" not in str(sub.get("id", "")) \
                         else act["id"]
                     act["_where"] = w
@@ -432,6 +469,8 @@ def layout_view(scene: dict[str, Any], name: str) -> tuple[dict[str, Any], dict[
         if "at" in ov:
             q["at"] = list(ov["at"])
         q["params"].update(ov.get("params") or {})
+        q["anchors"].update(ov.get("anchors") or {})
+        q["init"].update(ov.get("init") or {})
         spec = L.PROP_TYPES[p["type"]]["params"]
         full = {k: v for k, v in spec.items() if v is not L.REQ}
         full.update(q["params"])

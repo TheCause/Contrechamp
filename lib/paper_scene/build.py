@@ -21,7 +21,7 @@ from lib.paper_scene import checks as K
 from lib.paper_scene import library as L
 from lib.paper_scene.compile import (Compiled, action_window, camera_keys, compile_action, new_compiled,
                                      refresh_starts)
-from lib.paper_scene.resolve import (Issues, Times, _known, _num, check_vocabulary, expand_actions,
+from lib.paper_scene.resolve import (Issues, Times, _check_pose, _known, _num, check_vocabulary, expand_actions,
                                      layout_view)
 from lib.paper_scene.values import COLOR, NAME, check_action_values, check_values
 
@@ -30,7 +30,12 @@ INK = ROOT / "ink-theater"
 GSAP = ROOT / ".agents" / "skills" / "music-to-video" / "references" / "motion-primitives" / "assets" / "gsap.min.js"
 FONT = INK / "assets" / "patrickhand.ttf"
 CHECKS = ("vocabulary", "references", "timing", "limb_overlap", "jump", "off_frame", "contact", "zoom_speed",
-          "ui_safe_bottom", "beat_in_phrase", "text_policy")
+          "ui_safe_bottom", "beat_in_phrase", "text_policy", "pointing", "min_size")
+def for_layout(a: dict[str, Any], name: str) -> dict[str, Any]:
+    """The action as this layout plays it (its per-layout target / position merged)."""
+    out = dict(a)
+    out.update((a.get("layouts") or {}).get(name) or {})
+    return out
 STATIC = ("vocabulary", "references", "timing")
 
 
@@ -79,8 +84,10 @@ class Build:
         self.duration = d or 0.0
         self.times = times
         self.actions = expand_actions(sc, times, self.issues)
-        for a in self.actions:
+        for a in self._actions_all_layouts():
             check_action_values(a, self.issues)
+            if a.get("do") == "pose" and "_n" in a:      # expressions of $n are numbers by now
+                _check_pose(a.get("set"), self.issues, a["_where"])
         if self.issues.of("vocabulary"):
             return
         self._references()
@@ -92,7 +99,8 @@ class Build:
         for name, lay in sc["layouts"].items():
             props, chars = layout_view(sc, name)
             c = new_compiled(dict(lay, name=name), props, chars)
-            for a in sorted(self.actions, key=lambda a: (a["start"], order[a["id"]])):
+            c.actions = [for_layout(a, name) for a in self.actions]
+            for a in sorted(c.actions, key=lambda a: (a["start"], order[a["id"]])):
                 compile_action(c, a, self.duration)
             for job in c.resolvers:        # targets known once every action is in
                 job()
@@ -116,9 +124,24 @@ class Build:
             self.measured.setdefault("contact", {})[name] = K.check_contact(c, self.issues)
             self.measured.setdefault("zoom_speed", {})[name] = K.check_zoom_speed(c, self.issues)
             K.check_ui_safe_bottom(c, self.issues, self.duration)
+            self.measured.setdefault("pointing", {})[name] = K.check_pointing(c, self.issues, self.duration)
+            self.measured.setdefault("min_size", {})[name] = K.check_min_size(c, self.issues)
         K.check_beat_in_phrase(self.beats, self.marks, self.issues)
         self.measured["text_policy"] = K.check_text_policy(sc, self.issues)
         self.ran.update(CHECKS)
+
+    def _actions_all_layouts(self) -> list[dict[str, Any]]:
+        """Each action, plus its version in every layout that overrides it (all are checked)."""
+        out = []
+        names = list((self.scene.get("layouts") or {}))
+        for a in self.actions:
+            out.append(a)
+            for name, ov in (a.get("layouts") or {}).items():
+                if name not in names:
+                    self.issues.add("references", "layout override: " + _known("layout", name, names), a["_where"])
+                elif ov:
+                    out.append(for_layout(a, name))
+        return out
 
     def _same_story_in_every_layout(self) -> None:
         """One sound track and one beat list per scene: a layout may move things, not change
@@ -228,7 +251,7 @@ class Build:
                     self._ref(k["target"], w)
                 if not (_num(k.get("zoom", 1.0)) and k.get("zoom", 1.0) >= 1.0):
                     self.issues.add("references", "zoom must be >= 1 (zoom 1 shows the whole layout)", w)
-        for a in self.actions:
+        for a in self._actions_all_layouts():
             w, verb = a["_where"], a["do"]
             spec = L.VERBS[verb]
             if spec["actor"] == "character" and a.get("actor") not in self.chars:
@@ -319,7 +342,7 @@ class Build:
             beats.append({"id": b["id"], "label": b["label"], "start": self.times(b["start"], f"beats[{i}]"),
                           "end": self.times(b["end"], f"beats[{i}]"), "expected": b["expected"],
                           **({"phrase": b["phrase"]} if "phrase" in b else {})})
-        for a in self.actions:
+        for a in first.actions:
             b = a.get("beat")
             if not b:
                 continue
@@ -335,10 +358,15 @@ class Build:
                 self.issues.add("timing", f"beat {b['id']!r} window {b['start']}-{b['end']} is not inside the scene",
                                 b["id"])
         self.beats = sorted(beats, key=lambda b: (b["start"] or 0, b["end"] or 0))
+        fade = float((self.scene.get("style") or {}).get("fade_in", 0.45))
+        for b in self.beats:   # the opening fade from the blank page hides what happens under it
+            if fade > 0 and b["start"] is not None and b["start"] < fade - 1e-9:
+                self.issues.add("timing", f"beat {b['id']!r} starts at {b['start']:g}s, during the opening fade "
+                                f"(0-{fade:g}s) that hides it: set style.fade_in to 0 or start the beat later", b["id"])
         events = []
         from tools.audio.sfx_synth import KIND_PARAMS
 
-        for a in self.actions:
+        for a in first.actions:
             t0, t1 = action_window(a, first)
             for s in a.get("sound") or []:
                 base = {k: v for k, v in s.items() if k in KIND_PARAMS[s["kind"]] or k in ("kind", "gain", "pan")}

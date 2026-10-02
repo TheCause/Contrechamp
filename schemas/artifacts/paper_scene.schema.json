@@ -137,6 +137,16 @@
         },
         "beat": {
           "$ref": "#/$defs/beat_on_action"
+        },
+        "layouts": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "additionalProperties": {
+            "type": "object"
+          },
+          "description": "Per-layout target / position of this action (target, to, from, dx, grip): never its time or its counts."
         }
       }
     },
@@ -357,6 +367,21 @@
                 },
                 "params": {
                   "type": "object"
+                },
+                "anchors": {
+                  "type": "object",
+                  "propertyNames": {
+                    "pattern": "^[A-Za-z0-9_-]+$"
+                  },
+                  "additionalProperties": {
+                    "$ref": "#/$defs/point"
+                  }
+                },
+                "init": {
+                  "type": "object",
+                  "propertyNames": {
+                    "pattern": "^[A-Za-z0-9_-]+$"
+                  }
                 }
               },
               "additionalProperties": false

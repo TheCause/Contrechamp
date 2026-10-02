@@ -141,7 +141,9 @@ VERBS: dict[str, dict[str, Any]] = {
     "layer": {"actor": None, "target": "any_id", "keys": {"behind", "in_front_of"}, "needs": set()},
 }
 NO_END_VERBS = {"paint", "burst", "layer"}   # their end is computed (or they are instants)
-ACTION_KEYS = {"do", "id", "actor", "target", "start", "end", "sound", "beat"}
+ACTION_KEYS = {"do", "id", "actor", "target", "start", "end", "sound", "beat", "layouts"}
+# a layout may change where an action aims, never when nor how much (U2: 16:9 and 9:16 cuts)
+LAYOUT_ACTION_KEYS = ("target", "to", "from", "dx", "grip")
 EASE_NAMES = ("io", "io5", "out", "in", "lin")
 SOUND_KEYS = {"kind", "at", "every", "per_item", "gain", "pan", "pitch_step"}
 ITEM_VERBS = {"flip", "drop_in", "overflow", "burst", "stack_add"}   # verbs that count items (per_item sound)
