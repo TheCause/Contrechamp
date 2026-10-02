@@ -2,6 +2,7 @@
 
 > Style id: `ink-sketch` · Engine: `ink-theater/ink-theater.js` · Runtime: HyperFrames (atelier)
 > Technique credit: inspired by Ian's `小黑/Xiaohei` MIT skill. Generic, English, motion-first.
+> Sister style: `paper-cut` (coloured cut paper, same engine) — `skills/creative/paper-cut.md`.
 
 **What it is:** a minimalist **black-ink-on-white** world where a deadpan mascot *physically performs* an abstract idea by operating an absurd **low-tech contraption**. Not a fixed catalog of scenes — a generic method + a parametric engine. Runs on the `animation` pipeline in atelier mode; it is NOT its own pipeline.
 

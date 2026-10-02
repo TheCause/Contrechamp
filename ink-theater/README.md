@@ -81,6 +81,11 @@ Free **CMU mocap** (`una-dinosauria/cmu-mocap`) has thousands. This is what Meta
 ### Speech balloons — `InkTheater.balloon(tl, opts)`
 Comic balloon that grows from the mouth, with HTML overlay text (so the webfont applies). `opts`: `into` (an SVG `<g>`), `overlay` (an HTML div), `at`, `dur`, `text`, `mouth:[x,y]`, `center:[x,y]`, `w`, `size`, `boil`.
 
+## Second style — `paper-cut` (`paper-cut.js`, global `PaperCut`)
+
+Coloured cut paper on the same engine: torn shapes seeded per key (`tornPoly`, `tornCircle`, `starPoly`…), `paper()` fills with a doubled screen-space drop shadow and a light rim, `glow`, a seeded raster paper grain, and a paper **skin for the puppet** that reads the same 16-point poses (so `InkPuppet.choreograph` can drive it) with an expression API (`setFace({turn, gaze, mouth, brow, blink, openHands})`). Scenes are written as one pure `render(t)` driven by `PaperCut.drive(tl, duration, render)`. Load `paper-cut.js` after `ink-theater.js`. Skill: `skills/creative/paper-cut.md`. Checks: `scripts/paper_cut_checks.py`.
+
 ## Demos
 
 - `examples/mocap-figure/` — the pencil figure draws itself, then walks / runs / dances / kicks / sits / waves via **real CMU mocap**. Self-contained and lintable (`npx hyperframes lint ink-theater/examples/mocap-figure`); see `examples/README.md`.
+- `examples/paper-cut-sunrise/` — the `paper-cut` style: 5 s of a sun rolling out of a factory, three expressive paper workers (`npx hyperframes lint ink-theater/examples/paper-cut-sunrise`).
