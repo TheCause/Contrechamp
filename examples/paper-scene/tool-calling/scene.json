@@ -294,7 +294,7 @@
       "width": 64,
       "gap": 22,
       "unit": 60,
-      "labels": null
+      "label_size": 20
      }
     }
    }
@@ -442,7 +442,7 @@
    "layouts": {
     "portrait": {
      "at": [
-      965,
+      925,
       1405
      ]
     }
@@ -562,7 +562,7 @@
    "layouts": {
     "portrait": {
      "at": [
-      122,
+      128,
       1500
      ]
     }
@@ -752,6 +752,12 @@
    },
    "actions": [
     {
+     "do": "settle",
+     "actor": "courier",
+     "start": 0.0,
+     "end": 0.15
+    },
+    {
      "do": "stack_add",
      "target": "stack",
      "from": "hatch.opening",
@@ -780,6 +786,12 @@
        "dur": "0.6-0.08*$n"
       }
      ]
+    },
+    {
+     "do": "settle",
+     "actor": "courier",
+     "start": 0.42,
+     "end": 0.52
     },
     {
      "do": "walk_to",
@@ -862,6 +874,11 @@
      "actor": "courier",
      "to": "cart.left",
      "dx": -40,
+     "layouts": {
+      "portrait": {
+       "dx": -24
+      }
+     },
      "start": 0.74,
      "end": 0.84
     },
@@ -924,6 +941,13 @@
      "dur": 0.6
     }
    ]
+  },
+  {
+   "id": "t5_settle",
+   "do": "settle",
+   "actor": "courier",
+   "start": 8.75,
+   "end": 9.05
   },
   {
    "id": "t5_back",
