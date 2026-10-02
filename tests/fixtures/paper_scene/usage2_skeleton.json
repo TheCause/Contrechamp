@@ -1,0 +1,1241 @@
+{
+ "format": "paper_scene/1",
+ "id": "resent-history-skeleton",
+ "title": "The history that is sent again (skeleton)",
+ "brief": "Insert under narration (19.62 s): at every turn the whole pile of pages is wheeled back to a seated reader who reads all of it again and pays a coin per page; the strips of pages read per turn form a triangle, next to the flat row of equal costs that intuition expects.",
+ "duration": "p24.end",
+ "marks": {
+  "p20": [
+   0.0,
+   4.08
+  ],
+  "p21": [
+   4.08,
+   8.48
+  ],
+  "p22": [
+   8.48,
+   10.86
+  ],
+  "p23": [
+   10.86,
+   15.58
+  ],
+  "p24": [
+   15.58,
+   19.62
+  ]
+ },
+ "insert": {
+  "offset": 75.82,
+  "source": "narration"
+ },
+ "layouts": {
+  "landscape": {
+   "aspect": "16:9",
+   "width": 1920,
+   "height": 1080
+  },
+  "portrait": {
+   "aspect": "9:16",
+   "width": 1080,
+   "height": 1920,
+   "ui_safe_bottom": 0.2
+  }
+ },
+ "style": {
+  "fade_in": 0
+ },
+ "text_allowed": [
+  "tour 1",
+  "tour 2",
+  "tour 3",
+  "tour 4",
+  "tour 5"
+ ],
+ "order": [
+  "wall",
+  "lane",
+  "board",
+  "strips",
+  "ghosts",
+  "triangle",
+  "hatch",
+  "tool_icon",
+  "reader",
+  "desk",
+  "lamp",
+  "jar",
+  "courier",
+  "cart",
+  "sheets"
+ ],
+ "props": [
+  {
+   "id": "wall",
+   "type": "shape",
+   "params": {
+    "shape": "rect",
+    "rect": [
+     -20,
+     -20,
+     1960,
+     800
+    ],
+    "color": "#eadcc2",
+    "shadow": false,
+    "edge": false
+   },
+   "layouts": {
+    "portrait": {
+     "params": {
+      "rect": [
+       -20,
+       -20,
+       1120,
+       1520
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "lane",
+   "type": "shape",
+   "params": {
+    "shape": "rect",
+    "rect": [
+     -20,
+     760,
+     1960,
+     340
+    ],
+    "color": "#cdb48c"
+   },
+   "layouts": {
+    "portrait": {
+     "params": {
+      "rect": [
+       -20,
+       1480,
+       1120,
+       460
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "hatch",
+   "type": "door",
+   "params": {
+    "rect": [
+     120,
+     500,
+     160,
+     180
+    ],
+    "color": "#9aa3a8",
+    "inside_color": "#4c302b",
+    "box_color": "#7d6a60",
+    "slats": 8
+   },
+   "layouts": {
+    "portrait": {
+     "params": {
+      "rect": [
+       40,
+       1240,
+       140,
+       160
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "tool_icon",
+   "type": "shape",
+   "at": [
+    200,
+    470
+   ],
+   "params": {
+    "shape": "poly",
+    "points": [
+     [
+      -14,
+      -4
+     ],
+     [
+      10,
+      -4
+     ],
+     [
+      14,
+      -10
+     ],
+     [
+      18,
+      -4
+     ],
+     [
+      18,
+      4
+     ],
+     [
+      14,
+      10
+     ],
+     [
+      10,
+      4
+     ],
+     [
+      -14,
+      4
+     ]
+    ],
+    "color": "#5d5f68",
+    "depth": 0.4
+   },
+   "layouts": {
+    "portrait": {
+     "at": [
+      110,
+      1210
+     ]
+    }
+   }
+  },
+  {
+   "id": "board",
+   "type": "shape",
+   "params": {
+    "shape": "rect",
+    "rect": [
+     760,
+     230,
+     760,
+     420
+    ],
+    "color": "#c99a62"
+   },
+   "layouts": {
+    "portrait": {
+     "params": {
+      "rect": [
+       100,
+       220,
+       880,
+       760
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "strips",
+   "type": "bars",
+   "at": [
+    800,
+    620
+   ],
+   "params": {
+    "n": 5,
+    "width": 50,
+    "gap": 22,
+    "unit": 50,
+    "color": "#e98a5d",
+    "labels": [
+     "tour 1",
+     "tour 2",
+     "tour 3",
+     "tour 4",
+     "tour 5"
+    ],
+    "label_size": 22
+   },
+   "layouts": {
+    "portrait": {
+     "at": [
+      160,
+      860
+     ],
+     "params": {
+      "width": 60,
+      "gap": 30,
+      "unit": 100
+     }
+    }
+   }
+  },
+  {
+   "id": "triangle",
+   "type": "path",
+   "at": [
+    0,
+    0
+   ],
+   "params": {
+    "points": [
+     [
+      800,
+      620
+     ],
+     [
+      1138,
+      370
+     ],
+     [
+      1138,
+      620
+     ]
+    ],
+    "closed": true,
+    "color": "#3b3437",
+    "width": 4,
+    "fill_color": "#f3c98b",
+    "fill_alpha": 0.45
+   },
+   "init": {
+    "draw": 0,
+    "fill": 0
+   },
+   "layouts": {
+    "portrait": {
+     "params": {
+      "points": [
+       [
+        160,
+        860
+       ],
+       [
+        580,
+        360
+       ],
+       [
+        580,
+        860
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "ghosts",
+   "type": "bars",
+   "at": [
+    1200,
+    620
+   ],
+   "params": {
+    "n": 5,
+    "width": 50,
+    "gap": 12,
+    "unit": 50,
+    "color": "#8f6fb1",
+    "dashed": true
+   },
+   "init": {
+    "h_1": 1,
+    "h_2": 1,
+    "h_3": 1,
+    "h_4": 1,
+    "h_5": 1,
+    "reveal_1": 0,
+    "reveal_2": 0,
+    "reveal_3": 0,
+    "reveal_4": 0,
+    "reveal_5": 0
+   },
+   "layouts": {
+    "portrait": {
+     "at": [
+      620,
+      960
+     ],
+     "params": {
+      "width": 50,
+      "gap": 12,
+      "unit": 100
+     }
+    }
+   }
+  },
+  {
+   "id": "desk",
+   "type": "group",
+   "at": [
+    1640,
+    760
+   ],
+   "params": {
+    "children": [
+     {
+      "shape": "rect",
+      "rect": [
+       -170,
+       -110,
+       340,
+       22
+      ],
+      "color": "#8a5a3b",
+      "key": "desk_top"
+     },
+     {
+      "shape": "rect",
+      "rect": [
+       -160,
+       -90,
+       20,
+       90
+      ],
+      "color": "#7a4e33",
+      "key": "desk_leg_l"
+     },
+     {
+      "shape": "rect",
+      "rect": [
+       140,
+       -90,
+       20,
+       90
+      ],
+      "color": "#7a4e33",
+      "key": "desk_leg_r"
+     },
+     {
+      "shape": "rect",
+      "rect": [
+       -170,
+       -88,
+       340,
+       70
+      ],
+      "color": "#9b6a48",
+      "key": "desk_front"
+     }
+    ]
+   },
+   "anchors": {
+    "top_left": [
+     -150,
+     -110
+    ]
+   },
+   "layouts": {
+    "portrait": {
+     "at": [
+      880,
+      1480
+     ]
+    }
+   }
+  },
+  {
+   "id": "lamp",
+   "type": "group",
+   "at": [
+    1770,
+    650
+   ],
+   "params": {
+    "children": [
+     {
+      "shape": "rect",
+      "rect": [
+       -4,
+       -70,
+       8,
+       70
+      ],
+      "color": "#3b3437",
+      "key": "lamp_stem"
+     },
+     {
+      "shape": "poly",
+      "points": [
+       [
+        -30,
+        -60
+       ],
+       [
+        10,
+        -95
+       ],
+       [
+        24,
+        -80
+       ],
+       [
+        -14,
+        -48
+       ]
+      ],
+      "color": "#2f6f6a",
+      "key": "lamp_shade"
+     }
+    ]
+   },
+   "layouts": {
+    "portrait": {
+     "at": [
+      990,
+      1370
+     ]
+    }
+   }
+  },
+  {
+   "id": "jar",
+   "type": "container",
+   "at": [
+    1690,
+    650
+   ],
+   "params": {
+    "item": "coin",
+    "w": 60,
+    "h": 70,
+    "capacity": 15,
+    "lid": null,
+    "glass": "#cfe6f2"
+   },
+   "anchors": {
+    "above": [
+     0,
+     -170
+    ]
+   },
+   "layouts": {
+    "portrait": {
+     "at": [
+      930,
+      1370
+     ]
+    }
+   }
+  },
+  {
+   "id": "cart",
+   "type": "group",
+   "at": [
+    330,
+    760
+   ],
+   "params": {
+    "children": [
+     {
+      "shape": "rect",
+      "rect": [
+       -70,
+       -62,
+       140,
+       18
+      ],
+      "color": "#5d7a8c",
+      "key": "cart_bed"
+     },
+     {
+      "shape": "rect",
+      "rect": [
+       -84,
+       -100,
+       12,
+       56
+      ],
+      "color": "#3b3437",
+      "key": "cart_handle"
+     },
+     {
+      "shape": "circle",
+      "at": [
+       -45,
+       -14
+      ],
+      "r": 14,
+      "rolls": 14,
+      "color": "#3b3437",
+      "key": "cart_wheel_l"
+     },
+     {
+      "shape": "circle",
+      "at": [
+       45,
+       -14
+      ],
+      "r": 14,
+      "rolls": 14,
+      "color": "#3b3437",
+      "key": "cart_wheel_r"
+     }
+    ]
+   },
+   "anchors": {
+    "handle": [
+     -78,
+     -96
+    ],
+    "bed": [
+     0,
+     -62
+    ]
+   },
+   "layouts": {
+    "portrait": {
+     "at": [
+      240,
+      1480
+     ]
+    }
+   }
+  },
+  {
+   "id": "sheets",
+   "type": "stack",
+   "at": [
+    330,
+    698
+   ],
+   "params": {
+    "w": 90,
+    "sheet": 6,
+    "max": 8
+   },
+   "layouts": {
+    "portrait": {
+     "at": [
+      240,
+      1418
+     ]
+    }
+   }
+  }
+ ],
+ "characters": [
+  {
+   "id": "courier",
+   "role": "the agent loop",
+   "look": {
+    "overall": "#3f7f9e"
+   },
+   "scale": 1.4,
+   "at": [
+    230,
+    760
+   ],
+   "pose": {
+    "turn": 0.6,
+    "gaze": [
+     1,
+     0
+    ]
+   },
+   "layouts": {
+    "portrait": {
+     "at": [
+      140,
+      1480
+     ],
+     "scale": 1.3
+    }
+   }
+  },
+  {
+   "id": "reader",
+   "role": "the model",
+   "posture": "seated",
+   "look": {
+    "hat": false,
+    "glasses": true,
+    "shirt": "#e9eef2",
+    "overall": "#8a6fb1"
+   },
+   "scale": 1.5,
+   "at": [
+    1420,
+    760
+   ],
+   "pose": {
+    "turn": -0.5,
+    "gaze": [
+     -1,
+     0.6
+    ],
+    "arms": [
+     -20,
+     -40,
+     20,
+     40
+    ]
+   },
+   "layouts": {
+    "portrait": {
+     "at": [
+      650,
+      1480
+     ],
+     "scale": 1.3
+    }
+   }
+  }
+ ],
+ "camera": {
+  "landscape": [
+   {
+    "t": 0,
+    "center": [
+     960,
+     540
+    ],
+    "zoom": 1.0
+   },
+   {
+    "t": 9.5,
+    "center": [
+     960,
+     540
+    ],
+    "zoom": 1.0
+   },
+   {
+    "t": 10.7,
+    "target": "reader.head",
+    "zoom": 1.6
+   },
+   {
+    "t": "p23.start",
+    "target": "reader.head",
+    "zoom": 1.6
+   },
+   {
+    "t": "p23.start+1.3",
+    "target": "board.center",
+    "zoom": 1.3
+   },
+   {
+    "t": "p24.start",
+    "target": "board.center",
+    "zoom": 1.3
+   },
+   {
+    "t": "p24.start+1.3",
+    "center": [
+     1180,
+     420
+    ],
+    "zoom": 1.2
+   }
+  ],
+  "portrait": [
+   {
+    "t": 0,
+    "center": [
+     540,
+     960
+    ],
+    "zoom": 1.0
+   },
+   {
+    "t": 9.5,
+    "center": [
+     540,
+     960
+    ],
+    "zoom": 1.0
+   },
+   {
+    "t": 10.7,
+    "target": "reader.head",
+    "zoom": 1.5
+   },
+   {
+    "t": "p23.start",
+    "target": "reader.head",
+    "zoom": 1.5
+   },
+   {
+    "t": "p23.start+1.3",
+    "center": [
+     540,
+     760
+    ],
+    "zoom": 1.0
+   }
+  ]
+ },
+ "actions": [
+  {
+   "do": "attach",
+   "target": "sheets",
+   "to": "cart.bed",
+   "by": "bottom",
+   "start": 0.0,
+   "end": 19.62
+  },
+  {
+   "repeat": {
+    "name": "turn",
+    "spans": [
+     [
+      0.6,
+      "p20.end-1.08"
+     ],
+     [
+      3.0,
+      5.6
+     ],
+     [
+      5.6,
+      7.6
+     ],
+     [
+      7.6,
+      8.9
+     ]
+    ]
+   },
+   "actions": [
+    {
+     "do": "stack_add",
+     "target": "sheets",
+     "from": "hatch.opening",
+     "start": 0.0,
+     "end": 0.12,
+     "sound": [
+      {
+       "kind": "swish",
+       "at": 0,
+       "dur": 0.4,
+       "gain": 0.3
+      }
+     ]
+    },
+    {
+     "do": "push",
+     "actor": "courier",
+     "target": "cart",
+     "to": "desk.left",
+     "dx": -140,
+     "grip": "handle",
+     "start": 0.14,
+     "end": 0.42,
+     "sound": [
+      {
+       "kind": "motor",
+       "at": 0,
+       "freq": 70,
+       "dur": 0.4,
+       "gain": 0.1
+      }
+     ]
+    },
+    {
+     "do": "reach",
+     "actor": "reader",
+     "hand": "L",
+     "target": "sheets.top",
+     "start": 0.42,
+     "end": 0.47
+    },
+    {
+     "do": "flip",
+     "actor": "reader",
+     "hand": "L",
+     "target": "sheets",
+     "count": "$n",
+     "start": 0.47,
+     "end": 0.68,
+     "sound": [
+      {
+       "kind": "click",
+       "per_item": true,
+       "gain": 0.2
+      }
+     ]
+    },
+    {
+     "do": "drop_in",
+     "target": "jar",
+     "count": "$n",
+     "from": "jar.above",
+     "start": 0.55,
+     "end": 0.75,
+     "sound": [
+      {
+       "kind": "marimba",
+       "per_item": true,
+       "freq": 392.0,
+       "pitch_step": 2,
+       "gain": 0.25
+      }
+     ]
+    },
+    {
+     "do": "push",
+     "actor": "courier",
+     "target": "cart",
+     "to": 330,
+     "dx": 0,
+     "grip": "handle",
+     "start": 0.76,
+     "end": 0.95
+    }
+   ]
+  },
+  {
+   "do": "animate",
+   "target": "strips",
+   "channel": "h_1",
+   "to": 1,
+   "start": 2.75,
+   "end": 2.95,
+   "sound": [
+    {
+     "kind": "thud",
+     "at": 0.15,
+     "gain": 0.3
+    }
+   ]
+  },
+  {
+   "do": "animate",
+   "target": "strips",
+   "channel": "h_2",
+   "to": 2,
+   "start": 5.35,
+   "end": 5.55
+  },
+  {
+   "do": "animate",
+   "target": "strips",
+   "channel": "h_3",
+   "to": 3,
+   "start": 7.35,
+   "end": 7.55
+  },
+  {
+   "do": "animate",
+   "target": "strips",
+   "channel": "h_4",
+   "to": 4,
+   "start": 8.55,
+   "end": 8.85
+  },
+  {
+   "do": "stack_add",
+   "target": "sheets",
+   "from": "hatch.opening",
+   "start": 8.9,
+   "end": 9.05,
+   "sound": [
+    {
+     "kind": "swish",
+     "at": 0,
+     "dur": 0.4,
+     "gain": 0.3
+    }
+   ]
+  },
+  {
+   "do": "push",
+   "actor": "courier",
+   "target": "cart",
+   "to": "desk.left",
+   "dx": -140,
+   "grip": "handle",
+   "start": 9.05,
+   "end": 9.5
+  },
+  {
+   "do": "reach",
+   "actor": "reader",
+   "hand": "L",
+   "target": "sheets.top",
+   "start": 9.5,
+   "end": 9.6
+  },
+  {
+   "do": "flip",
+   "actor": "reader",
+   "hand": "L",
+   "target": "sheets",
+   "count": 5,
+   "start": 9.6,
+   "end": 10.6,
+   "sound": [
+    {
+     "kind": "click",
+     "per_item": true,
+     "gain": 0.2
+    }
+   ]
+  },
+  {
+   "do": "drop_in",
+   "target": "jar",
+   "count": 5,
+   "from": "jar.above",
+   "start": 9.8,
+   "end": 10.75,
+   "sound": [
+    {
+     "kind": "marimba",
+     "per_item": true,
+     "freq": 392.0,
+     "pitch_step": 2,
+     "gain": 0.25
+    }
+   ]
+  },
+  {
+   "do": "animate",
+   "target": "strips",
+   "channel": "h_5",
+   "to": 5,
+   "start": 12.2,
+   "end": 12.5
+  },
+  {
+   "do": "animate",
+   "target": "triangle",
+   "channel": "draw",
+   "to": 1,
+   "start": 12.6,
+   "end": 14.2,
+   "sound": [
+    {
+     "kind": "swish",
+     "at": 0,
+     "dur": 1.6,
+     "lo": 2000,
+     "hi": 6000,
+     "gain": 0.12
+    }
+   ]
+  },
+  {
+   "do": "animate",
+   "target": "triangle",
+   "channel": "fill",
+   "to": 1,
+   "start": 14.2,
+   "end": 14.8,
+   "sound": [
+    {
+     "kind": "bell",
+     "at": 0.2,
+     "gain": 0.2
+    }
+   ]
+  },
+  {
+   "do": "animate",
+   "target": "ghosts",
+   "channel": "reveal_1",
+   "to": 1,
+   "start": 15.8,
+   "end": 15.95,
+   "sound": [
+    {
+     "kind": "click",
+     "at": 0,
+     "gain": 0.1
+    }
+   ]
+  },
+  {
+   "do": "animate",
+   "target": "ghosts",
+   "channel": "reveal_2",
+   "to": 1,
+   "start": 16.0,
+   "end": 16.15,
+   "sound": [
+    {
+     "kind": "click",
+     "at": 0,
+     "gain": 0.1
+    }
+   ]
+  },
+  {
+   "do": "animate",
+   "target": "ghosts",
+   "channel": "reveal_3",
+   "to": 1,
+   "start": 16.2,
+   "end": 16.349999999999998,
+   "sound": [
+    {
+     "kind": "click",
+     "at": 0,
+     "gain": 0.1
+    }
+   ]
+  },
+  {
+   "do": "animate",
+   "target": "ghosts",
+   "channel": "reveal_4",
+   "to": 1,
+   "start": 16.400000000000002,
+   "end": 16.55,
+   "sound": [
+    {
+     "kind": "click",
+     "at": 0,
+     "gain": 0.1
+    }
+   ]
+  },
+  {
+   "do": "animate",
+   "target": "ghosts",
+   "channel": "reveal_5",
+   "to": 1,
+   "start": 16.6,
+   "end": 16.75,
+   "sound": [
+    {
+     "kind": "click",
+     "at": 0,
+     "gain": 0.1
+    }
+   ]
+  },
+  {
+   "do": "pose",
+   "actor": "courier",
+   "start": 16.9,
+   "end": 17.4,
+   "set": {
+    "turn": 0.0,
+    "gaze": [
+     0.3,
+     -1
+    ]
+   }
+  },
+  {
+   "do": "point_at",
+   "actor": "courier",
+   "hand": "R",
+   "target": "ghosts.top_3",
+   "start": 17.8,
+   "end": 18.2
+  },
+  {
+   "do": "point_at",
+   "actor": "courier",
+   "hand": "R",
+   "target": "triangle.center",
+   "start": 18.25,
+   "end": 18.6
+  },
+  {
+   "do": "shrug",
+   "actor": "courier",
+   "start": 18.8,
+   "end": 19.3
+  },
+  {
+   "do": "look_at",
+   "actor": "reader",
+   "target": "jar",
+   "start": 17.9,
+   "end": 18.4
+  },
+  {
+   "do": "overflow",
+   "target": "jar",
+   "count": 3,
+   "start": 18.3,
+   "end": 19.0,
+   "sound": [
+    {
+     "kind": "metal",
+     "per_item": true,
+     "gain": 0.15
+    }
+   ]
+  }
+ ],
+ "beats": [
+  {
+   "id": "establish",
+   "label": "Hatch, lane, desk, empty cart, board empty",
+   "start": 0.0,
+   "end": 0.6,
+   "expected": "All three zones readable in one wide shot; board has no strips",
+   "phrase": "p20"
+  },
+  {
+   "id": "turn1",
+   "label": "Turn 1: one sheet carried, read, paid",
+   "start": 0.6,
+   "end": 3.0,
+   "expected": "1 sheet on the cart, 1 page flip, 1 coin in the jar, strip of height 1 pinned with label tour 1",
+   "phrase": "p20"
+  },
+  {
+   "id": "turn2_resend",
+   "label": "Turn 2: old sheet goes back with the new one",
+   "start": 3.0,
+   "end": 5.6,
+   "expected": "Cart carries 2 sheets (old + new), Reader flips 2 pages, 2 coins drop, strip of height 2"
+  },
+  {
+   "id": "turn3",
+   "label": "Turn 3: stack grows, loop speeds up",
+   "start": 5.6,
+   "end": 7.6,
+   "expected": "3 sheets, 3 flips, 3 coins, strip of height 3; loop visibly shorter than turn 2",
+   "phrase": "p21"
+  },
+  {
+   "id": "turn4_strain",
+   "label": "Turn 4: Courier strains under the stack",
+   "start": 7.6,
+   "end": 9.2,
+   "expected": "4 sheets; Courier leans forward with raised brows; camera push-in begins"
+  },
+  {
+   "id": "reread_all",
+   "label": "Reader rereads the whole stack",
+   "start": 8.48,
+   "end": 10.86,
+   "expected": "Close-up, 5 fast page flips with the gaze following each page, mouth o, rapid run of 5 coins; strip of height 5 pinned",
+   "phrase": "p22"
+  },
+  {
+   "id": "triangle",
+   "label": "Strips form a staircase, outlined as a triangle",
+   "start": 10.86,
+   "end": 15.58,
+   "expected": "Five strips of heights 1..5 side by side; a drawn line closes a triangle over them; the triangle fills with a tint",
+   "phrase": "p23"
+  },
+  {
+   "id": "linear_ghost",
+   "label": "Intuition: a flat row of equal dashed strips",
+   "start": 15.58,
+   "end": 17.8,
+   "expected": "Five dashed strips of height 1 appear next to the triangle, clearly lower and flat",
+   "phrase": "p24"
+  },
+  {
+   "id": "compare_shrug",
+   "label": "Courier points at both, shrugs; jar overflows",
+   "start": 17.8,
+   "end": 19.62,
+   "expected": "Courier points flat row then triangle and shrugs; Reader glances at an overflowing jar; hold on the comparison",
+   "phrase": "p24"
+  }
+ ],
+ "sound": {
+  "peak_dbfs": -18.0
+ }
+}

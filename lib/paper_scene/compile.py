@@ -134,6 +134,14 @@ def _ease(c: Compiled, key: str, t0: float, t1: float, v1: Any, ease: str, act: 
     c.relative.append((key, seg))
 
 
+def _from_here(c: Compiled, key: str, seg: list[Any], act: dict[str, Any]) -> None:
+    """A segment whose base (index 3) is wherever the channel is at its start
+    (oscillations, damped shakes): re-read like the eases' starts."""
+    seg[3] = c.ch.value(key, seg[1])
+    _seg(c, key, seg, act)
+    c.relative.append((key, seg))
+
+
 def refresh_starts(c: Compiled) -> None:
     """Set the start of every relative ease to the value its channel really has
     there, in time order (some channels are only known after the deferred passes:
@@ -335,7 +343,7 @@ def _v_wave(c: Compiled, a: dict[str, Any], _d: float) -> None:
     arms = [(_arm("L"), 1.0), (_arm("R"), -1.0)] if hand == "both" else [(_arm(hand), 1.0)]
     for (ku, kf, _), sign in arms:
         for k, am in ((ku, amp[0]), (kf, amp[1])):
-            _seg(c, f"{cid}.{k}", ["o", t0, t1, c.ch.value(f"{cid}.{k}", t0), sign * float(am), freq], a)
+            _from_here(c, f"{cid}.{k}", ["o", t0, t1, 0.0, sign * float(am), freq], a)
     anchor = "head" if hand == "both" else f"hand_{hand}"
     _place(c, a, t0, t1, lambda t: char_point(c, cid, anchor, t), f"{cid} waving")
 
@@ -345,7 +353,7 @@ def _v_clap(c: Compiled, a: dict[str, Any], _d: float) -> None:
     amp = a.get("amp", [8.0, 22.0])
     freq = float(a.get("freq", 3.0))
     for k, am in (("armL_u", amp[0]), ("armL_f", amp[1]), ("armR_u", -amp[0]), ("armR_f", -amp[1])):
-        _seg(c, f"{cid}.{k}", ["o", t0, t1, c.ch.value(f"{cid}.{k}", t0), float(am), freq], a)
+        _from_here(c, f"{cid}.{k}", ["o", t0, t1, 0.0, float(am), freq], a)
     _place(c, a, t0, t1, lambda t: char_point(c, cid, "center", t), f"{cid} (clapping)")
 
 
@@ -355,8 +363,8 @@ def _v_flip(c: Compiled, a: dict[str, Any], _d: float) -> None:
     ku, kf, _ = _arm(hand)
     freq = n / (t1 - t0)
     _seg(c, f"{sid}.flipped", ["e", t0, t1, 0.0, float(n), "lin"], a)
-    _seg(c, f"{cid}.{kf}", ["o", t0, t1, c.ch.value(f"{cid}.{kf}", t0), float(a.get("amp", 25.0)), freq], a)
-    _seg(c, f"{cid}.gaze_x", ["o", t0, t1, c.ch.value(f"{cid}.gaze_x", t0), 0.6, freq], a)
+    _from_here(c, f"{cid}.{kf}", ["o", t0, t1, 0.0, float(a.get("amp", 25.0)), freq], a)
+    _from_here(c, f"{cid}.gaze_x", ["o", t0, t1, 0.0, 0.6, freq], a)
     c.items[a["id"]] = [t0 + (k - 0.5) * (t1 - t0) / n for k in range(1, n + 1)]
     c.deferred.append(lambda: _contact(c, a, t0, char_point(c, cid, f"hand_{hand}", t0),
                                        prop_point(c, sid, "top", t0), 2 * CONTACT_TOL,
@@ -533,8 +541,8 @@ def _v_animate(c: Compiled, a: dict[str, Any], _d: float) -> None:
 
 def _v_shake(c: Compiled, a: dict[str, Any], _d: float) -> None:
     pid, t0, t1 = a["target"], a["start"], a["end"]
-    _seg(c, f"{pid}.x", ["d", t0, t1, c.ch.value(f"{pid}.x", t0), float(a.get("amp", 5.0)),
-                         float(a.get("freq", 6.0)), float(a.get("decay", 9.0))], a)
+    _from_here(c, f"{pid}.x", ["d", t0, t1, 0.0, float(a.get("amp", 5.0)), float(a.get("freq", 6.0)),
+                               float(a.get("decay", 9.0))], a)
     _place(c, a, t0, t1, lambda t: prop_point(c, pid, "center", t), f"{pid} (shaking)")
 
 
