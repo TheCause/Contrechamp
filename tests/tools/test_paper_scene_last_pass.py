@@ -123,3 +123,20 @@ def test_a_camera_key_can_follow_a_character():
         cx, cy, z = M.camera_at(c.camera, t, 1080, 1920)
         wx, wy = char_point(c, "w", "center", t)
         assert abs(cx - wx) < 3 and abs(cy - wy) < 3      # he stays centred while he walks
+
+
+# ------------------------------------------------------- the example scenes stay valid
+
+EXAMPLES = sorted((ROOT / "examples" / "paper-scene").glob("*/scene.json"))
+
+
+@pytest.mark.parametrize("path", EXAMPLES, ids=lambda p: p.parent.name)
+def test_example_scenes_pass_every_check(path):
+    from lib.paper_scene import load
+
+    rep = validate(load(path))
+    assert rep["status"] == "pass", rep["errors"]
+
+
+def test_there_is_an_example_scene():
+    assert EXAMPLES
