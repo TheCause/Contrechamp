@@ -83,7 +83,9 @@ Comic balloon that grows from the mouth, with HTML overlay text (so the webfont 
 
 ## Second style — `paper-cut` (`paper-cut.js`, global `PaperCut`)
 
-Coloured cut paper on the same engine: torn shapes seeded per key (`tornPoly`, `tornCircle`, `starPoly`…), `paper()` fills with a doubled screen-space drop shadow and a light rim, `glow`, a seeded raster paper grain, and a paper **skin for the puppet** that reads the same 16-point poses (so `InkPuppet.choreograph` can drive it) with an expression API (`setFace({turn, gaze, mouth, brow, blink, openHands})`). Scenes are written as one pure `render(t)` driven by `PaperCut.drive(tl, duration, render)`. Load `paper-cut.js` after `ink-theater.js`. Skill: `skills/creative/paper-cut.md`. Checks: `scripts/paper_cut_checks.py`.
+Coloured cut paper on the same engine: torn shapes seeded per key (`tornPoly`, `tornCircle`, `starPoly`…), `paper()` fills with a doubled screen-space drop shadow and a light rim, `glow`, a seeded raster paper grain, and a paper **skin for the puppet** that reads the same 16-point poses (so `InkPuppet.choreograph` can drive it) with an expression API (`setFace({turn, gaze, mouth, brow, blink, openHands})`). Scenes are written as one pure `render(t)` driven by `PaperCut.drive(tl, duration, render)`. Load `paper-cut.js` after `ink-theater.js`. Skill: `skills/creative/paper-cut.md`. Checks: `scripts/paper_cut_checks.py`. The puppet also has `seated: true` (pose) and `look.glasses`.
+
+`paper-scene.js` (global `PaperScene`) plays a scene compiled from the declarative `paper_scene` format (`lib/paper_scene`, tool `paper_scene`, skill `skills/creative/paper-scene.md`): `PaperScene.mount(compiledScene)` returns the timeline.
 
 ## Demos
 
