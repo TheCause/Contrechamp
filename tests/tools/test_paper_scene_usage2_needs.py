@@ -60,7 +60,7 @@ def _two_layouts():
                 props=[{"id": "box", "type": "shape", "at": [560, 1500], "params": {"shape": "rect", "rect": [-40, -80, 80, 80]},
                         "anchors": {"grip": [-40, -70]},
                         "layouts": {"wide": {"at": [560, 900], "anchors": {"grip": [-40, -76]}, "init": {"opacity": 0.5}}}},
-                       {"id": "board", "type": "shape", "at": [300, 400], "params": {"shape": "rect", "rect": [0, 0, 200, 100]},
+                       {"id": "board", "type": "shape", "at": [800, 1200], "params": {"shape": "rect", "rect": [0, 0, 200, 100]},
                         "layouts": {"wide": {"at": [1500, 200]}}}],
                 characters=[{"id": "w", "at": [460, 1500], "layouts": {"wide": {"at": [460, 900]}}}],
                 order=["box", "board", "w"])
@@ -89,7 +89,7 @@ def test_a_layout_cannot_change_when_or_how_much(key):
 # ------------------------------------------------------- 3. pointing that designates
 
 def _point(then_walk=False):
-    s = tiny(props=tiny()["props"] + [{"id": "board", "type": "shape", "at": [800, 600],
+    s = tiny(props=tiny()["props"] + [{"id": "board", "type": "shape", "at": [800, 1000],
                                        "params": {"shape": "rect", "rect": [0, 0, 200, 100]}}])
     s["order"].append("board")
     s["actions"] = [{"do": "pose", "actor": "w", "set": {"lean": 15}, "start": 0.2, "end": 0.6},
@@ -111,6 +111,12 @@ def test_pointing_stretches_the_arm_turns_the_head_and_straightens_the_body():
     hx, hy = char_point(c, "w", "head", 1.4)
     tx, ty = ref_point(c, "board.center", 1.4)
     assert b.measured["pointing"]["portrait"][0]["error_deg"] < 3
+
+
+def test_pointing_almost_straight_up_fails():
+    s = _point()
+    s["props"][-1]["at"] = [430, 900]          # the board right above his head
+    assert "almost straight up" in " ".join(issues(validate(s), "pointing"))
 
 
 def test_pointing_that_drifts_off_its_target_while_held_fails():

@@ -245,7 +245,7 @@ addition below answers one of their findings, and nothing more.
 |---|---|
 | Arithmetic on `$n` in a repeat: numbers, `$n`, `+ - * /`, `()`, `min`, `max` — a closed parser, no `eval`, no names, calls, attributes or powers | the lean, the loop duration and the pitch grow with the turn; the author had to write turn 4 out in full |
 | An action's `layouts.<name>` may change `target`, `to`, `from`, `dx`, `grip` only; a prop's `layouts.<name>` may also move a declared anchor and set `init` | the 9:16 needs another point (the board is above, not beside); timing and counts stay shared, so the same-story check still holds |
-| `point_at` straightens the body, aims the whole arm, turns head and eyes; check `pointing` (≤ 10° off, held 0.4 s) | both reviewers read the final designation as a wave or a hand on the head, aimed at the hatch or the cart |
+| `point_at` straightens the body, aims the whole arm, turns head and eyes; check `pointing` (≤ 10° off, held 0.4 s, ≥ 30° from vertical: a nearly vertical arm still read as a hand on the head on the re-render) | both reviewers read the final designation as a wave or a hand on the head, aimed at the hatch or the cart |
 | `seated`: pelvis at seat height, thighs horizontal towards the first facing, knees bent, a stool | the reader looked standing and small, a leg sticking out from behind the desk |
 | Check `min_size`: a counted object ≥ 24 px and ≥ 6 px thick on screen; coins scale with the jar width | sheets and coins were a few pixels in the wide shots: the counts, the core of the idea, did not read |
 | Check: no beat starts during the opening fade (`style.fade_in`, 0 allowed) | the 0.2 s fade ate a third of the first beat |

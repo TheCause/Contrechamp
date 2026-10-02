@@ -98,6 +98,7 @@ def check_off_frame(c: Compiled, issues: Issues, duration: float) -> None:
 
 
 POINT_TOL_DEG = 10.0
+POINT_MIN_FROM_VERTICAL = 30.0   # U2 renders: a nearly vertical pointing arm was read as a hand on the head
 
 
 def check_pointing(c: Compiled, issues: Issues, duration: float) -> list[dict[str, Any]]:
@@ -119,8 +120,16 @@ def check_pointing(c: Compiled, issues: Issues, duration: float) -> list[dict[st
             if a > worst:
                 worst, worst_t = a, t
             t += 0.05
+        sx, sy = shoulder_world(c, p["actor"], p["side"], p["t"])
+        tx, ty = ref_point(c, p["target"], p["t"])
+        from_up = abs(math.degrees(math.atan2(tx - sx, -(ty - sy))))      # 0 = straight up
         measured.append({"action": p["action"], "t": round(p["t"], 3), "error_deg": round(first or 0.0, 2),
-                         "worst_deg_while_held": round(worst, 2)})
+                         "worst_deg_while_held": round(worst, 2), "from_vertical_deg": round(from_up, 1)})
+        if from_up < POINT_MIN_FROM_VERTICAL:
+            issues.add("pointing", f"[{c.layout['name']}] '{p['actor']}' points almost straight up at {p['target']} "
+                       f"({from_up:.0f} deg from vertical, '{p['action']}'): an arm that high reads as a raised hand or "
+                       f"a hand on the head; move him away from under the target or aim lower "
+                       f"(>= {POINT_MIN_FROM_VERTICAL:g} deg)", p["action"])
         if worst > POINT_TOL_DEG:
             issues.add("pointing", f"[{c.layout['name']}] '{p['actor']}' points {worst:.0f} deg off {p['target']} at "
                        f"{worst_t:.2f}s ('{p['action']}'): hold the point {POINT_HOLD:g}s on its target, without "

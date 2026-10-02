@@ -84,7 +84,7 @@ A layout moves things, it never changes what happens or when.
 | container | `w` 50, `h` 60; a coin is 0.36 w × 0.2 w (18 × 10 for w 50); 6 stars by default |
 | label | `size` 40, centred on `at` |
 | contact tolerance | 8 px (16 for a hand on the pages of a pile) |
-| pointing | aimed within 10°, held 0.4 s |
+| pointing | aimed within 10°, held 0.4 s, at least 30° from vertical |
 | counted object (`min_size`) | ≥ 24 px long side and ≥ 6 px thick on screen |
 | zoom | ×1.25 at most over 1.2 s |
 | opening fade | 0.45 s |
@@ -217,7 +217,7 @@ Inside a repeat, `start`/`end` are fractions of the iteration's span (shorter sp
 | `ui_safe_bottom` | an action in the bottom band of a 9:16 frame | raise the set in that layout |
 | `beat_in_phrase` | a beat not inside the phrase it illustrates | the picture follows the voice, not the reverse |
 | `text_policy` | an on-screen text not in `text_allowed` | counts are shown by objects, not figures |
-| `pointing` | a `point_at` arm is more than 10° off its target when it arrives or during the 0.4 s after | hold the point: no walk, lean or other gesture of that arm for 0.4 s |
+| `pointing` | a `point_at` arm is more than 10° off its target when it arrives or during the 0.4 s after; or it aims less than 30° from straight up (read as a raised hand, a hand on the head) | hold the point 0.4 s (no walk, lean or other gesture of that arm); step aside from under a high target (`layouts.<name>.to` on a `walk_to`), or aim lower; lower the first arm before pointing with the other, two raised arms read as joy |
 | `min_size` | a counted object (sheet of a pile, coin, star) is under 24 px, or under 6 px thick, on screen during the action that counts it | thicker sheets (`sheet` ≥ 6 at zoom 1), a wider jar (coins scale with `w`), or a closer camera |
 | `timing` (fade) | a beat starts during the opening fade | `style.fade_in: 0`, or start the beat later |
 

@@ -1116,26 +1116,62 @@
    }
   },
   {
+   "do": "walk_to",
+   "actor": "courier",
+   "to": 1230,
+   "start": 15.6,
+   "end": 16.6,
+   "layouts": {
+    "portrait": {
+     "to": 570
+    }
+   }
+  },
+  {
    "do": "point_at",
    "actor": "courier",
    "hand": "R",
    "target": "ghosts.top_3",
    "start": 17.5,
-   "end": 17.9
+   "end": 17.9,
+   "layouts": {
+    "portrait": {
+     "target": "ghosts.slot_5"
+    }
+   }
+  },
+  {
+   "do": "pose",
+   "actor": "courier",
+   "set": {
+    "arms": [
+     -12,
+     -6,
+     12,
+     6
+    ]
+   },
+   "start": 18.3,
+   "end": 18.45
   },
   {
    "do": "point_at",
    "actor": "courier",
    "hand": "L",
    "target": "triangle.center",
-   "start": 18.3,
-   "end": 18.7
+   "start": 18.45,
+   "end": 18.8,
+   "layouts": {
+    "portrait": {
+     "target": "strips.slot_1"
+    }
+   }
   },
   {
    "do": "shrug",
    "actor": "courier",
-   "start": 19.1,
-   "end": 19.5
+   "start": 19.2,
+   "end": 19.55
   },
   {
    "do": "look_at",

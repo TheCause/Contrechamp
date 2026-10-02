@@ -562,10 +562,11 @@
     var facing = S.v(id + ".turn", 0) < 0 ? -1 : 1;
     if (seated) {
       stool = g(parent);
-      var sx0 = facing > 0 ? -4 : -28;   // seat spans the thighs: pelvis to knees
-      PC.paper(stool, PC.tornRect(id + "stool", sx0, -21, 32, 7, 0.6), "#8a5a3b", { depth: 0.8 });
-      PC.paper(stool, PC.tornRect(id + "stoolL", sx0 + 2, -15, 5, 15, 0.4), "#6b4430", { depth: 0.5 });
-      PC.paper(stool, PC.tornRect(id + "stoolR", sx0 + 25, -15, 5, 15, 0.4), "#6b4430", { depth: 0.5 });
+      // the seat sticks out on his BACK side (the thighs and what he faces hide the front)
+      var sx0 = facing > 0 ? -38 : -6;
+      PC.paper(stool, PC.tornRect(id + "stool", sx0, -22, 44, 8, 0.6), "#7a4a2c", { depth: 1.0 });
+      PC.paper(stool, PC.tornRect(id + "stoolL", sx0 + 3, -15, 6, 15, 0.4), "#5a3420", { depth: 0.6 });
+      PC.paper(stool, PC.tornRect(id + "stoolR", sx0 + 35, -15, 6, 15, 0.4), "#5a3420", { depth: 0.6 });
     }
     var pup = PC.puppet(g(parent), { look: look, cx: S.v(id + ".x", 0), ground: C.ground, scale: C.scale });
     var off = 0.3 + 1.3 * index;
