@@ -57,6 +57,8 @@ r = PaperScene().execute({"operation": "render", "scene": "scene.json", "output_
 - **`init`**: initial values of a prop's channels (x and y come from `at`): a crane's trolley, a jar's count, a strip's height 0, a line not drawn yet (`draw: 0`).
 - **`sound.peak_dbfs`** is the level of the whole sound layer (−1 for a standalone short, about −18 for a layer ducked under a voice).
 - **9:16 layouts must declare `ui_safe_bottom`**: 0.2 for Reels / Shorts / TikTok (the app covers the bottom fifth), 0 when nothing covers the frame.
+- **A layout moves things, it does not change what happens or when**: one sound and one beat list serve every layout. Override positions per layout, never counts, durations or particle numbers (a `timing` error says which action differs).
+- **Names and colours**: ids, layout names, marks, anchors, channels are plain names (`^[A-Za-z0-9_-]+$`); colours are `#rrggbb` or `#rgb`; numbers are finite. Anything else is refused before compilation.
 
 ## Props (`type` → what it draws; channels in *italics*; own anchors)
 
@@ -64,9 +66,9 @@ Every prop has *x y rot scale opacity* and the anchors `center top bottom left r
 
 | type | params | channels / anchors |
 |---|---|---|
-| `shape` | `shape`: `rect` (`rect: [x,y,w,h]`), `circle` (`r`), `ellipse` (`rx, ry`), `poly` (`points`), `star` (`r`), `gear` (`r, r_in, teeth`); `color`, `depth` (shadow), `amp` (torn edge), `alpha`, `edge`, `shadow`, `stroke`, `fill: false` (outline), `rolls: r` (turns with x), `spin` (idle rad/s), `key` (torn-edge seed) | *color* |
+| `shape` | `shape`: `rect` (`rect: [x,y,w,h]`), `circle` (`r`), `ellipse` (`rx, ry`), `poly` (`points`), `gear` (`r, r_in, teeth`); `color`, `depth` (shadow), `amp` (torn edge), `alpha`, `edge`, `shadow`, `rolls: r` (turns with x), `spin` (idle rad/s), `key` (torn-edge seed) | *color* |
 | `group` | `children`: shapes (each may have `at`, `rolls`), `spin` | — |
-| `label` | `text`, `size`, `color`, `align`, `rotate` — handwriting font with accents; must be in `text_allowed` | — |
+| `label` | `text`, `size`, `color` — centred handwriting with accents; must be in `text_allowed` | — |
 | `path` | `points`, `closed`, `color`, `width`, `dashed`, `line_alpha`, `fill_color`, `fill_alpha` | *draw* (0→1 draws the line), *fill* |
 | `glow` | `r`, `color` | *alpha* |
 | `door` | `rect`, `color`, `slat_color`, `slats`, `inside_color`, `box_color` | *open*; `opening`, `sill` |
@@ -81,7 +83,7 @@ Every prop has *x y rot scale opacity* and the anchors `center top bottom left r
 | `burst` | `count`, `area`, `avoid` (rects / circles), `sizes`, `seed`, `spacing`, `column`, `spread`, `sparks` | started by `burst` |
 | `curtain` | `top`, `bottom` (night sky colours) | *y* (its lower edge) |
 | `tint` | `color`, `alpha`, `glows: [[x,y,r,color,alpha]]` | *night* (0→1) |
-| `smoke` | `count`, `rate`, `rise`, `drift`, `r0`, `r1`, `color` (idle puffs from `at`) | — |
+| `smoke` | `rise`, `r0`, `r1`, `color` (four idle puffs rising from `at`) | — |
 | `scatter` | `area`, `count`, `item` (`flower`/`brick`), `seed`, `colors`, `size` | — |
 
 ## Characters
@@ -142,9 +144,9 @@ Inside a repeat, `start`/`end` are fractions of the iteration's span (shorter sp
 | `vocabulary`, `references`, `timing` | unknown name, missing id/anchor, a time outside the scene | the message lists the known names |
 | `limb_overlap` | two actions drive the same channel at once (same arm, same position) | sequence them, or use the other hand |
 | `jump` | a value jumps when an action takes over: a push from where the actor is not, a pose with no duration | walk him there first; give the pose a duration |
-| `off_frame` | the place of an action is outside the current camera frame | move the action or the camera; a prop off-frame does not exist |
-| `contact` | a hand or hook stays more than 8 px from what it holds, pushes, pins or hooks | bring the actor closer, lower the target, change the grip |
-| `zoom_speed` | a zoom change ≥ ×1.25 between camera keys less than 1.2 s apart (even inside a longer move) | spread the keys: it reads as a cut |
+| `off_frame` | the place of an action is outside the current camera frame; a character outside the frame at a camera key; a prop outside its layout (a position inherited from another layout) | move the action, the character or the camera; give the prop a position for that layout |
+| `contact` | a hand or hook stays more than 8 px from what it holds, pushes, pins or hooks — from the anchor and from the object's own box | bring the actor closer, lower the target, change the grip (an anchor drawn away from the object does not count) |
+| `zoom_speed` | camera moves that fit in less than 1.2 s add up to a scale change of ×1.25 or more (holds and reversals do not split them) | one move of 1.2 s or more per strong change: otherwise it reads as a cut |
 | `ui_safe_bottom` | an action in the bottom band of a 9:16 frame | raise the set in that layout |
 | `beat_in_phrase` | a beat not inside the phrase it illustrates | the picture follows the voice, not the reverse |
 | `text_policy` | an on-screen text not in `text_allowed` | counts are shown by objects, not figures |

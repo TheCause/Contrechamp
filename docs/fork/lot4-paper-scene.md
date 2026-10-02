@@ -67,6 +67,21 @@ or a character has one `at`, and `layouts.<name>.at` (or `.params`) overrides it
 U2's 9:16 puts the board above the lane instead of beside it. Actions never carry layout
 coordinates: they name props and anchors, so one action list serves every layout.
 
+**A layout moves things; it does not change what happens or when.** One sound track and one beat
+list serve every layout (U2: the 16:9 and the 9:16 play under the same voice). The compiler
+compiles each layout, then compares, action by action, the counted items (pages, coins,
+particles) and the computed ends: a layout override that changes them (a burst with fewer
+particles, a band more to paint) is a `timing` error. The alternative — one sound and one beat
+list per layout — was rejected: the narration is the same for both cuts, and a 9:16 that tells a
+different story from its 16:9 is a defect, not a feature.
+
+**Values are untrusted.** Every key that becomes a folder or an identifier (scene id, layout,
+mark, anchor, channel, repeat, action and beat ids) is a plain name `^[A-Za-z0-9_-]+$`; every
+colour is `#rrggbb` or `#rgb` (expanded); every number is finite; counts, periods, pitch steps
+and the duration have sanity bounds (no value can make the compiler loop for minutes). The
+compiled data is embedded with `<`, `>` and `&` escaped, and no name of the scene appears outside
+it. A scene that still breaks the compiler fails closed (`vocabulary` error), it never passes.
+
 ## 2. Prop library
 
 Every prop has `id`, `type`, `at`, optional `params`, `anchors` (`{name: [dx, dy]}`) and
@@ -75,9 +90,9 @@ bounding box), plus the type's own. Channels are the values actions animate.
 
 | Type | Draws | Own channels / anchors | U1 | U2 |
 |---|---|---|---|---|
-| `shape` | One torn paper piece: `rect`, `circle`, `ellipse`, `poly`, `star`, `gear`; `color`, `depth`, `alpha`, `rolls` (rotates with x) | `x y rot scale opacity color` | hills, floor, factory walls, crate, lever, chimney | wall, desk, chair, board, lamp |
+| `shape` | One torn paper piece: `rect`, `circle`, `ellipse`, `poly`, `gear` (`teeth`, `r_in`: U1's gear); `color`, `depth`, `alpha`, `rolls` (rotates with x: U1's sun, U2's cart wheels), `spin` (idle rotation: U1's gear turning all along, not a story action) | `x y rot scale opacity color` | hills, floor, factory walls, crate, lever, chimney, gear | wall, desk, chair, board, lamp |
 | `group` | Several pieces moving together (children in local coordinates) | as `shape` | factory front, sign, crane cab | cart (box + rolling wheels), desk with lamp |
-| `label` | Handwritten text (bundled Patrick Hand, accents included) | `opacity` | — | `tour 1` … `tour 5` |
+| `label` | Handwritten text (bundled Patrick Hand, accents included), `text`, `size`, `color`, centred | `opacity` | — | `tour 1` … `tour 5` |
 | `path` | A pencil line through points, drawn progressively, optional fill and dashes | `draw fill` | pencil lines on the blank sky | the triangle outline and its tint |
 | `glow` | Radial light | `alpha` | sun, lit windows, jar | — |
 | `door` | A panel that slides up inside an opening | `open` | the shutter | the hatch |
@@ -92,7 +107,7 @@ bounding box), plus the type's own. Channels are the values actions animate.
 | `burst` | Particles that leave a source in a column, hold, then spread to their places | `t0` (start), seeded per particle | the stars | — |
 | `curtain` | A torn night sky coming down | `y` | night falls | — |
 | `tint` | Multiply tint over the frame + lit windows | `night` | night falls | — |
-| `smoke` | Puffs rising from a point (idle, seeded) | — | chimney smoke | — |
+| `smoke` | Puffs rising from a point (idle; four puffs at the chimney's rate): `rise`, `r0`, `r1`, `color` | — | chimney smoke | — |
 | `scatter` | Seeded scatter of small pieces in a rectangle | — | flowers, bricks | — |
 
 A type, a parameter, an anchor or a channel name that is not in the library is an **error that
@@ -163,15 +178,15 @@ test that fails on a real defect and one where it stays silent on the healthy ca
 
 | Check | Trap (§ 5) | Detects |
 |---|---|---|
-| `vocabulary` | — | unknown type, verb, parameter, anchor, channel, sound kind (lists the known names) |
+| `vocabulary` | — | unknown type, verb, parameter, anchor, channel, sound kind (lists the known names); a bad value (name, colour, non-finite number, wrong type, out of bounds) |
 | `references` | — | an actor, target or ordered id that does not exist |
-| `timing` | — | a time outside `[0, duration]`, `start > end`, an unknown mark, a sound after the end |
+| `timing` | — | a time outside `[0, duration]`, `start > end`, an unknown mark, a sound after the end; a layout that changes counts or durations |
 | `limb_overlap` | — | two actions driving the same channel (same arm, same face, same position) at once |
-| `jump` | 1 | a value that jumps when an action takes over or lets go (a push from where the actor is not, an oscillation released mid-swing, an attach before the contact) |
-| `off_frame` | 5 | the place of an action outside the current camera frame of a layout |
-| `contact` | 6 | a hand or hook that does not reach what it grabs, pushes, pins or hooks |
-| `zoom_speed` | 7 | a strong zoom change (ratio ≥ 1.25) in less than 1.2 s |
-| `ui_safe_bottom` | 8 | the place of an action in the bottom band of a 9:16 layout (declared per layout; required for 9:16) |
+| `jump` | 1 | a value that jumps when an action takes over (a push from where the actor is not, a pose with no duration) |
+| `off_frame` | 5 | the place of an action outside the current camera frame of a layout; without any action, a character outside the frame at a camera key, or a prop outside its layout |
+| `contact` | 6 | a hand or hook that does not reach what it grabs, pushes, pins or hooks — measured against the anchor and against the object's own box (a declared anchor floating away from the object cannot fake a contact) |
+| `zoom_speed` | 7 | camera moves that fit in less than 1.2 s and add up to a scale change of ×1.25 or more, however holds or reversals cut them (a single move longer than 1.2 s is the slow change the trap asks for) |
+| `ui_safe_bottom` | 8 | the place of an action, or a character at a camera key, in the bottom band of a 9:16 layout (declared per layout; required for 9:16) |
 | `beat_in_phrase` | U2 | a beat that does not lie inside the phrase it illustrates |
 | `text_policy` | U2 | an on-screen text that is not in `text_allowed` |
 
@@ -191,6 +206,9 @@ image: they stay with the mute review, and the skill says so.
 - Sound pan that follows an object: both cases set pan by hand.
 - Automatic recomposition from 16:9 to 9:16: per-layout positions are explicit.
 - Decorative micro-motions of the reference (sun sway on the hook, sun bobbing in the sky).
+- Parameters of the first draft that neither case uses, removed after review: shape `star`,
+  shape `stroke` / `stroke_width` / `fill: false`, smoke `count` / `rate` / `drift` (fixed to the
+  chimney's values), label `align` / `rotate`.
 
 ## 7. The three outputs (contract)
 

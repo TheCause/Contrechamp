@@ -56,7 +56,8 @@ def _rgb(h: str) -> list[int]:
 
 def mix(h1: str, h2: str, x: float) -> str:
     a, b = _rgb(h1), _rgb(h2)
-    return "#" + "".join(f"{int(round(clamp(lerp(p, q, x), 0, 255))):02x}" for p, q in zip(a, b))
+    # floor(v + 0.5) is JavaScript's Math.round (Python's round() rounds half to even)
+    return "#" + "".join(f"{int(math.floor(clamp(lerp(p, q, x), 0, 255) + 0.5)):02x}" for p, q in zip(a, b))
 
 
 def interp(v0: Any, v1: Any, x: float) -> Any:

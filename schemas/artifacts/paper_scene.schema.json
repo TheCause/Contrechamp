@@ -4,86 +4,231 @@
   "title": "Paper scene",
   "description": "Declarative description of a paper-cut scene (docs/fork/lot4-paper-scene.md). Compiled by the paper_scene tool into a HyperFrames project per layout, sfx_synth events and mute-review story beats. This schema checks the structure; the names (prop types, verbs, parameters, anchors, channels) are checked by lib/paper_scene, which lists the known names on error.",
   "type": "object",
-  "required": ["format", "id", "brief", "duration", "layouts", "props", "order", "camera", "actions"],
+  "required": [
+    "format",
+    "id",
+    "brief",
+    "duration",
+    "layouts",
+    "props",
+    "order",
+    "camera",
+    "actions"
+  ],
   "additionalProperties": false,
   "$defs": {
     "time": {
       "description": "Seconds, or a narration mark reference: 'p2', 'p2.start', 'p2.end', 'p2.end+0.3'.",
-      "oneOf": [{"type": "number", "minimum": 0}, {"type": "string", "minLength": 1}]
+      "oneOf": [
+        {
+          "type": "number",
+          "minimum": 0
+        },
+        {
+          "type": "string",
+          "minLength": 1
+        }
+      ]
     },
-    "point": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 2},
-    "id": {"type": "string", "pattern": "^[A-Za-z0-9_-]+$"},
+    "point": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]+$"
+    },
     "sound": {
       "type": "object",
-      "required": ["kind"],
+      "required": [
+        "kind"
+      ],
       "properties": {
-        "kind": {"type": "string"},
-        "at": {"type": "number", "minimum": 0},
-        "every": {"type": "number", "exclusiveMinimum": 0},
-        "per_item": {"const": true},
-        "gain": {"type": "number", "exclusiveMinimum": 0},
-        "pan": {"type": "number", "minimum": 0, "maximum": 1},
-        "pitch_step": {"type": "number"}
+        "kind": {
+          "type": "string"
+        },
+        "at": {
+          "type": "number",
+          "minimum": 0
+        },
+        "every": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "per_item": {
+          "const": true
+        },
+        "gain": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "pan": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "pitch_step": {
+          "type": "number"
+        }
       }
     },
     "beat_on_action": {
       "type": "object",
-      "required": ["id", "label", "expected"],
+      "required": [
+        "id",
+        "label",
+        "expected"
+      ],
       "properties": {
-        "id": {"$ref": "#/$defs/id"},
-        "label": {"type": "string", "minLength": 1},
-        "expected": {"type": "string", "minLength": 1},
-        "start": {"$ref": "#/$defs/time"},
-        "end": {"$ref": "#/$defs/time"}
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "expected": {
+          "type": "string",
+          "minLength": 1
+        },
+        "start": {
+          "$ref": "#/$defs/time"
+        },
+        "end": {
+          "$ref": "#/$defs/time"
+        }
       },
       "additionalProperties": false
     },
     "action": {
       "type": "object",
-      "required": ["do", "start"],
+      "required": [
+        "do",
+        "start"
+      ],
       "properties": {
-        "do": {"type": "string"},
-        "id": {"$ref": "#/$defs/id"},
-        "actor": {"$ref": "#/$defs/id"},
-        "target": {"type": "string"},
-        "start": {"$ref": "#/$defs/time"},
-        "end": {"$ref": "#/$defs/time"},
-        "sound": {"type": "array", "items": {"$ref": "#/$defs/sound"}},
-        "beat": {"$ref": "#/$defs/beat_on_action"}
+        "do": {
+          "type": "string"
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "actor": {
+          "$ref": "#/$defs/id"
+        },
+        "target": {
+          "type": "string"
+        },
+        "start": {
+          "$ref": "#/$defs/time"
+        },
+        "end": {
+          "$ref": "#/$defs/time"
+        },
+        "sound": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/sound"
+          }
+        },
+        "beat": {
+          "$ref": "#/$defs/beat_on_action"
+        }
       }
     },
     "repeat": {
       "type": "object",
-      "required": ["repeat", "actions"],
+      "required": [
+        "repeat",
+        "actions"
+      ],
       "additionalProperties": false,
       "properties": {
         "repeat": {
           "type": "object",
-          "required": ["spans"],
+          "required": [
+            "spans"
+          ],
           "properties": {
-            "name": {"$ref": "#/$defs/id"},
-            "spans": {"type": "array", "minItems": 1,
-                      "items": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"$ref": "#/$defs/time"}}}
+            "name": {
+              "$ref": "#/$defs/id"
+            },
+            "spans": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "$ref": "#/$defs/time"
+                }
+              }
+            }
           },
           "additionalProperties": false
         },
-        "actions": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/action"}}
+        "actions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/action"
+          }
+        }
       }
+    },
+    "color": {
+      "type": "string",
+      "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$"
     }
   },
   "properties": {
-    "format": {"const": "paper_scene/1"},
-    "id": {"$ref": "#/$defs/id"},
-    "title": {"type": "string"},
-    "brief": {"type": "string", "minLength": 1},
-    "duration": {"$ref": "#/$defs/time"},
+    "format": {
+      "const": "paper_scene/1"
+    },
+    "id": {
+      "$ref": "#/$defs/id"
+    },
+    "title": {
+      "type": "string"
+    },
+    "brief": {
+      "type": "string",
+      "minLength": 1
+    },
+    "duration": {
+      "$ref": "#/$defs/time"
+    },
     "marks": {
       "type": "object",
-      "additionalProperties": {"type": "array", "items": {"type": "number", "minimum": 0}, "minItems": 2, "maxItems": 2}
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "number",
+          "minimum": 0
+        },
+        "minItems": 2,
+        "maxItems": 2
+      },
+      "propertyNames": {
+        "pattern": "^[A-Za-z0-9_-]+$"
+      }
     },
     "insert": {
       "type": "object",
-      "properties": {"offset": {"type": "number", "minimum": 0}, "source": {"type": "string"}},
+      "properties": {
+        "offset": {
+          "type": "number",
+          "minimum": 0
+        },
+        "source": {
+          "type": "string"
+        }
+      },
       "additionalProperties": false
     },
     "layouts": {
@@ -91,32 +236,132 @@
       "minProperties": 1,
       "additionalProperties": {
         "type": "object",
-        "required": ["aspect", "width", "height"],
+        "required": [
+          "aspect",
+          "width",
+          "height"
+        ],
         "properties": {
-          "aspect": {"enum": ["9:16", "16:9"]},
-          "width": {"type": "integer", "minimum": 16},
-          "height": {"type": "integer", "minimum": 16},
-          "ui_safe_bottom": {"type": "number", "minimum": 0, "maximum": 0.4}
+          "aspect": {
+            "enum": [
+              "9:16",
+              "16:9"
+            ]
+          },
+          "width": {
+            "type": "integer",
+            "minimum": 16
+          },
+          "height": {
+            "type": "integer",
+            "minimum": 16
+          },
+          "ui_safe_bottom": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 0.4
+          }
         },
         "additionalProperties": false
+      },
+      "propertyNames": {
+        "pattern": "^[A-Za-z0-9_-]+$"
       }
     },
-    "style": {"type": "object"},
-    "text_allowed": {"type": "array", "items": {"type": "string"}},
-    "order": {"type": "array", "items": {"$ref": "#/$defs/id"}},
+    "style": {
+      "type": "object",
+      "properties": {
+        "background": {
+          "$ref": "#/$defs/color"
+        },
+        "grain": {
+          "type": "boolean"
+        },
+        "grain_seed": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "grain_alpha": {
+          "type": "number",
+          "minimum": 0
+        },
+        "vignette": {
+          "type": "boolean"
+        },
+        "fade_in": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "text_allowed": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "order": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/id"
+      }
+    },
     "props": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "type"],
+        "required": [
+          "id",
+          "type"
+        ],
         "properties": {
-          "id": {"$ref": "#/$defs/id"},
-          "type": {"type": "string"},
-          "at": {"$ref": "#/$defs/point"},
-          "params": {"type": "object"},
-          "anchors": {"type": "object", "additionalProperties": {"$ref": "#/$defs/point"}},
-          "init": {"type": "object", "description": "Initial values of the prop's channels (x and y come from at)"},
-          "layouts": {"type": "object"}
+          "id": {
+            "$ref": "#/$defs/id"
+          },
+          "type": {
+            "type": "string"
+          },
+          "at": {
+            "$ref": "#/$defs/point"
+          },
+          "params": {
+            "type": "object"
+          },
+          "anchors": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/$defs/point"
+            },
+            "propertyNames": {
+              "pattern": "^[A-Za-z0-9_-]+$"
+            }
+          },
+          "init": {
+            "type": "object",
+            "description": "Initial values of the prop's channels (x and y come from at)",
+            "propertyNames": {
+              "pattern": "^[A-Za-z0-9_-]+$"
+            }
+          },
+          "layouts": {
+            "type": "object",
+            "propertyNames": {
+              "pattern": "^[A-Za-z0-9_-]+$"
+            },
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "at": {
+                  "$ref": "#/$defs/point"
+                },
+                "params": {
+                  "type": "object"
+                }
+              },
+              "additionalProperties": false
+            }
+          }
         },
         "additionalProperties": false
       }
@@ -125,16 +370,90 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "at"],
+        "required": [
+          "id",
+          "at"
+        ],
         "properties": {
-          "id": {"$ref": "#/$defs/id"},
-          "role": {"type": "string"},
-          "look": {"type": "object"},
-          "posture": {"type": "string"},
-          "scale": {"type": "number", "exclusiveMinimum": 0},
-          "at": {"$ref": "#/$defs/point"},
-          "pose": {"type": "object"},
-          "layouts": {"type": "object"}
+          "id": {
+            "$ref": "#/$defs/id"
+          },
+          "role": {
+            "type": "string"
+          },
+          "look": {
+            "type": "object",
+            "properties": {
+              "skin": {
+                "$ref": "#/$defs/color"
+              },
+              "shirt": {
+                "$ref": "#/$defs/color"
+              },
+              "overall": {
+                "$ref": "#/$defs/color"
+              },
+              "brow": {
+                "$ref": "#/$defs/color"
+              },
+              "hat": {
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/color"
+                  },
+                  {
+                    "const": false
+                  }
+                ]
+              },
+              "glasses": {
+                "oneOf": [
+                  {
+                    "$ref": "#/$defs/color"
+                  },
+                  {
+                    "type": "boolean"
+                  }
+                ]
+              },
+              "mustache": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false
+          },
+          "posture": {
+            "type": "string"
+          },
+          "scale": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "at": {
+            "$ref": "#/$defs/point"
+          },
+          "pose": {
+            "type": "object"
+          },
+          "layouts": {
+            "type": "object",
+            "propertyNames": {
+              "pattern": "^[A-Za-z0-9_-]+$"
+            },
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "at": {
+                  "$ref": "#/$defs/point"
+                },
+                "scale": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                }
+              },
+              "additionalProperties": false
+            }
+          }
         },
         "additionalProperties": false
       }
@@ -146,33 +465,87 @@
         "minItems": 1,
         "items": {
           "type": "object",
-          "required": ["t"],
+          "required": [
+            "t"
+          ],
           "properties": {
-            "t": {"$ref": "#/$defs/time"},
-            "center": {"$ref": "#/$defs/point"},
-            "target": {"type": "string"},
-            "zoom": {"type": "number", "minimum": 1}
+            "t": {
+              "$ref": "#/$defs/time"
+            },
+            "center": {
+              "$ref": "#/$defs/point"
+            },
+            "target": {
+              "type": "string"
+            },
+            "zoom": {
+              "type": "number",
+              "minimum": 1
+            }
           },
           "additionalProperties": false
         }
+      },
+      "propertyNames": {
+        "pattern": "^[A-Za-z0-9_-]+$"
       }
     },
     "actions": {
       "type": "array",
-      "items": {"oneOf": [{"$ref": "#/$defs/repeat"}, {"allOf": [{"$ref": "#/$defs/action"}, {"not": {"required": ["repeat"]}}]}]}
+      "items": {
+        "oneOf": [
+          {
+            "$ref": "#/$defs/repeat"
+          },
+          {
+            "allOf": [
+              {
+                "$ref": "#/$defs/action"
+              },
+              {
+                "not": {
+                  "required": [
+                    "repeat"
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
     },
     "beats": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "label", "start", "end", "expected"],
+        "required": [
+          "id",
+          "label",
+          "start",
+          "end",
+          "expected"
+        ],
         "properties": {
-          "id": {"$ref": "#/$defs/id"},
-          "label": {"type": "string", "minLength": 1},
-          "start": {"$ref": "#/$defs/time"},
-          "end": {"$ref": "#/$defs/time"},
-          "expected": {"type": "string", "minLength": 1},
-          "phrase": {"type": "string"}
+          "id": {
+            "$ref": "#/$defs/id"
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1
+          },
+          "start": {
+            "$ref": "#/$defs/time"
+          },
+          "end": {
+            "$ref": "#/$defs/time"
+          },
+          "expected": {
+            "type": "string",
+            "minLength": 1
+          },
+          "phrase": {
+            "type": "string"
+          }
         },
         "additionalProperties": false
       }
@@ -180,10 +553,30 @@
     "sound": {
       "type": "object",
       "properties": {
-        "peak_dbfs": {"type": "number", "minimum": -30, "maximum": -0.5},
-        "seed": {"type": "integer", "minimum": 0},
-        "reverb_mix": {"type": "number", "minimum": 0, "maximum": 1},
-        "events": {"type": "array", "items": {"type": "object", "required": ["t", "kind"]}}
+        "peak_dbfs": {
+          "type": "number",
+          "minimum": -30,
+          "maximum": -0.5
+        },
+        "seed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reverb_mix": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "t",
+              "kind"
+            ]
+          }
+        }
       },
       "additionalProperties": false
     }

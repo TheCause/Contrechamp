@@ -121,8 +121,7 @@ def _check_shape(p: dict[str, Any], issues: Issues, where: str) -> None:
     if kind not in L.SHAPE_KINDS:
         issues.add("vocabulary", "shape: " + _known("shape", kind, L.SHAPE_KINDS), where)
         return
-    need = {"rect": ["rect"], "circle": ["r"], "ellipse": ["rx", "ry"], "poly": ["points"], "star": ["r"],
-            "gear": ["r"]}[kind]
+    need = {"rect": ["rect"], "circle": ["r"], "ellipse": ["rx", "ry"], "poly": ["points"], "gear": ["r"]}[kind]
     for k in need:
         if p.get(k) is None:
             issues.add("vocabulary", f"shape {kind}: missing parameter {k!r}", where)
@@ -287,6 +286,8 @@ def _check_action_vocab(a: Any, issues: Issues, where: str, in_repeat: bool) -> 
             issues.add("vocabulary", "repeat blocks do not nest", where)
             return
         r = a["repeat"]
+        if isinstance(r, dict) and "name" in r and not (isinstance(r["name"], str) and ID.match(r["name"])):
+            issues.add("vocabulary", f"repeat name {r['name']!r}: letters, digits, '_' or '-' only", where)
         for k in a:
             if k not in ("repeat", "actions"):
                 issues.add("vocabulary", _known("repeat key", k, ("repeat", "actions")), where)

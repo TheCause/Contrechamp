@@ -99,13 +99,12 @@
       b.setAttribute("d", "M" + f2(x - k) + " " + f2(y - k) + "L" + f2(x + k) + " " + f2(y + k) + "M" + f2(x - k) + " " + f2(y + k) + "L" + f2(x + k) + " " + f2(y - k));
     } };
   }
-  var AMP = { rect: 1.0, poly: 1.5, circle: 1.2, ellipse: 1.2, star: 0.8, gear: 0.8 };
+  var AMP = { rect: 1.0, poly: 1.5, circle: 1.2, ellipse: 1.2, gear: 0.8 };
   function shapePoints(key, p) {
     var amp = p.amp != null ? p.amp : AMP[p.shape];
     if (p.shape === "rect") return PC.tornRect(key, p.rect[0], p.rect[1], p.rect[2], p.rect[3], amp);
     if (p.shape === "circle") return PC.tornCircle(key, p.r, amp);
     if (p.shape === "ellipse") return PC.tornEllipse(key, p.rx, p.ry, amp);
-    if (p.shape === "star") return PC.starPoly(key, p.r, 0.45, amp);
     if (p.shape === "gear") {
       var n = p.teeth || 24, ri = p.r_in != null ? p.r_in : p.r * 0.77, pts = [];
       for (var i = 0; i < n; i++) { var a = i * 2 * Math.PI / n, r = (Math.floor(i / 2) % 2 === 0) ? p.r : ri; pts.push([r * Math.cos(a), r * Math.sin(a)]); }
@@ -116,12 +115,8 @@
   // One paper piece from shape params; returns {g, fill} (fill may be null for outlines).
   function shapePiece(parent, key, p) {
     var holder = g(parent, p.at ? { transform: T(p.at[0], p.at[1]) } : {});
-    var pts = shapePoints(key, p), piece = null, outline = null;
-    if (p.fill !== false) piece = PC.paper(holder, pts, p.color || "#d8694b", { depth: p.depth == null ? 1 : p.depth, alpha: p.alpha == null ? 1 : p.alpha, edge: p.edge !== false, shadow: p.shadow !== false });
-    if (p.stroke || p.fill === false) {
-      outline = el("path", { d: PC.polyD(pts), fill: "none", stroke: p.stroke || p.color, "stroke-width": p.stroke_width || 2, "stroke-opacity": p.fill === false ? (p.alpha == null ? 1 : p.alpha) : 0.55, "stroke-linejoin": "round" });
-      holder.appendChild(outline);
-    }
+    var pts = shapePoints(key, p);
+    var piece = PC.paper(holder, pts, p.color || "#d8694b", { depth: p.depth == null ? 1 : p.depth, alpha: p.alpha == null ? 1 : p.alpha, edge: p.edge !== false, shadow: p.shadow !== false });
     return { g: holder, piece: piece, x0: p.at ? p.at[0] : 0, y0: p.at ? p.at[1] : 0 };
   }
 
@@ -137,7 +132,7 @@
       if (r) rot += (x - x0) / r;
       root_.setAttribute("transform", T(x, S.v(id + ".y", t), rot / D2R, S.v(id + ".scale", t)));
       root_.setAttribute("opacity", f2(S.v(id + ".opacity", t)));
-      if (sp.piece) { var c = S.v(id + ".color", t); sp.piece.fill.setAttribute("fill", c); if (P.params.edge !== false) sp.piece.fill.setAttribute("stroke", PC.shade(c, 0.35)); }
+      var c = S.v(id + ".color", t); sp.piece.fill.setAttribute("fill", c); if (P.params.edge !== false) sp.piece.fill.setAttribute("stroke", PC.shade(c, 0.35));
     };
   };
 
@@ -157,7 +152,7 @@
 
   DRAW.label = function (parent, id, P, S) {
     var root_ = g(parent), p = P.params;
-    var tx = el("text", { x: 0, y: 0, "font-family": "InkHand, 'Patrick Hand', sans-serif", "font-size": p.size, fill: p.color, "text-anchor": p.align === "left" ? "start" : p.align === "right" ? "end" : "middle", transform: p.rotate ? "rotate(" + p.rotate + ")" : "" });
+    var tx = el("text", { x: 0, y: 0, "font-family": "InkHand, 'Patrick Hand', sans-serif", "font-size": p.size, fill: p.color, "text-anchor": "middle" });
     tx.textContent = p.text; root_.appendChild(tx);
     return function (t) {
       root_.setAttribute("transform", T(S.v(id + ".x", t), S.v(id + ".y", t), S.v(id + ".rot", t) / D2R, S.v(id + ".scale", t)));
@@ -529,13 +524,13 @@
   };
 
   DRAW.smoke = function (parent, id, P, S) {
-    var p = P.params, root_ = g(parent), puffs = [];
-    for (var k = 0; k < p.count; k++) { var pg = g(root_); puffs.push({ g: pg, piece: PC.paper(pg, PC.tornCircle(id + "puff" + k, p.r0, 1.6), p.color, { depth: 0.5 }) }); }
+    var p = P.params, root_ = g(parent), puffs = [], COUNT = 4, RATE = 0.32, DRIFT = 60;   // the factory's chimney
+    for (var k = 0; k < COUNT; k++) { var pg = g(root_); puffs.push({ g: pg, piece: PC.paper(pg, PC.tornCircle(id + "puff" + k, p.r0, 1.6), p.color, { depth: 0.5 }) }); }
     return function (t) {
       var x = S.v(id + ".x", t), y = S.v(id + ".y", t);
       puffs.forEach(function (q, k) {
-        var ph = ((t * p.rate + k / p.count) % 1 + 1) % 1, rr = Math.round((p.r0 + ph * (p.r1 - p.r0)) * 10) / 10;
-        q.g.setAttribute("transform", T(x + ph * p.drift + 10 * Math.sin(ph * 6 + k), y - ph * p.rise));
+        var ph = ((t * RATE + k / COUNT) % 1 + 1) % 1, rr = Math.round((p.r0 + ph * (p.r1 - p.r0)) * 10) / 10;
+        q.g.setAttribute("transform", T(x + ph * DRIFT + 10 * Math.sin(ph * 6 + k), y - ph * p.rise));
         PC.reshape(q.piece, PC.tornCircle(id + "puff" + k, rr, 1.6));
         q.g.setAttribute("opacity", f2(Math.sin(ph * Math.PI) * 0.85 * S.v(id + ".opacity", t)));
       });

@@ -23,6 +23,7 @@ from lib.paper_scene.compile import (Compiled, action_window, camera_keys, compi
                                      refresh_starts)
 from lib.paper_scene.resolve import (Issues, Times, _known, _num, check_vocabulary, expand_actions,
                                      layout_view)
+from lib.paper_scene.values import COLOR, NAME, check_action_values, check_values
 
 ROOT = Path(__file__).resolve().parents[2]
 INK = ROOT / "ink-theater"
@@ -47,24 +48,41 @@ class Build:
         self.duration = 0.0
         self.marks: dict[str, list[float]] = {}
         self.ran: set[str] = set()
-        self._run()
+        try:
+            self._run()
+        except Exception as e:  # noqa: BLE001 - fail closed: a scene that breaks the compiler does not pass
+            self.issues.add("vocabulary", f"the scene could not be compiled ({type(e).__name__}: {str(e)[:200]})",
+                            "(compiler)")
+            self.layouts = {}
 
     # -------------------------------------------------------------- stages
     def _run(self) -> None:
+        if not isinstance(self.scene, dict):
+            self.issues.add("vocabulary", "a scene is a JSON object")
+            return
+        self._schema()                      # structure first: the other stages may then trust the types
+        try:                                # plain-language messages for names and colours, even then
+            self.scene = check_values(self.scene, self.issues)
+        except Exception:  # noqa: BLE001 - the schema already said what is wrong with this structure
+            if not self.issues.of("vocabulary"):
+                raise
+        if self.issues.of("vocabulary"):
+            return
         sc = self.scene
         if not check_vocabulary(sc, self.issues):
-            return
-        self._schema()
-        if self.issues.of("vocabulary"):
             return
         self._marks()
         times = Times(self.marks, self.issues)
         d = times(sc["duration"], "duration")
-        if d is not None and d <= 0:
-            self.issues.add("timing", f"duration {d:g} must be > 0", "duration")
+        if d is not None and not 0 < d <= 300:
+            self.issues.add("timing", f"duration {d:g} must be > 0 and at most 300 s", "duration")
         self.duration = d or 0.0
         self.times = times
         self.actions = expand_actions(sc, times, self.issues)
+        for a in self.actions:
+            check_action_values(a, self.issues)
+        if self.issues.of("vocabulary"):
+            return
         self._references()
         self._timing()
         self.ran.update(STATIC)
@@ -88,17 +106,36 @@ class Build:
                 job()
             c.camera = camera_keys(c, sc["camera"][name], times)
             self.layouts[name] = c
+        self._same_story_in_every_layout()
         self._beats_and_sound()
         for name, c in self.layouts.items():
             K.check_limb_overlap(c, self.issues)
             self.measured.setdefault("jump", {})[name] = K.check_jump(c, self.issues)
             K.check_off_frame(c, self.issues, self.duration)
+            K.check_static(c, self.issues, self.duration)
             self.measured.setdefault("contact", {})[name] = K.check_contact(c, self.issues)
             self.measured.setdefault("zoom_speed", {})[name] = K.check_zoom_speed(c, self.issues)
             K.check_ui_safe_bottom(c, self.issues, self.duration)
         K.check_beat_in_phrase(self.beats, self.marks, self.issues)
         self.measured["text_policy"] = K.check_text_policy(sc, self.issues)
         self.ran.update(CHECKS)
+
+    def _same_story_in_every_layout(self) -> None:
+        """One sound track and one beat list per scene: a layout may move things, not change
+        what happens or when. Counted items and computed ends must agree across layouts."""
+        names = list(self.layouts)
+        ref = self.layouts[names[0]]
+        for name in names[1:]:
+            c = self.layouts[name]
+            for a in self.actions:
+                ia = [round(t, 4) for t in ref.items.get(a["id"], [])]
+                ib = [round(t, 4) for t in c.items.get(a["id"], [])]
+                ea, eb = round(ref.ends.get(a["id"], -1.0), 4), round(c.ends.get(a["id"], -1.0), 4)
+                if ia != ib or ea != eb:
+                    self.issues.add("timing", f"layout '{name}' changes when or how often '{a['id']}' happens "
+                                    f"({len(ib)} items, end {eb:g}s) compared with '{names[0]}' ({len(ia)} items, "
+                                    f"end {ea:g}s): one sound and one beat list serve every layout; override "
+                                    "positions per layout, not counts or durations", a["id"])
 
     def _schema(self) -> None:
         import jsonschema
@@ -331,6 +368,12 @@ class Build:
                 continue
             out.append({k: (round(v, 4) if isinstance(v, float) else v) for k, v in ev.items()})
         self.events = sorted(out, key=lambda e: (e["t"], e["kind"]))
+        if self.events:
+            from tools.audio.sfx_synth import validate_events
+            try:   # the sound events must be a valid sfx_synth input, checked here, not at render time
+                validate_events(self.events, self.duration)
+            except ValueError as e:
+                self.issues.add("vocabulary", f"sound: {e}", "sound")
 
     # ------------------------------------------------------------- report
     def report(self) -> dict[str, Any]:
@@ -345,7 +388,8 @@ class Build:
                 checks[name]["reason"] = "earlier checks failed: the scene could not be compiled"
         status = "fail" if self.issues.items else ("pass" if all(c["status"] == "pass" for c in checks.values())
                                                    else "not_checked")
-        return {"status": status, "scene": self.scene.get("id"), "duration": self.duration, "checks": checks,
+        sid = self.scene.get("id") if isinstance(self.scene, dict) else None
+        return {"status": status, "scene": sid, "duration": self.duration, "checks": checks,
                 "errors": [f"{i['check']}: {i['message']} ({i['where']})" for i in self.issues.items]}
 
     def sfx_events(self) -> dict[str, Any]:
@@ -405,10 +449,16 @@ def html(compiled: dict[str, Any], uses_font: bool) -> str:
     lay = compiled["layout"]
     W, H = lay["width"], lay["height"]
     bg = compiled["style"]["background"]
+    # defence in depth: validation already refused these, the template refuses them again
+    if not (isinstance(bg, str) and COLOR.match(bg)) or not all(isinstance(v, int) and v > 0 for v in (W, H)):
+        raise ValueError("background must be a colour and the layout size integers")
     res = "portrait" if H > W else "landscape"
     font = ('@font-face { font-family: "InkHand"; src: url("assets/patrickhand.ttf") format("truetype"); '
             'font-display: block; }\n      ') if uses_font else ""
-    data = json.dumps(compiled, ensure_ascii=False, sort_keys=True, separators=(",", ":")).replace("</", "<\\/")
+    # "<", ">" and "&" never appear raw in the inline script: no text of the scene can close it
+    data = (json.dumps(compiled, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+            .replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
+            .replace("\u2028", "\\u2028").replace("\u2029", "\\u2029"))
     d = compiled["duration"]
     return f"""<!doctype html>
 <html lang="en" data-resolution="{res}">
@@ -440,8 +490,7 @@ def html(compiled: dict[str, Any], uses_font: bool) -> str:
       </section>
     </div>
     <script>
-      /* Compiled by the paper_scene tool (scene "{compiled_id(compiled)}", layout "{lay['name']}"). Do not edit:
-         edit the scene description and compile again. */
+      /* Compiled by the paper_scene tool. Do not edit: edit the scene description and compile again. */
       window.__PAPER_SCENE__ = {data};
       window.__timelines = window.__timelines || {{}};
       window.__timelines["main"] = PaperScene.mount(window.__PAPER_SCENE__);
@@ -449,10 +498,6 @@ def html(compiled: dict[str, Any], uses_font: bool) -> str:
   </body>
 </html>
 """
-
-
-def compiled_id(compiled: dict[str, Any]) -> str:
-    return str(compiled.get("scene", "")) or "scene"
 
 
 def write_layout(out: Path, compiled: dict[str, Any], uses_font: bool) -> Path:
@@ -480,9 +525,14 @@ def compile_scene(scene: dict[str, Any], out_dir: str | Path) -> dict[str, Any]:
     if rep["status"] != "pass":
         return {"report": rep, "written": [str(out / "report.json")]}
     written = [str(out / "report.json")]
+    scene = b.scene                      # the normalized copy (colours expanded)
     uses_font = any(p["type"] == "label" or (p["type"] == "bars" and (p.get("params") or {}).get("labels"))
                     for p in scene["props"])
+    root = out.resolve()
     for name in b.layouts:
+        # defence in depth: a layout name is a plain name, and its folder stays inside out_dir
+        if not NAME.match(name) or (out / name).resolve().parent != root:
+            raise ValueError(f"layout name {name!r} cannot be a folder name")
         cj = b.compiled_json(name)
         cj["scene"] = scene.get("id")
         if scene.get("insert"):

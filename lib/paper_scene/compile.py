@@ -167,11 +167,27 @@ def _place(c: Compiled, act: dict[str, Any], t0: float, t1: float, fn: Callable[
                      "where": act.get("_where", act["id"])})
 
 
+def prop_box(c: Compiled, pid: str, t: float) -> tuple[float, float, float, float]:
+    """World bounding box of a prop at t (its local box, rotated and scaled)."""
+    p = c.props[pid]
+    st = prop_state(c, pid, t)
+    x0, y0, x1, y1 = L.bbox(p["type"], p["params"], st)
+    pts = [L.place(st["x"], st["y"], st["rot"], st["scale"], q) for q in ((x0, y0), (x1, y0), (x1, y1), (x0, y1))]
+    return min(q[0] for q in pts), min(q[1] for q in pts), max(q[0] for q in pts), max(q[1] for q in pts)
+
+
 def _contact(c: Compiled, act: dict[str, Any], t: float, effector: tuple[float, float],
-             target: tuple[float, float], tol: float, what: str) -> None:
+             target: tuple[float, float], tol: float, what: str, prop: str | None = None) -> None:
+    """The effector must reach the target point AND the object itself: a declared anchor
+    floating away from the object cannot fake a contact."""
+    d = math.hypot(effector[0] - target[0], effector[1] - target[1])
+    if prop is not None and prop in c.props and c.props[prop]["type"] not in ("pole", "burst"):
+        bx0, by0, bx1, by1 = prop_box(c, prop, t)
+        dx = max(bx0 - effector[0], 0.0, effector[0] - bx1)
+        dy = max(by0 - effector[1], 0.0, effector[1] - by1)
+        d = max(d, math.hypot(dx, dy))
     c.contacts.append({"action": act["id"], "verb": act["do"], "t": t, "effector": effector, "target": target,
-                       "distance": math.hypot(effector[0] - target[0], effector[1] - target[1]), "tol": tol,
-                       "what": what, "where": act.get("_where", act["id"])})
+                       "distance": d, "tol": tol, "what": what, "where": act.get("_where", act["id"])})
 
 
 CONTACT_TOL = 8.0   # px: a hand or hook farther than this from what it holds does not touch it
@@ -265,7 +281,7 @@ def _v_push(c: Compiled, a: dict[str, Any], _d: float) -> None:
         for tc in (ta, t1):
             c.deferred.append(lambda tc=tc, hand=hand, grip_t=grip_t: _contact(
                 c, a, tc, char_point(c, cid, f"hand_{hand}", tc), grip_t(tc), CONTACT_TOL,
-                f"{cid}'s {hand} hand on {pid}"))
+                f"{cid}'s {hand} hand on {pid}", prop=pid))
     _place(c, a, t0, t1, lambda t: char_point(c, cid, "center", t), f"{cid} (pushing)")
     _place(c, a, t0, t1, lambda t: prop_point(c, pid, "center", t), f"{pid} (pushed)")
 
@@ -300,7 +316,7 @@ def _v_reach(c: Compiled, a: dict[str, Any], _d: float) -> None:
     _target_ease(c, a, [ku, kf], solve)
     c.deferred.append(lambda: _contact(c, a, t1, char_point(c, cid, f"hand_{hand}", t1),
                                        ref_point(c, a["target"], t1), CONTACT_TOL,
-                                       f"{cid}'s {hand} hand on {a['target']}"))
+                                       f"{cid}'s {hand} hand on {a['target']}", prop=_split(a["target"])[0]))
     _place(c, a, t0, t1, lambda t: ref_point(c, a["target"], t), f"{a['target']} (reached)")
 
 
@@ -368,7 +384,7 @@ def _v_flip(c: Compiled, a: dict[str, Any], _d: float) -> None:
     c.items[a["id"]] = [t0 + (k - 0.5) * (t1 - t0) / n for k in range(1, n + 1)]
     c.deferred.append(lambda: _contact(c, a, t0, char_point(c, cid, f"hand_{hand}", t0),
                                        prop_point(c, sid, "top", t0), 2 * CONTACT_TOL,
-                                       f"{cid}'s {hand} hand on the pages of {sid}"))
+                                       f"{cid}'s {hand} hand on the pages of {sid}", prop=sid))
     _place(c, a, t0, t1, lambda t: prop_point(c, sid, "top", t), f"{sid} (pages flipped)")
 
 
@@ -517,7 +533,7 @@ def _v_attach(c: Compiled, a: dict[str, Any], _d: float) -> None:
     _seg(c, f"{pid}.y", ["f", t0, t1, srcy, 1.0, offy - bly * st["scale"]], a)
     c.deferred.append(lambda: _contact(c, a, t0, ref_point(c, a["to"], t0),
                                        _before_point(c, pid, by, t0), CONTACT_TOL,
-                                       f"{a['to']} takes {pid} by its {by}"))
+                                       f"{a['to']} takes {pid} by its {by}", prop=pid))
     _place(c, a, t0, t1, lambda t: prop_point(c, pid, "center", t), f"{pid} (carried)")
 
 

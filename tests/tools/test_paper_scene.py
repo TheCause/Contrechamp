@@ -229,7 +229,7 @@ def _cam(keys):
 
 def test_a_strong_zoom_faster_than_1_2_s_fails():
     msg = " ".join(issues(validate(_cam([(0, 1.0), (1.0, 1.0), (1.85, 1.6)])), "zoom_speed"))
-    assert "(x1.60) in 0.85s" in msg
+    assert "x1.60 in 0.85s" in msg
 
 
 def test_a_strong_zoom_over_1_2_s_passes():
@@ -237,9 +237,9 @@ def test_a_strong_zoom_over_1_2_s_passes():
 
 
 def test_a_fast_zoom_is_not_excused_by_a_slow_end_of_the_same_move():
-    # the camera of the delivered factory video: x1.62 in 1.1 s, then a slow creep to 1.66
+    # x1.62 in 1.1 s, then a slow creep to 1.66: the fast part is not excused
     rep = validate(_cam([(0, 1.0), (2.0, 1.0), (3.1, 1.62), (4.0, 1.66)]))
-    assert "(x1.62) in 1.10s" in " ".join(issues(rep, "zoom_speed"))
+    assert "x1.62 in 1.10s" in " ".join(issues(rep, "zoom_speed"))
 
 
 # ------------------------------------------------------------------ trap 8: 9:16 bottom band

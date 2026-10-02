@@ -2451,6 +2451,74 @@
    "to": 0.35
   },
   {
+   "repeat": {
+    "name": "lever_stroke",
+    "spans": [
+     [
+      10.1,
+      10.9
+     ],
+     [
+      10.9,
+      11.7
+     ],
+     [
+      11.7,
+      12.5
+     ],
+     [
+      12.5,
+      13.3
+     ]
+    ]
+   },
+   "actions": [
+    {
+     "do": "animate",
+     "target": "lever",
+     "channel": "rot",
+     "to": 0.6,
+     "start": 0.0,
+     "end": 0.5,
+     "sound": [
+      {
+       "kind": "click",
+       "at": 0.0,
+       "freq": 2400,
+       "dur": 0.02,
+       "noise": 0.4,
+       "gain": 0.04,
+       "pan": 0.7
+      }
+     ]
+    },
+    {
+     "do": "reach",
+     "actor": "w_blue",
+     "hand": "R",
+     "target": "lever.handle",
+     "start": 0.0,
+     "end": 0.5
+    },
+    {
+     "do": "animate",
+     "target": "lever",
+     "channel": "rot",
+     "to": 0.15,
+     "start": 0.5,
+     "end": 1.0
+    },
+    {
+     "do": "reach",
+     "actor": "w_blue",
+     "hand": "R",
+     "target": "lever.handle",
+     "start": 0.5,
+     "end": 1.0
+    }
+   ]
+  },
+  {
    "do": "animate",
    "start": 9.8,
    "end": 10.6,

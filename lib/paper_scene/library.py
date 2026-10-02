@@ -16,12 +16,11 @@ REQ = object()  # marks a required parameter
 # Channels every prop has (position of its local origin, rotation in radians).
 COMMON_CHANNELS = {"x": 0.0, "y": 0.0, "rot": 0.0, "scale": 1.0, "opacity": 1.0}
 
-SHAPE_KINDS = ("rect", "circle", "ellipse", "poly", "star", "gear")
+SHAPE_KINDS = ("rect", "circle", "ellipse", "poly", "gear")      # gear: U1 (teeth, r_in, spin)
 SHAPE_PARAMS = {
     "shape": REQ, "rect": None, "r": None, "rx": None, "ry": None, "points": None,
     "teeth": 24, "r_in": None, "color": "#d8694b", "depth": 1.0, "amp": None, "step": 13,
-    "alpha": 1.0, "edge": True, "shadow": True, "stroke": None, "stroke_width": 2.0,
-    "fill": True, "key": None, "rolls": None, "spin": 0.0, "at": None,
+    "alpha": 1.0, "edge": True, "shadow": True, "key": None, "rolls": None, "spin": 0.0, "at": None,
 }
 
 PROP_TYPES: dict[str, dict[str, Any]] = {
@@ -30,7 +29,7 @@ PROP_TYPES: dict[str, dict[str, Any]] = {
     # U1 (factory front, sign) + U2 (cart with rolling wheels, desk with lamp)
     "group": {"params": {"children": REQ, "spin": 0.0}, "channels": {}},
     # U2 (handwritten "tour 1".."tour 5")
-    "label": {"params": {"text": REQ, "size": 40, "color": "#3b2a1e", "align": "middle", "rotate": 0.0},
+    "label": {"params": {"text": REQ, "size": 40, "color": "#3b2a1e"},
               "channels": {}},
     # U1 (pencil lines on the blank sky) + U2 (triangle outline and tint)
     "path": {"params": {"points": REQ, "closed": False, "color": "#3b3437", "width": 3.0, "dashed": False,
@@ -78,8 +77,7 @@ PROP_TYPES: dict[str, dict[str, Any]] = {
     # U1 (night tint over the frame, lit windows)
     "tint": {"params": {"color": "#666edb", "alpha": 0.62, "glows": []}, "channels": {"night": 0.0}},
     # U1 (chimney smoke)
-    "smoke": {"params": {"count": 4, "rate": 0.32, "rise": 260, "drift": 60, "r0": 14, "r1": 48,
-                         "color": "#fbf6ec"}, "channels": {}},
+    "smoke": {"params": {"rise": 260, "r0": 14, "r1": 48, "color": "#fbf6ec"}, "channels": {}},
     # U1 (flowers in the grass, bricks on the wall)
     "scatter": {"params": {"area": REQ, "count": REQ, "item": REQ, "seed": 3, "colors": None, "size": 1.0},
                 "channels": {}},
@@ -180,9 +178,6 @@ def _shape_bbox(p: dict[str, Any]) -> tuple[float, float, float, float]:
         box = (-r, -r, r, r)
     elif kind == "ellipse":
         box = (-p["rx"], -p["ry"], p["rx"], p["ry"])
-    elif kind == "star":
-        r = p["r"]
-        box = (-r, -r, r, r)
     elif kind == "gear":
         r = p["r"]
         box = (-r, -r, r, r)

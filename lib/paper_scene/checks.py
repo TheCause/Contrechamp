@@ -97,6 +97,38 @@ def check_off_frame(c: Compiled, issues: Issues, duration: float) -> None:
                 break
 
 
+STATIC_SKIP = {"pole", "burst"}   # placed by what holds or launches them, not by their own position
+
+
+def key_times(c: Compiled, duration: float) -> list[float]:
+    return sorted({min(max(k[0], 0.0), duration) for k in c.camera} | {0.0, duration})
+
+
+def check_static(c: Compiled, issues: Issues, duration: float) -> None:
+    """Without any action: every character inside the camera frame at every camera key,
+    every prop inside its layout (a position inherited from another layout lands outside)."""
+    from lib.paper_scene import library as L
+    from lib.paper_scene.compile import char_point, prop_point
+
+    W, H = c.layout["width"], c.layout["height"]
+    for cid in c.chars:
+        for t in key_times(c, duration):
+            x, y = char_point(c, cid, "center", t)
+            x0, y0, x1, y1 = M.view_rect(c.camera, t, W, H)
+            if not (x0 <= x <= x1 and y0 <= y <= y1):
+                issues.add("off_frame", f"[{c.layout['name']}] character '{cid}' stands outside the camera frame at "
+                           f"{t:.2f}s (camera key): point ({x:.0f}, {y:.0f}), frame x {x0:.0f}..{x1:.0f}, "
+                           f"y {y0:.0f}..{y1:.0f}", cid)
+                break
+    for pid, p in c.props.items():
+        if p["type"] in L.FULL_FRAME_TYPES or p["type"] in STATIC_SKIP:
+            continue
+        x, y = prop_point(c, pid, "center", 0.0)
+        if not (0 <= x <= W and 0 <= y <= H):
+            issues.add("off_frame", f"[{c.layout['name']}] prop '{pid}' lies outside the {W}x{H} layout "
+                       f"(centre at {x:.0f}, {y:.0f}): give it a position for this layout", pid)
+
+
 def check_ui_safe_bottom(c: Compiled, issues: Issues, duration: float) -> None:
     lay = c.layout
     if lay["aspect"] != "9:16":
@@ -110,6 +142,15 @@ def check_ui_safe_bottom(c: Compiled, issues: Issues, duration: float) -> None:
         return
     W, H = lay["width"], lay["height"]
     limit = H * (1 - f)
+    from lib.paper_scene.compile import char_point
+
+    for cid in c.chars:     # a character standing there, even without an action
+        for t in key_times(c, duration):
+            sx, sy = M.to_screen(c.camera, t, W, H, *char_point(c, cid, "center", t))
+            if sy > limit and 0 <= sx <= W and sy <= H:
+                issues.add("ui_safe_bottom", f"[{lay['name']}] character '{cid}' stands {sy - limit:.0f} px inside "
+                           f"the bottom {f:.0%} of the frame at {t:.2f}s (camera key)", cid)
+                break
     for pl in c.places:
         for t in _sample_times(pl["t0"], min(pl["t1"], duration)):
             x, y = pl["fn"](t)
@@ -161,18 +202,25 @@ def check_zoom_speed(c: Compiled, issues: Issues) -> list[dict[str, Any]]:
         z0, z1 = run[0][3], run[-1][3]
         measured.append({"t0": run[0][0], "t1": run[-1][0], "from": z0, "to": z1,
                          "ratio": round(max(z0, z1) / min(z0, z1), 3)})
-        worst = None
-        for i, a in enumerate(run):
-            for b in run[i + 1:]:
-                ratio = max(a[3], b[3]) / min(a[3], b[3])
-                if ratio >= ZOOM_STRONG_RATIO and b[0] - a[0] < ZOOM_MIN_SECONDS - 1e-9:
-                    if worst is None or ratio > worst[0]:
-                        worst = (ratio, a, b)
-        if worst:
-            ratio, a, b = worst
-            issues.add("zoom_speed", f"[{c.layout['name']}] zoom {a[3]:g} -> {b[3]:g} (x{ratio:.2f}) in "
-                       f"{b[0] - a[0]:.2f}s ({a[0]:g}-{b[0]:g}s) reads as a cut: give a strong zoom change at "
-                       f"least {ZOOM_MIN_SECONDS:g}s", c.layout["name"])
+    # Sliding window: every set of consecutive camera moves that fits in less than 1.2 s,
+    # whatever holds or reversals cut it into pieces, adds up its scale changes (|d ln zoom|).
+    # A move longer than 1.2 s never fits whole: it is the slow change the rule asks for.
+    keys = c.camera
+    limit = math.log(ZOOM_STRONG_RATIO)
+    worst = None
+    for i in range(len(keys) - 1):
+        total = 0.0
+        for j in range(i, len(keys) - 1):
+            if keys[j + 1][0] - keys[i][0] >= ZOOM_MIN_SECONDS - 1e-9:
+                break
+            total += abs(math.log(keys[j + 1][3] / keys[j][3]))
+            if total >= limit - 1e-12 and (worst is None or total > worst[0]):
+                worst = (total, keys[i], keys[j + 1])
+    if worst:
+        total, a, b = worst
+        issues.add("zoom_speed", f"[{c.layout['name']}] zoom changes by x{math.exp(total):.2f} in {b[0] - a[0]:.2f}s "
+                   f"({a[0]:g}-{b[0]:g}s, {a[3]:g} -> {b[3]:g}) reads as a cut: give a strong zoom change at least "
+                   f"{ZOOM_MIN_SECONDS:g}s", c.layout["name"])
     return measured
 
 
